@@ -1,0 +1,11 @@
+﻿{
+  "extends": "@atlasrep/config/tsconfig/base",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
+  },
+  "include": ["src/**/*.js"]
+}

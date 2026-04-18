@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)"
+    ],
+    "additionalDirectories": [
+      "d:\\RacoonDevs\\AtlasERP",
+      "d:\\RacoonDevs\\AtlasERP\\docs\\07-dev-workflow\\tasks"
+    ]
+  }
+}

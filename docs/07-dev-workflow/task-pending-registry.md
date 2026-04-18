@@ -1,0 +1,175 @@
+# Registro General de Pendientes por Task
+
+## Objetivo
+
+Centralizar pendientes no resueltos que queden al cerrar una task, con referencia explícita a su documento origen.
+
+## Regla de uso
+
+- Solo registrar pendientes reales no resueltos al cierre de una task.
+- Cada pendiente debe incluir referencia directa al archivo de task.
+- Si no hay pendientes abiertos, mantener el registro en estado vacío explícito.
+
+## Pendientes abiertos
+
+- ~~`T-0610`: Estrategia final de autenticación diferida a Fase 7.~~ **RESUELTO en T-0700 a T-0704 (Fase 7 Bloque 1).**
+- `T-0619`: Integración de almacenamiento seguro de adjuntos (MinIO/upload/download) diferida a `T-0632` a `T-0634`.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-04/T-0619-modulo-attachments.md`
+- `T-0625`: Falta enforcement de scope organization/branch mediante guard dedicado.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0625-decorators-organizacion-sucursal.md`
+- `T-0628`: Adopción completa de paginación base en todos los listados pendientes de Fase 6.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0628-paginacion-base.md`
+- `T-0629`: Adopción completa de filtros base en todos los módulos pendiente de bloques siguientes.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0629-filtros-base.md`
+- `T-0632`: Endurecer políticas de bucket/CORS por ambiente en fase de hardening.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0632-modulo-archivos-minio.md`
+- `T-0633`: Integrar escaneo antivirus para hardening de uploads.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0633-subida-segura-archivos.md`
+- `T-0634`: Evaluar endpoint proxy de descarga para ambientes con restricciones de red a MinIO.
+  Referencia: `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0634-descarga-segura-archivos.md`
+- `T-0902`: Instalar toolchain de Rust (`cargo`) en entornos de desarrollo para ejecutar `tauri build` local.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-01/T-0902-build-local-desktop.md`
+- `T-0905`: Endurecer secure storage con backend de secreto de SO (Stronghold/Keychain) para hardening productivo.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-02/T-0905-almacenamiento-local-seguro.md`
+- `T-0908`: Completar integración nativa de impresión por SO (spooler/PDF nativo) en bloque de hardening desktop.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-02/T-0908-bridge-impresion-exportacion.md`
+- `T-0910`: Integrar updater real (feed, firma y política de canales) cuando CI/CD de binarios esté habilitado.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-03/T-0910-bridge-actualizaciones-futuras.md`
+- `T-0914`: Definir política productiva de reintentos/backoff y dead-letter para cola local de sync.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-03/T-0914-repositorios-locales-cola-sync.md`
+- `T-0916`: Conectar boot autenticado con login real/backend (tokens emitidos por API) y política de refresh productiva.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-04/T-0916-arranque-desktop-autenticado.md`
+- `T-0917`: Definir política formal de expiración de sesión en modo offline prolongado.
+  Referencia: `docs/07-dev-workflow/tasks/fase-09-bloque-04/T-0917-arranque-desktop-offline.md`
+
+## Historial
+
+| Fecha      | Task | Pendiente                                                                                     | Severidad | Estado  | Referencia                                                             |
+| ---------- | ---- | --------------------------------------------------------------------------------------------- | --------- | ------- | ---------------------------------------------------------------------- |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de bloques 1-7                                          | N/A       | Cerrado | `docs/07-dev-workflow/tasks/*`                                         |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre del bloque 8 (`T-0036` a `T-0040`)                      | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-00-bloque-08/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre del bloque 9 (`T-0041` a `T-0045`)                      | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-00-bloque-09/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre del bloque 10 (`T-0046` a `T-0050`) — Fase 0 COMPLETADA | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-00-bloque-10/*`                       |
+| 2026-04-13 | N/A  | Sin pendientes no resueltos al cierre de Fase 1 (`T-0100` a `T-0149`) — Fase 1 COMPLETADA     | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-01-bloque-01/* a fase-01-bloque-10/*` |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 2 (`T-0200` a `T-0240`) — Fase 2 COMPLETADA     | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-02-bloque-01/* a fase-02-bloque-09/*` |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 1 (`T-0300` a `T-0304`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-01/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 2 (`T-0305` a `T-0309`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-02/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 3 (`T-0310` a `T-0314`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-03/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 4 (`T-0315` a `T-0319`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-04/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 5 (`T-0320` a `T-0324`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-05/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 6 (`T-0325` a `T-0329`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-06/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 7 (`T-0330` a `T-0334`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-07/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 Bloque 8 (`T-0335` a `T-0339`)                | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-08/*`                       |
+| 2026-04-12 | N/A  | Sin pendientes no resueltos al cierre de Fase 3 (`T-0300` a `T-0340`) — Fase 3 COMPLETADA     | N/A       | Cerrado | `docs/07-dev-workflow/tasks/fase-03-bloque-01/* a fase-03-bloque-09/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 1 de Fase 5 (`T-0500` a `T-0504`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-01/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 2 de Fase 5 (`T-0505` a `T-0509`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-02/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 3 de Fase 5 (`T-0510` a `T-0514`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-03/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 4 de Fase 5 (`T-0515` a `T-0519`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-04/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 5 de Fase 5 (`T-0520` a `T-0524`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-05/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 6 de Fase 5 (`T-0525` a `T-0529`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-06/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 7 de Fase 5 (`T-0530` a `T-0534`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-07/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 8 de Fase 5 (`T-0535` a `T-0540`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-08/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre de Fase 5 (`T-0500` a `T-0540`) — Fase 5 COMPLETADA | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-05-bloque-01/* a fase-05-bloque-08/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre del bloque 1 de Fase 6 (`T-0600` a `T-0604`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-01/*` |
+| 2026-04-13 | T-0609 | AllExceptionsFilter sin manejo especifico de errores Prisma (conflict→409) | Bajo | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0630-manejo-estandar-errores.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 2 de Fase 6 (`T-0605` a `T-0609`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-02/*` |
+| 2026-04-13 | T-0610 | Auth en modo contractual; estrategia final JWT + guards + sesiones/refresh tokens operativos se implementa en Fase 7 | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-03/T-0610-modulo-auth.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 3 de Fase 6 (`T-0610` a `T-0614`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-03/*` |
+| 2026-04-13 | T-0618 | Emisión automática de auditoría de operaciones críticas pendiente para `T-0635` | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-04/T-0618-modulo-audit.md` |
+| 2026-04-13 | T-0619 | Integración de almacenamiento seguro de adjuntos (MinIO/upload/download) pendiente para `T-0632` a `T-0634` | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-04/T-0619-modulo-attachments.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 4 de Fase 6 (`T-0615` a `T-0619`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-04/*` |
+| 2026-04-13 | T-0622 | Validación JWT productiva (firma, expiración y claims) pendiente para `T-0636` y `T-0637` | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-05/T-0622-guards-autenticacion.md` |
+| 2026-04-13 | T-0623 | Integración de permisos/roles desde identidad autenticada real pendiente para `T-0636` y `T-0637` | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-05/T-0623-guards-autorizacion.md` |
+| 2026-04-13 | T-0624 | Aplicación masiva de decorators de permisos en endpoints pendiente para `T-0639+` | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-05/T-0624-decorators-permisos.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 5 de Fase 6 (`T-0620` a `T-0624`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-05/*` |
+| 2026-04-13 | T-0625 | Falta enforcement de scope organization/branch mediante guard dedicado | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0625-decorators-organizacion-sucursal.md` |
+| 2026-04-13 | T-0628 | Adopción completa de paginación base en todos los listados pendiente de bloques siguientes | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0628-paginacion-base.md` |
+| 2026-04-13 | T-0629 | Adopción completa de filtros base en todos los módulos pendiente de bloques siguientes | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-06/T-0629-filtros-base.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 6 de Fase 6 (`T-0625` a `T-0629`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-06/*` |
+| 2026-04-13 | N/A | Sin pendientes no resueltos al cierre de `T-0630` (manejo estándar de errores) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0630-manejo-estandar-errores.md` |
+| 2026-04-13 | T-0632 | Endurecer políticas de bucket/CORS por ambiente pendiente para fase de hardening | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0632-modulo-archivos-minio.md` |
+| 2026-04-13 | T-0633 | Integrar escaneo antivirus para hardening de uploads | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0633-subida-segura-archivos.md` |
+| 2026-04-13 | T-0634 | Evaluar endpoint proxy de descarga para ambientes con restricciones de red a MinIO | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-06-bloque-07/T-0634-descarga-segura-archivos.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 7 de Fase 6 (`T-0630` a `T-0634`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-07/*` |
+| 2026-04-13 | T-0618 | Emisión automática de auditoría → resuelto con `auditAction()` en `T-0635` | Medio | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-08/T-0635-bitacora-acciones-criticas.md` |
+| 2026-04-13 | T-0622 | Verificación JWT productiva → infraestructura de sesiones lista; wiring JWT diferido a Fase 7 | Medio | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-08/T-0636-modulo-sesiones-refresh-tokens.md` |
+| 2026-04-13 | T-0623 | Integración permisos/roles desde identidad real → diferido a Fase 7 con `SessionsService` listo | Medio | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-08/T-0637-login-logout-refresh-flow.md` |
+| 2026-04-13 | T-0624 | Decorators masivos de permisos → base roles/permisos completada en `T-0639` | Bajo | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-08/T-0639-endpoints-base-roles-permisos.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 8 de Fase 6 (`T-0635` a `T-0639`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-08/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 9 de Fase 6 (`T-0640` a `T-0644`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-09/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 10 de Fase 6 (`T-0645` a `T-0646`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-10/*` |
+| 2026-04-13 | N/A | Fase 6 COMPLETADA (`T-0600` a `T-0646`) — backend foundation aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-06-bloque-01/* a fase-06-bloque-10/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 1 de Fase 7 (`T-0700` a `T-0704`) — auth JWT real operativo | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-01/*` |
+| 2026-04-13 | T-0706 | Registro avanzado de devices moviles (clientId + fingerprint) diferido a modulo de sync | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-07-bloque-02/T-0706-registro-devices.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 2 de Fase 7 (`T-0705` a `T-0709`) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-02/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 3 de Fase 7 (`T-0710` a `T-0714`) — permisos, scoping y auditoria de requests operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-03/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 4 de Fase 7 (`T-0715` a `T-0719`) — auditoria datos/login/sync/conflictos + paginacion operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-04/*` |
+| 2026-04-13 | T-0722 | RateLimitGuard es in-memory (single-instance). Para multi-instancia prod reemplazar con Redis INCR+EXPIRE | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-07-bloque-05/T-0722-rate-limit-guard.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 5 de Fase 7 (`T-0720` a `T-0724`) — filtros fecha, permisos endpoints, rate limit, validacion uploads, trazabilidad archivos operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-05/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 6 de Fase 7 (`T-0725` a `T-0726`) — smoke tests OK, baseline aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-06/*` |
+| 2026-04-13 | N/A | Fase 7 COMPLETADA (`T-0700` a `T-0726`) — seguridad, auth, permisos, auditoría y rate limiting operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-07-bloque-01/* a fase-07-bloque-06/*` |
+| 2026-04-13 | T-0809 | Interceptor de refresh token pendiente (actualmente el token no se renueva automáticamente en el cliente) | Medio | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-02/T-0809-manejo-sesion.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 1 de Fase 8 (`T-0800` a `T-0804`) — React+Vite+TailwindCSS 4.1+router+estructura operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-01/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 2 de Fase 8 (`T-0805` a `T-0809`) — layouts, HTTP client, React Query, Zustand, refresh token operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-02/*` |
+| 2026-04-13 | T-0814 | Paginación frontend en UsersPage/RolesPage pendiente — actualmente carga todos los registros sin paginar | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-08-bloque-03/T-0814-users-roles-base.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 3 de Fase 8 (`T-0810` a `T-0814`) — guards, auth pages, dashboard, settings, users/roles operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-03/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 4 de Fase 8 (`T-0815` a `T-0819`) — audit, attachments, toasts, error boundaries, empty states operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-04/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 5 de Fase 8 (`T-0820` a `T-0824`) — loading states, componentes base, formularios, validaciones, i18n operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-05/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 6 de Fase 8 (`T-0825` a `T-0829`) — offline banner, connection indicator, sync store, sync center, sidebar por modulos operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-06/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 7 de Fase 8 (`T-0830` a `T-0834`) — permisos visuales, design tokens, iconos SVG, tabla base, modal base operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-07/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 8 de Fase 8 (`T-0835` a `T-0839`) — side panels, breadcrumbs, busqueda global, errores de API en UI, flujo completo validado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-08/*` |
+| 2026-04-13 | N/A | Fase 8 COMPLETADA — T-0800 a T-0840 cerradas; frontend web foundation aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-08-bloque-09/T-0840-aprobar-frontend-foundation.md` |
+| 2026-04-13 | T-0902 | Falta toolchain Rust (`cargo`) en el entorno actual para ejecutar `tauri build` local | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-01/T-0902-build-local-desktop.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 1 de Fase 9 (`T-0900` a `T-0904`) — base desktop Tauri + React + branding provisional operativa | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-01/*` |
+| 2026-04-13 | T-0905 | Hardening pendiente de secure storage con secreto de SO (Stronghold/Keychain) | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-02/T-0905-almacenamiento-local-seguro.md` |
+| 2026-04-13 | T-0908 | Integración nativa de impresión por SO pendiente (spooler/PDF nativo) | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-02/T-0908-bridge-impresion-exportacion.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 2 de Fase 9 (`T-0905` a `T-0909`) — bridges desktop base operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-02/*` |
+| 2026-04-13 | T-0910 | Updater real pendiente (feed + firma + política de canales) | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-03/T-0910-bridge-actualizaciones-futuras.md` |
+| 2026-04-13 | T-0914 | Estrategia de reintentos/backoff y dead-letter pendiente para sync_queue local | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-03/T-0914-repositorios-locales-cola-sync.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 3 de Fase 9 (`T-0910` a `T-0914`) — updater/paths/sqlite/migraciones/queue base operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-03/*` |
+| 2026-04-13 | T-0916 | Integración de boot autenticado con tokens reales de backend pendiente de wiring con módulo auth final | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-04/T-0916-arranque-desktop-autenticado.md` |
+| 2026-04-13 | T-0917 | Política formal de expiración/reauth en modo offline prolongado pendiente de definición productiva | Medio | Abierto | `docs/07-dev-workflow/tasks/fase-09-bloque-04/T-0917-arranque-desktop-offline.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 4 de Fase 9 (`T-0915` a `T-0919`) — sesión local, boot modes y panel sync operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-04/*` |
+| 2026-04-13 | N/A | Sin nuevos pendientes al cierre del bloque 5 de Fase 9 (`T-0920` a `T-0923`); continúa vigente el prerrequisito de `cargo` para `tauri build` en entorno local | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-05/*` |
+| 2026-04-13 | N/A | Fase 9 COMPLETADA (`T-0900` a `T-0923`) — desktop foundation aprobada con pendientes residuales de hardening ya registrados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-09-bloque-01/* a fase-09-bloque-05/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 1 de Fase 10 (`T-1000` a `T-1004`) — baseline contractual de Sync Core aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-01/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 2 de Fase 10 (`T-1005` a `T-1009`) — estrategias base de cola, retries, idempotencia, duplicados y conflictos aprobadas | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-02/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 3 de Fase 10 (`T-1010` a `T-1014`) — aprobación/rechazo, reglas offline, storage SQLite contractual y enqueue local operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-03/*` |
+| 2026-04-13 | T-1019 | deviceRegistryId fallback a actorId en sync batch — cliente debe enviar siempre su deviceRegistryId registrado en produccion | Bajo | Abierto | `docs/07-dev-workflow/tasks/fase-10-bloque-04/T-1019-persistencia-sync-session.md` |
+| 2026-04-13 | N/A | Sin otros pendientes al cierre del bloque 4 de Fase 10 (`T-1015` a `T-1019`) — dequeue, worker local, POST /v1/sync/batch, validacion, SyncSession operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-04/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 5 de Fase 10 (`T-1020` a `T-1024`) — SyncItem con status semantico, ConflictRecord, ConflictResolution, SyncLog y comparador de versiones operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-05/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 6 de Fase 10 (`T-1025` a `T-1029`) — estrategias auto-resolucion formalizadas, merges peligrosos IN_REVIEW, diff minimo, centro de conflictos backend y tabla pendientes desktop operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-06/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 7 de Fase 10 (`T-1030` a `T-1034`) — Sync Center desktop con 5 tabs (pendientes, sincronizados, rechazados, conflictos, historial) y panel de detalle de conflicto operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-07/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 8 de Fase 10 (`T-1035` a `T-1039`) — acciones de resolución de conflicto (aprobar local, conservar servidor, descartar local, merge manual) y permisos de resolución operativos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-08/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 9 de Fase 10 (`T-1040` a `T-1044`) — auditoría de resolución de conflictos y suite de pruebas de Sync Core (online/offline, conflictos, duplicados y reglas de negocio) operativas | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-09/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 10 de Fase 10 (`T-1045` a `T-1046`) — persistencia de cola tras reinicio validada y aprobación formal de Sync Core v1 emitida | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-10/*` |
+| 2026-04-13 | N/A | Fase 10 COMPLETADA (`T-1000` a `T-1046`) — Sync Core v1 aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-10-bloque-01/* a fase-10-bloque-10/*` |
+| 2026-04-13 | N/A | Sin pendientes al cierre del bloque 1 de Fase 11 (`T-1100` a `T-1104`) — Design System Meridian: paleta OKLCH, tipografia DM Serif Display + Outfit + JetBrains Mono, spacing/radio/shadow semanticos, estados de color completos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-01/*` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 1 de Fase 12 (`T-1200` a `T-1204`) — blueprint refinado, alcance/fuera de alcance, entidades y relaciones con Core Platform definidos | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-01/*` |
+| 2026-04-13 | N/A | Decisión documentada: avance de Fase 12 dominio/datos sin bloquear por pendientes visuales de Fase 11 | N/A | Cerrado | `docs/07-dev-workflow/task-block-88-status.md` |
+| 2026-04-13 | N/A | Sin pendientes nuevos al cierre del bloque 2 de Fase 12 (`T-1205` a `T-1209`) — relaciones con Sync Core y Accounting Core definidas, modelos base Prisma (`BankAccountType`, `BankAccount`, `FinancialMovement`) implementados y validados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-02/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 3 de Fase 12 (`T-1210` a `T-1214`) — modelos Prisma (`FinancialMovementAttachment`, `Transfer`, `ReconciliationSession`, `ReconciliationItem`, `BalanceSnapshot`) implementados y validados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-03/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 4 de Fase 12 (`T-1215` a `T-1219`) — modelos Prisma (`CounterpartyLite`, `ReceivableLite`, `PayableLite`), enums financieros y migración SQL del bloque generada/validada | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-04/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 5 de Fase 12 (`T-1220` a `T-1222`) — seeds demo del módulo ejecutados en modo idempotente y validaciones de integridad en verde | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-05/*` |
+| 2026-04-14 | N/A | Fase 12 COMPLETADA (`T-1200` a `T-1222`) — dominio y esquema de Financial Operations Core aprobados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-12-bloque-01/* a fase-12-bloque-05/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 1 de Fase 13 (`T-1300` a `T-1304`) — módulos backend base de Financial Operations (`BankAccounts`, `FinancialMovements`, `Transfers`, `Reconciliation`, `BalanceSnapshots`) implementados y validados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-01/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 2 de Fase 13 (`T-1305` a `T-1309`) — módulos backend `ReceivablesLite`/`PayablesLite` y DTOs base de `BankAccount`/`FinancialMovement`/`Transfer` implementados y validados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-02/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 3 de Fase 13 (`T-1310` a `T-1314`) — DTOs de `Reconciliation`/`ReceivablesLite`/`PayablesLite` y servicios base de `BankAccount`/`FinancialMovement` ampliados y validados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-03/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 4 de Fase 13 (`T-1315` a `T-1319`) — servicios base de `Transfer`/`Reconciliation`/`BalanceSnapshot`/`ReceivablesLite`/`PayablesLite` ampliados y validados (backend-only) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-04/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 5 de Fase 13 (`T-1320` a `T-1324`) — endpoints CRUD de `BankAccounts`/`FinancialMovements`/`Transfers`/`ReceivablesLite`/`PayablesLite` implementados y validados (backend-only) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-05/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 6 de Fase 13 (`T-1325` a `T-1329`) — endpoints de balance/resumen y conciliación (`reconcile`, `close`, `approve`) implementados y validados (backend-only) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-06/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 7 de Fase 13 (`T-1330` a `T-1334`) — comprobantes en movimientos, auditoría, permisos, soporte sync y pruebas unitarias implementadas y validadas (backend-only) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-07/*` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 3 de Fase 11 (`T-1110` a `T-1114`) — cards/modales/side panels/tabs/breadcrumbs consolidados y documentados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-03/*` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 4 de Fase 11 (`T-1115` a `T-1119`) — toasts, skeleton, resúmenes, layout responsive y foundation UI consolidados y documentados | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-04/*` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 5 de Fase 11 (`T-1120` a `T-1124`) — documentación visual, ejemplos, accesibilidad y aprobación de Design System Foundation | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-05/*` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 2 de Fase 11 (`T-1105` a `T-1109`) — componentes core del Design System Meridian completados: Badge (xs+territory), Button (xs), Textarea, Select y Table (sortable+selectable+cartographic empty state) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-02/*` |
+| 2026-04-14 | N/A | Sin pendientes nuevos al cierre del bloque 8 de Fase 13 (`T-1335` a `T-1337`) — pruebas de integración (21/21), pruebas de permisos (20/20) y aprobación formal del backend implementadas y validadas (backend-only) | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-08/*` |
+| 2026-04-14 | N/A | Fase 13 COMPLETADA (`T-1300` a `T-1337`) — backend de Financial Operations Core aprobado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-13-bloque-01/* a fase-13-bloque-08/*` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 3 de Fase 11 (`T-1110` a `T-1114`) — Modal, SidePanel reescritos sobre Radix Dialog, Tabs.jsx nuevo sobre Radix Tabs, Card y Breadcrumbs validados responsive | N/A | Cerrado | `docs/07-dev-workflow/task-block-101-status.md` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 4 de Fase 11 (`T-1115` a `T-1119`) — Toast, Select reescritos sobre Radix; Tooltip, DropdownMenu, AlertDialog, Checkbox, Switch, ScrollArea nuevos; AppShell responsive con sidebar mobile-first | N/A | Cerrado | `docs/07-dev-workflow/task-block-102-status.md` |
+| 2026-04-14 | N/A | Sin pendientes al cierre del bloque 5 de Fase 11 (`T-1120` a `T-1124`) — component-catalog.md, radix-component-skill, responsive-layout-skill creados; accesibilidad heredada de Radix | N/A | Cerrado | `docs/07-dev-workflow/task-block-103-status.md` |
+| 2026-04-14 | N/A | Fase 11 COMPLETADA (`T-1100` a `T-1124`) — Design System Meridian v1.0 aprobado: 26 componentes (11 Radix), layout responsive mobile-first, 2 skills, catálogo documentado | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-11-bloque-01/* a task-block-103-status.md` |
+| 2026-04-15 | N/A | Sin pendientes al cierre del bloque 1 de Fase 16 (`T-1600` a `T-1604`) — catálogo de reportes v1 definido; MovementsReportPage, MovementsByAccountReportPage, BalancesReportPage y TransfersReportPage implementados con exportación CSV/XLSX/PDF | N/A | Cerrado | `docs/07-dev-workflow/task-block-114-status.md` |
+| 2026-04-15 | N/A | Sin pendientes al cierre del bloque 2 de Fase 16 (`T-1605` a `T-1609`) — ReceivablesReportPage y PayablesReportPage con aging de cartera; exportaciones CSV (BOM UTF-8), XLSX (exceljs) y PDF (@react-pdf/renderer) en todos los reportes | N/A | Cerrado | `docs/07-dev-workflow/task-block-115-status.md` |
+| 2026-04-15 | N/A | Sin pendientes al cierre del bloque 3 de Fase 16 (`T-1610` a `T-1615`) — impresión desktop (printReport.js + report-print.css), comprobantes PDF (MovementReceiptPdf + TransferReceiptPdf), ReportFilterPanel mejorado (shortcuts de fecha, badges removibles, URL params), auditoría de exportaciones (useReportAudit fire-and-forget), validación de rendimiento documentada | N/A | Cerrado | `docs/07-dev-workflow/task-block-116-status.md` |
+| 2026-04-15 | N/A | Fase 16 COMPLETADA (`T-1600` a `T-1615`) — capa operativa de reportes y exportaciones de FinOps v1 aprobada: 6 reportes, 3 formatos de exportación, impresión desktop, comprobantes, filtros reutilizables y auditoría | N/A | Cerrado | `docs/07-dev-workflow/tasks/fase-16-bloque-01/* a task-block-116-status.md` |

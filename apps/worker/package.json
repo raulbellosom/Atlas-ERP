@@ -1,0 +1,14 @@
+{
+  "name": "@atlasrep/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Worker de jobs y sincronización — NestJS + BullMQ",
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  }
+}

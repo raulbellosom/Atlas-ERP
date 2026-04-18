@@ -1,0 +1,34 @@
+{
+  "name": "@atlasrep/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Configuracion compartida — ESLint, Prettier, tsconfig",
+  "type": "module",
+  "exports": {
+    "./eslint/base": "./eslint/base.mjs",
+    "./eslint/typescript": "./eslint/typescript.mjs",
+    "./eslint/react": "./eslint/react.mjs",
+    "./eslint/nest": "./eslint/nest.mjs",
+    "./prettier": "./prettier/index.mjs",
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./tsconfig/nestjs": "./tsconfig/nestjs.json"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@typescript-eslint/eslint-plugin": { "optional": true },
+    "@typescript-eslint/parser": { "optional": true },
+    "eslint-plugin-react": { "optional": true },
+    "eslint-plugin-react-hooks": { "optional": true }
+  }
+}

@@ -1,0 +1,6 @@
+#!/bin/sh
+# AtlasERP — commit-msg hook
+# Valida que el mensaje de commit siga Conventional Commits.
+# Requiere: @commitlint/cli @commitlint/config-conventional (instalados en raiz)
+
+npx --no -- commitlint --edit "$1"

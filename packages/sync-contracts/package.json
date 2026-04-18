@@ -1,0 +1,17 @@
+{
+  "name": "@atlasrep/sync-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tipos y contratos del protocolo de sincronizacion",
+  "main": "./src/index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@atlasrep/config": "workspace:*",
+    "eslint": "^9.0.0",
+    "typescript": "^5.9.3"
+  }
+}

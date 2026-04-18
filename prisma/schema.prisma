@@ -1,0 +1,1030 @@
+// AtlasERP - Prisma schema (foundation Fase 5)
+// Referencia: T-0500..T-0540
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  branches               Branch[]
+  users                  User[]
+  roles                  Role[]
+  auditLogs              AuditLog[]
+  attachments            Attachment[]
+  settings               Setting[]
+  devices                DeviceRegistry[]
+  syncSessions           SyncSession[]
+  syncItems              SyncItem[]
+  conflicts              ConflictRecord[]
+  conflictResolutions    ConflictResolution[]
+  syncLogs               SyncLog[]
+  notifications          Notification[]
+  sessions               Session[]
+  refreshTokens          RefreshToken[]
+  passwordResetTokens    PasswordResetToken[]
+  bankAccountTypes       BankAccountType[]
+  bankAccounts           BankAccount[]
+  financialMovements     FinancialMovement[]
+  movementAttachments    FinancialMovementAttachment[]
+  transfers              Transfer[]
+  reconciliationSessions ReconciliationSession[]
+  reconciliationItems    ReconciliationItem[]
+  balanceSnapshots       BalanceSnapshot[]
+  counterpartiesLite     CounterpartyLite[]
+  receivablesLite        ReceivableLite[]
+  payablesLite           PayableLite[]
+
+  @@index([isActive])
+  @@map("organizations")
+}
+
+model Branch {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  users                  User[]
+  bankAccounts           BankAccount[]
+  financialMovements     FinancialMovement[]
+  transfers              Transfer[]
+  reconciliationSessions ReconciliationSession[]
+  reconciliationItems    ReconciliationItem[]
+  balanceSnapshots       BalanceSnapshot[]
+  counterpartiesLite     CounterpartyLite[]
+  receivablesLite        ReceivableLite[]
+  payablesLite           PayableLite[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, isActive])
+  @@map("branches")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  organizationId String
+  branchId       String?
+  email          String
+  displayName    String
+  passwordHash   String?
+  isActive       Boolean   @default(true)
+  isLocked       Boolean   @default(false)
+  lockedAt       DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization                 Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch                       Branch?                       @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  userRoles                    UserRole[]
+  auditLogs                    AuditLog[]                    @relation("UserAuditLogs")
+  attachments                  Attachment[]                  @relation("UserAttachments")
+  updatedSettings              Setting[]                     @relation("UserUpdatedSettings")
+  devices                      DeviceRegistry[]              @relation("UserDevices")
+  resolvedConflicts            ConflictRecord[]              @relation("UserResolvedConflicts")
+  conflictResolutions          ConflictResolution[]          @relation("UserConflictResolutions")
+  notifications                Notification[]                @relation("UserNotifications")
+  sessions                     Session[]                     @relation("UserSessions")
+  refreshTokens                RefreshToken[]                @relation("UserRefreshTokens")
+  passwordResetTokens          PasswordResetToken[]          @relation("UserPasswordResets")
+  createdBankAccounts          BankAccount[]                 @relation("UserCreatedBankAccounts")
+  createdFinancialMovements    FinancialMovement[]           @relation("UserCreatedFinancialMovements")
+  createdMovementAttachments   FinancialMovementAttachment[] @relation("UserCreatedMovementAttachments")
+  initiatedTransfers           Transfer[]                    @relation("UserInitiatedTransfers")
+  approvedTransfers            Transfer[]                    @relation("UserApprovedTransfers")
+  openedReconciliationSessions ReconciliationSession[]       @relation("UserOpenedReconciliationSessions")
+  closedReconciliationSessions ReconciliationSession[]       @relation("UserClosedReconciliationSessions")
+  resolvedReconciliationItems  ReconciliationItem[]          @relation("UserResolvedReconciliationItems")
+  capturedBalanceSnapshots     BalanceSnapshot[]             @relation("UserCapturedBalanceSnapshots")
+  createdCounterpartiesLite    CounterpartyLite[]            @relation("UserCreatedCounterpartiesLite")
+  createdReceivablesLite       ReceivableLite[]              @relation("UserCreatedReceivablesLite")
+  createdPayablesLite          PayableLite[]                 @relation("UserCreatedPayablesLite")
+
+  @@unique([organizationId, email])
+  @@index([organizationId, isActive])
+  @@index([branchId])
+  @@map("users")
+}
+
+model Role {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  isActive       Boolean   @default(true)
+  level          Int       @default(0)
+  parentRoleId   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  parentRole      Role?            @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  childRoles      Role[]           @relation("RoleHierarchy")
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, isActive])
+  @@index([parentRoleId])
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  module      String
+  action      String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+
+  @@index([module, action])
+  @@index([isActive])
+  @@map("permissions")
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model AuditLog {
+  id             String     @id @default(cuid())
+  organizationId String
+  actorId        String?
+  action         String
+  entityType     String
+  entityId       String
+  origin         SourceType
+  result         String?
+  before         Json?
+  after          Json?
+  metadata       Json?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actor        User?        @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([origin])
+  @@map("audit_logs")
+}
+
+model Attachment {
+  id             String    @id @default(cuid())
+  organizationId String
+  filename       String
+  storagePath    String
+  mimeType       String
+  sizeBytes      Int
+  entityType     String
+  entityId       String
+  uploadedById   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization        Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  uploadedBy          User?                         @relation("UserAttachments", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  movementAttachments FinancialMovementAttachment[]
+
+  @@index([organizationId, entityType, entityId])
+  @@index([uploadedById])
+  @@map("attachments")
+}
+
+model Setting {
+  id             String   @id @default(cuid())
+  organizationId String?
+  key            String
+  value          String
+  description    String?
+  isActive       Boolean  @default(true)
+  updatedById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updatedBy    User?         @relation("UserUpdatedSettings", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([key])
+  @@index([isActive])
+  @@map("settings")
+}
+
+model BankAccountType {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  bankAccounts BankAccount[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, isActive])
+  @@map("bank_account_types")
+}
+
+model BankAccount {
+  id                String    @id @default(cuid())
+  organizationId    String
+  branchId          String?
+  bankAccountTypeId String?
+  createdById       String?
+  name              String
+  bankName          String
+  accountHolder     String?
+  accountNumberMask String
+  currencyCode      String    @default("MXN")
+  currentBalance    Decimal   @default(0)
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch                 Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  bankAccountType        BankAccountType?        @relation(fields: [bankAccountTypeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy              User?                   @relation("UserCreatedBankAccounts", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  financialMovements     FinancialMovement[]
+  outgoingTransfers      Transfer[]              @relation("TransferFromBankAccount")
+  incomingTransfers      Transfer[]              @relation("TransferToBankAccount")
+  reconciliationSessions ReconciliationSession[]
+  balanceSnapshots       BalanceSnapshot[]
+  receivablesLite        ReceivableLite[]
+  payablesLite           PayableLite[]
+
+  @@index([organizationId, isActive])
+  @@index([branchId])
+  @@index([bankAccountTypeId])
+  @@index([createdById])
+  @@map("bank_accounts")
+}
+
+model FinancialMovement {
+  id             String                  @id @default(cuid())
+  organizationId String
+  bankAccountId  String
+  branchId       String?
+  createdById    String?
+  movementType   FinancialMovementType
+  status         FinancialMovementStatus @default(POSTED)
+  amount         Decimal
+  currencyCode   String                  @default("MXN")
+  occurredAt     DateTime
+  description    String?
+  reference      String?
+  metadata       Json?
+  isReconciled   Boolean                 @default(false)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  deletedAt      DateTime?
+
+  organization        Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  bankAccount         BankAccount                   @relation(fields: [bankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch              Branch?                       @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy           User?                         @relation("UserCreatedFinancialMovements", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  movementAttachments FinancialMovementAttachment[]
+  outgoingTransfer    Transfer?                     @relation("TransferOutgoingMovement")
+  incomingTransfer    Transfer?                     @relation("TransferIncomingMovement")
+  reconciliationItems ReconciliationItem[]
+
+  @@index([organizationId, occurredAt])
+  @@index([bankAccountId, occurredAt])
+  @@index([movementType, status])
+  @@index([branchId])
+  @@index([createdById])
+  @@map("financial_movements")
+}
+
+model FinancialMovementAttachment {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  financialMovementId String
+  attachmentId        String
+  createdById         String?
+  note                String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  financialMovement FinancialMovement @relation(fields: [financialMovementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attachment        Attachment        @relation(fields: [attachmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy         User?             @relation("UserCreatedMovementAttachments", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, financialMovementId])
+  @@index([attachmentId])
+  @@index([createdById])
+  @@map("financial_movement_attachments")
+}
+
+model Transfer {
+  id                 String         @id @default(cuid())
+  organizationId     String
+  fromBankAccountId  String
+  toBankAccountId    String
+  branchId           String?
+  outgoingMovementId String?
+  incomingMovementId String?
+  initiatedById      String?
+  approvedById       String?
+  status             TransferStatus @default(POSTED)
+  amount             Decimal
+  currencyCode       String         @default("MXN")
+  occurredAt         DateTime
+  description        String?
+  reference          String?
+  metadata           Json?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  fromBankAccount  BankAccount        @relation("TransferFromBankAccount", fields: [fromBankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  toBankAccount    BankAccount        @relation("TransferToBankAccount", fields: [toBankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  outgoingMovement FinancialMovement? @relation("TransferOutgoingMovement", fields: [outgoingMovementId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  incomingMovement FinancialMovement? @relation("TransferIncomingMovement", fields: [incomingMovementId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  initiatedBy      User?              @relation("UserInitiatedTransfers", fields: [initiatedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  approvedBy       User?              @relation("UserApprovedTransfers", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  branch           Branch?            @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([outgoingMovementId])
+  @@unique([incomingMovementId])
+  @@index([organizationId, occurredAt])
+  @@index([fromBankAccountId, occurredAt])
+  @@index([toBankAccountId, occurredAt])
+  @@index([branchId])
+  @@index([initiatedById])
+  @@index([approvedById])
+  @@index([status])
+  @@map("transfers")
+}
+
+model ReconciliationSession {
+  id             String                      @id @default(cuid())
+  organizationId String
+  bankAccountId  String
+  branchId       String?
+  openedById     String?
+  closedById     String?
+  status         ReconciliationSessionStatus @default(OPEN)
+  startedAt      DateTime                    @default(now())
+  closedAt       DateTime?
+  notes          String?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  bankAccount  BankAccount          @relation(fields: [bankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch       Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  openedBy     User?                @relation("UserOpenedReconciliationSessions", fields: [openedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  closedBy     User?                @relation("UserClosedReconciliationSessions", fields: [closedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  items        ReconciliationItem[]
+
+  @@index([organizationId, startedAt])
+  @@index([bankAccountId, startedAt])
+  @@index([branchId])
+  @@index([openedById])
+  @@index([closedById])
+  @@index([status])
+  @@map("reconciliation_sessions")
+}
+
+model ReconciliationItem {
+  id                      String                   @id @default(cuid())
+  organizationId          String
+  reconciliationSessionId String
+  financialMovementId     String
+  branchId                String?
+  status                  ReconciliationItemStatus @default(PENDING)
+  expectedAmount          Decimal?
+  actualAmount            Decimal?
+  discrepancyAmount       Decimal?
+  reason                  String?
+  resolvedById            String?
+  resolvedAt              DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  organization          Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reconciliationSession ReconciliationSession @relation(fields: [reconciliationSessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialMovement     FinancialMovement     @relation(fields: [financialMovementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch                Branch?               @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  resolvedBy            User?                 @relation("UserResolvedReconciliationItems", fields: [resolvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, status])
+  @@index([reconciliationSessionId])
+  @@index([financialMovementId])
+  @@index([branchId])
+  @@index([resolvedById])
+  @@map("reconciliation_items")
+}
+
+model BalanceSnapshot {
+  id             String                @id @default(cuid())
+  organizationId String
+  bankAccountId  String
+  branchId       String?
+  capturedById   String?
+  snapshotAt     DateTime
+  balance        Decimal
+  currencyCode   String                @default("MXN")
+  source         BalanceSnapshotSource @default(MANUAL)
+  metadata       Json?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  bankAccount  BankAccount  @relation(fields: [bankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  capturedBy   User?        @relation("UserCapturedBalanceSnapshots", fields: [capturedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, snapshotAt])
+  @@index([bankAccountId, snapshotAt])
+  @@index([branchId])
+  @@index([capturedById])
+  @@map("balance_snapshots")
+}
+
+model CounterpartyLite {
+  id             String             @id @default(cuid())
+  organizationId String
+  branchId       String?
+  createdById    String?
+  type           CounterpartyType   @default(OTHER)
+  status         CounterpartyStatus @default(ACTIVE)
+  name           String
+  displayName    String?
+  taxId          String?
+  email          String?
+  phone          String?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch       Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy    User?            @relation("UserCreatedCounterpartiesLite", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  receivables  ReceivableLite[]
+  payables     PayableLite[]
+
+  @@index([organizationId, status])
+  @@index([branchId])
+  @@index([createdById])
+  @@index([type])
+  @@map("counterparties_lite")
+}
+
+model ReceivableLite {
+  id                String           @id @default(cuid())
+  organizationId    String
+  branchId          String?
+  counterpartyId    String?
+  bankAccountId     String?
+  createdById       String?
+  status            ReceivableStatus @default(OPEN)
+  reference         String?
+  externalReference String?
+  amount            Decimal
+  amountPaid        Decimal          @default(0)
+  currencyCode      String           @default("MXN")
+  issuedAt          DateTime         @default(now())
+  dueAt             DateTime?
+  paidAt            DateTime?
+  description       String?
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch       Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  counterparty CounterpartyLite? @relation(fields: [counterpartyId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  bankAccount  BankAccount?      @relation(fields: [bankAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy    User?             @relation("UserCreatedReceivablesLite", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, status, dueAt])
+  @@index([counterpartyId, status])
+  @@index([bankAccountId])
+  @@index([branchId])
+  @@index([createdById])
+  @@map("receivables_lite")
+}
+
+model PayableLite {
+  id                String        @id @default(cuid())
+  organizationId    String
+  branchId          String?
+  counterpartyId    String?
+  bankAccountId     String?
+  createdById       String?
+  status            PayableStatus @default(OPEN)
+  reference         String?
+  externalReference String?
+  amount            Decimal
+  amountPaid        Decimal       @default(0)
+  currencyCode      String        @default("MXN")
+  issuedAt          DateTime      @default(now())
+  dueAt             DateTime?
+  paidAt            DateTime?
+  description       String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch       Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  counterparty CounterpartyLite? @relation(fields: [counterpartyId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  bankAccount  BankAccount?      @relation(fields: [bankAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy    User?             @relation("UserCreatedPayablesLite", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, status, dueAt])
+  @@index([counterpartyId, status])
+  @@index([bankAccountId])
+  @@index([branchId])
+  @@index([createdById])
+  @@map("payables_lite")
+}
+
+model FeatureFlag {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  description  String
+  defaultValue Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("feature_flags")
+}
+
+model DeviceRegistry {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String?
+  clientId       String    @unique
+  deviceName     String?
+  platform       String
+  appVersion     String?
+  lastSeenAt     DateTime?
+  isActive       Boolean   @default(true)
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user         User?         @relation("UserDevices", fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  syncSessions SyncSession[]
+  sessions     Session[]
+  syncLogs     SyncLog[]
+
+  @@index([organizationId, isActive])
+  @@index([userId])
+  @@map("device_registry")
+}
+
+model SyncSession {
+  id               String            @id @default(cuid())
+  organizationId   String
+  deviceRegistryId String
+  status           SyncSessionStatus
+  itemsTotal       Int               @default(0)
+  itemsSynced      Int               @default(0)
+  itemsConflicted  Int               @default(0)
+  startedAt        DateTime          @default(now())
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  deviceRegistry DeviceRegistry @relation(fields: [deviceRegistryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  syncItems      SyncItem[]
+  syncLogs       SyncLog[]
+
+  @@index([organizationId, startedAt])
+  @@index([deviceRegistryId, startedAt])
+  @@map("sync_sessions")
+}
+
+model SyncItem {
+  id             String         @id @default(cuid())
+  sessionId      String
+  organizationId String
+  operation      String
+  entityType     String
+  entityId       String
+  payload        Json
+  status         SyncItemStatus
+  processedAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  session      SyncSession      @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  conflicts    ConflictRecord[]
+  syncLogs     SyncLog[]
+
+  @@index([sessionId, status])
+  @@index([organizationId, entityType, entityId])
+  @@map("sync_items")
+}
+
+model ConflictRecord {
+  id             String                    @id @default(cuid())
+  syncItemId     String
+  organizationId String
+  entityType     String
+  entityId       String
+  localPayload   Json
+  serverPayload  Json
+  status         ConflictStatus
+  resolution     ConflictResolutionAction?
+  resolvedById   String?
+  resolvedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  syncItem     SyncItem             @relation(fields: [syncItemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resolvedBy   User?                @relation("UserResolvedConflicts", fields: [resolvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  resolutions  ConflictResolution[]
+  syncLogs     SyncLog[]
+
+  @@index([organizationId, status, createdAt])
+  @@index([entityType, entityId])
+  @@index([resolvedById])
+  @@map("conflict_records")
+}
+
+model ConflictResolution {
+  id               String                   @id @default(cuid())
+  conflictRecordId String
+  organizationId   String
+  action           ConflictResolutionAction
+  status           ConflictResolutionStatus @default(APPLIED)
+  resolvedById     String
+  source           SourceType               @default(SYNC_ENGINE)
+  reason           String?
+  mergedPayload    Json?
+  resolvedAt       DateTime                 @default(now())
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  conflictRecord ConflictRecord @relation(fields: [conflictRecordId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resolvedBy     User           @relation("UserConflictResolutions", fields: [resolvedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([organizationId, resolvedAt])
+  @@index([conflictRecordId, resolvedAt])
+  @@index([resolvedById])
+  @@map("conflict_resolutions")
+}
+
+model SyncLog {
+  id               String         @id @default(cuid())
+  organizationId   String
+  sessionId        String?
+  syncItemId       String?
+  conflictRecordId String?
+  deviceRegistryId String?
+  source           SourceType     @default(SYNC_ENGINE)
+  level            SyncLogLevel   @default(INFO)
+  status           SyncLogStatus?
+  event            String
+  message          String
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  session        SyncSession?    @relation(fields: [sessionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  syncItem       SyncItem?       @relation(fields: [syncItemId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  conflictRecord ConflictRecord? @relation(fields: [conflictRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  deviceRegistry DeviceRegistry? @relation(fields: [deviceRegistryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([syncItemId, createdAt])
+  @@index([conflictRecordId, createdAt])
+  @@index([source, createdAt])
+  @@index([level, createdAt])
+  @@map("sync_logs")
+}
+
+model Notification {
+  id             String              @id @default(cuid())
+  organizationId String
+  userId         String
+  source         SourceType          @default(SYSTEM)
+  channel        NotificationChannel @default(IN_APP)
+  status         NotificationStatus  @default(UNREAD)
+  type           String
+  title          String
+  body           String
+  payload        Json?
+  readAt         DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user         User         @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([organizationId, userId, status])
+  @@index([userId, createdAt])
+  @@index([source, createdAt])
+  @@map("notifications")
+}
+
+model Session {
+  id               String        @id @default(cuid())
+  organizationId   String
+  userId           String
+  deviceRegistryId String?
+  status           SessionStatus @default(ACTIVE)
+  ipAddress        String?
+  userAgent        String?
+  lastActivityAt   DateTime      @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user           User            @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  deviceRegistry DeviceRegistry? @relation(fields: [deviceRegistryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  refreshTokens  RefreshToken[]
+
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@index([deviceRegistryId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id             String             @id @default(cuid())
+  sessionId      String
+  organizationId String
+  userId         String
+  tokenHash      String             @unique
+  status         RefreshTokenStatus @default(ACTIVE)
+  parentTokenId  String?
+  issuedAt       DateTime           @default(now())
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  rotatedAt      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  session       Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user          User           @relation("UserRefreshTokens", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parentToken   RefreshToken?  @relation("RefreshTokenRotation", fields: [parentTokenId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  rotatedTokens RefreshToken[] @relation("RefreshTokenRotation")
+
+  @@index([sessionId, status])
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String
+  tokenHash      String    @unique
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user         User         @relation("UserPasswordResets", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+enum SourceType {
+  WEB
+  DESKTOP
+  API
+  WORKER
+  SYSTEM
+  SYNC_ENGINE
+}
+
+enum FinancialMovementType {
+  INCOME          @map("income")
+  EXPENSE         @map("expense")
+  ADJUSTMENT      @map("adjustment")
+  TRANSFER_OUT    @map("transfer_out")
+  TRANSFER_IN     @map("transfer_in")
+  OPENING_BALANCE @map("opening_balance")
+}
+
+enum FinancialMovementStatus {
+  DRAFT    @map("draft")
+  POSTED   @map("posted")
+  CANCELED @map("canceled")
+  REVERSED @map("reversed")
+}
+
+enum TransferStatus {
+  DRAFT    @map("draft")
+  POSTED   @map("posted")
+  CANCELED @map("canceled")
+  REVERSED @map("reversed")
+}
+
+enum ReconciliationSessionStatus {
+  OPEN     @map("open")
+  CLOSED   @map("closed")
+  CANCELED @map("canceled")
+}
+
+enum ReconciliationItemStatus {
+  PENDING     @map("pending")
+  MATCHED     @map("matched")
+  DISCREPANCY @map("discrepancy")
+  RESOLVED    @map("resolved")
+  IGNORED     @map("ignored")
+}
+
+enum BalanceSnapshotSource {
+  MANUAL         @map("manual")
+  SYSTEM         @map("system")
+  RECONCILIATION @map("reconciliation")
+  SYNC           @map("sync")
+}
+
+enum CounterpartyType {
+  CUSTOMER @map("customer")
+  SUPPLIER @map("supplier")
+  EMPLOYEE @map("employee")
+  OTHER    @map("other")
+}
+
+enum CounterpartyStatus {
+  ACTIVE   @map("active")
+  INACTIVE @map("inactive")
+}
+
+enum ReceivableStatus {
+  OPEN           @map("open")
+  PARTIALLY_PAID @map("partially_paid")
+  PAID           @map("paid")
+  OVERDUE        @map("overdue")
+  CANCELED       @map("canceled")
+  WRITTEN_OFF    @map("written_off")
+}
+
+enum PayableStatus {
+  OPEN           @map("open")
+  PARTIALLY_PAID @map("partially_paid")
+  PAID           @map("paid")
+  OVERDUE        @map("overdue")
+  CANCELED       @map("canceled")
+  WRITTEN_OFF    @map("written_off")
+}
+
+enum SyncSessionStatus {
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  COMPLETED_WITH_CONFLICTS
+  FAILED
+  CANCELED
+}
+
+enum SyncItemStatus {
+  PENDING
+  APPLIED
+  SERVER_REJECTED
+  CONFLICT_DETECTED
+  RETRYING
+  FAILED
+  SYNCED
+}
+
+enum ConflictStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISCARDED
+}
+
+enum ConflictResolutionAction {
+  APPROVE_LOCAL
+  KEEP_SERVER
+  DISCARD_LOCAL
+  MERGE_MANUAL
+  AUTO_RESOLVED
+}
+
+enum ConflictResolutionStatus {
+  APPLIED
+  REVERTED
+}
+
+enum SyncLogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+enum SyncLogStatus {
+  PENDING
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum SessionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum RefreshTokenStatus {
+  ACTIVE
+  ROTATED
+  REVOKED
+  EXPIRED
+}

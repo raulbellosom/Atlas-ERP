@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Build outputs
+dist/
+build/
+.turbo/
+coverage/
+
+# Tauri (Rust — mantenido por rustfmt)
+apps/desktop/src-tauri/
+
+# Archivos generados por Prisma
+prisma/migrations/
+
+# Archivos de lock (no formatear)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Variables de entorno
+.env
+.env.*

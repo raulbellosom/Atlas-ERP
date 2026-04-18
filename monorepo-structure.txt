@@ -1,0 +1,54 @@
+﻿/business-platform/
+├─ apps/
+│  ├─ api/                    # Backend central NestJS + Prisma
+│  ├─ web/                    # React web app / PWA
+│  ├─ desktop/                # Tauri shell + integración local
+│  ├─ worker/                 # Jobs, colas, sincronización, tareas async
+│  └─ docs-site/              # Documentación interna opcional
+│
+├─ packages/
+│  ├─ ui/                     # Componentes reutilizables UI
+│  ├─ config/                 # Config compartida lint, prettier, tsconfig
+│  ├─ shared/                 # Constantes, enums, helpers cross-app
+│  ├─ sync-contracts/         # Contratos de sync, estados, tipos comunes
+│  ├─ domain-blueprints/      # Definiciones maestras de modelos y relaciones
+│  ├─ validation/             # Esquemas compartidos
+│  └─ sdk/                    # SDK interno para consumir la API
+│
+├─ prisma/
+│  ├─ schema.prisma
+│  ├─ migrations/
+│  └─ seeds/
+│
+├─ infra/
+│  ├─ docker/
+│  │  ├─ docker-compose.dev.yml
+│  │  ├─ docker-compose.staging.yml
+│  │  └─ docker-compose.prod.yml
+│  ├─ nginx/
+│  ├─ scripts/
+│  ├─ backup/
+│  └─ deploy/
+│
+├─ docs/
+│  ├─ 00-canon/
+│  ├─ 01-product/
+│  ├─ 02-architecture/
+│  ├─ 03-domain-blueprints/
+│  ├─ 04-modules/
+│  ├─ 05-sync/
+│  ├─ 06-security/
+│  ├─ 07-dev-workflow/
+│  ├─ 08-codex/
+│  └─ 09-roadmap/
+│
+├─ .github/
+│  └─ workflows/
+│
+├─ tools/
+│  ├─ generators/
+│  ├─ codemods/
+│  └─ prompts/
+│
+└─ README.md
+

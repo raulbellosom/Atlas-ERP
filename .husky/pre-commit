@@ -1,0 +1,6 @@
+#!/bin/sh
+# AtlasERP — pre-commit hook
+# Ejecuta lint-staged sobre los archivos en staging antes de cada commit.
+# Instalado por: pnpm prepare (husky)
+
+npx lint-staged

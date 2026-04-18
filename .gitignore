@@ -1,0 +1,48 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Variables de entorno — NUNCA versionar archivos con valores reales
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+out/
+.next/
+.output/
+
+# Caché de herramientas
+.turbo/
+.eslintcache
+.cache/
+*.tsbuildinfo
+
+# Desktop (Tauri)
+apps/desktop/src-tauri/target/
+
+# Base de datos SQLite local
+*.sqlite
+*.sqlite-journal
+*.db
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/migrations/migration_lock.toml

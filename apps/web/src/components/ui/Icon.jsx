@@ -1,0 +1,142 @@
+/**
+ * Biblioteca de iconos SVG inline minima.
+ * Uso sin dependencias externas en esta fase.
+ *
+ * Uso:
+ *   <Icon name="check" className="w-4 h-4 text-green-600" />
+ *   <Icon name="x" size={20} />
+ */
+
+const ICONS = {
+  check: (
+    <polyline points="20 6 9 17 4 12" />
+  ),
+  x: (
+    <>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </>
+  ),
+  "alert-triangle": (
+    <>
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </>
+  ),
+  "chevron-left": (
+    <polyline points="15 18 9 12 15 6" />
+  ),
+  "chevron-right": (
+    <polyline points="9 18 15 12 9 6" />
+  ),
+  "chevron-down": (
+    <polyline points="6 9 12 15 18 9" />
+  ),
+  "chevron-up": (
+    <polyline points="18 15 12 9 6 15" />
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  plus: (
+    <>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </>
+  ),
+  trash: (
+    <>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </>
+  ),
+  refresh: (
+    <>
+      <polyline points="1 4 1 10 7 10" />
+      <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </>
+  ),
+  user: (
+    <>
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </>
+  ),
+  wifi: (
+    <>
+      <path d="M1.42 9a16 16 0 0121.16 0" />
+      <path d="M5 12.55a11 11 0 0114.08 0" />
+      <path d="M8.53 16.11a6 6 0 016.95 0" />
+      <line x1="12" y1="20" x2="12.01" y2="20" />
+    </>
+  ),
+  "wifi-off": (
+    <>
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M16.72 11.06A10.94 10.94 0 0119 12.55" />
+      <path d="M5 12.55a11 11 0 015.17-2.39" />
+      <path d="M10.71 5.05A16 16 0 0122.56 9" />
+      <path d="M1.42 9a15.91 15.91 0 014.7-2.88" />
+      <path d="M8.53 16.11a6 6 0 016.95 0" />
+      <line x1="12" y1="20" x2="12.01" y2="20" />
+    </>
+  ),
+};
+
+/**
+ * @param {{ name: string, size?: number, className?: string }} props
+ */
+export default function Icon({ name, size = 16, className = "" }) {
+  const paths = ICONS[name];
+
+  if (!paths) {
+    if (import.meta.env.DEV) {
+      console.warn(`[Icon] icono desconocido: "${name}"`);
+    }
+    return null;
+  }
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      {paths}
+    </svg>
+  );
+}

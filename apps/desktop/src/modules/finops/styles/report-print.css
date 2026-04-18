@@ -1,0 +1,197 @@
+/**
+ * report-print.css — Estilos de impresión para reportes desktop AtlasERP.
+ *
+ * Se activan mediante la clase `.print-mode` aplicada temporalmente por
+ * `printReport.js` antes de llamar a `window.print()`.
+ *
+ * Página: carta landscape, margen 1 cm — acomoda tablas anchas (7+ columnas).
+ * Filas: page-break-inside avoid — sin cortes de fila entre páginas.
+ *
+ * Task origen: T-1610 (Fase 16 Bloque 3)
+ */
+
+/* ─── Configuración de página ─────────────────────────────────────────────── */
+
+@page {
+  size: letter landscape;
+  margin: 1cm;
+}
+
+/* ─── Ocultar cromo de la app al imprimir ─────────────────────────────────── */
+
+@media print {
+  /* Sidebar de navegación */
+  [data-print="hide"],
+  [class*="sidebar"],
+  [class*="Sidebar"],
+  nav,
+  aside,
+  /* Topbar / header de app */
+  header,
+  [class*="topbar"],
+  [class*="Topbar"],
+  [class*="navbar"],
+  /* Paneles de filtros y botones de exportación */
+  [data-report-filters],
+  [data-export-buttons],
+  [data-report-actions],
+  /* Botones de acción flotantes */
+  button:not([data-print="show"]),
+  /* Footer de app (no el footer del reporte) */
+  [data-app-footer] {
+    display: none !important;
+  }
+
+  /* Asegurarse de que el contenido del reporte ocupe toda la hoja */
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: black;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+  }
+
+  /* Contenedor principal sin padding lateral de app */
+  main,
+  [data-report-container],
+  .print-mode {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  /* ─── Encabezado del reporte (siempre visible) ──────────────────────────── */
+
+  [data-report-header] {
+    display: block !important;
+    margin-bottom: 12pt;
+  }
+
+  [data-report-header] h1,
+  [data-report-header] h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0 0 4pt;
+    color: #1e3a5f;
+  }
+
+  [data-report-header] p {
+    font-size: 9pt;
+    color: #555;
+    margin: 0;
+  }
+
+  /* ─── Tabla del reporte ─────────────────────────────────────────────────── */
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  thead {
+    display: table-header-group; /* Repite thead en cada página */
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  thead tr {
+    background-color: #1e3a5f !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  thead th {
+    padding: 6pt 8pt;
+    text-align: left;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: white !important;
+    border-bottom: none;
+  }
+
+  tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f4f6f8;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  tbody td {
+    padding: 5pt 8pt;
+    border-bottom: 1pt solid #e5e7eb;
+    vertical-align: top;
+  }
+
+  /* Columnas numéricas: alineación derecha */
+  td[data-col-type="number"],
+  td[data-col-type="currency"] {
+    text-align: right;
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  /* ─── Totales / sumario al final de la tabla ────────────────────────────── */
+
+  [data-report-totals] {
+    margin-top: 8pt;
+    border-top: 2pt solid #1e3a5f;
+    padding-top: 6pt;
+    font-size: 9pt;
+  }
+
+  [data-report-totals] strong {
+    font-weight: bold;
+    color: #1e3a5f;
+  }
+
+  /* ─── Footer de reporte (paginación) ────────────────────────────────────── */
+
+  [data-report-footer] {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: #888;
+    border-top: 1pt solid #e5e7eb;
+    padding: 4pt 0;
+  }
+
+  /* Número de página nativo via CSS (cuando el browser soporta @page counter) */
+  [data-report-footer]::after {
+    content: "Página " counter(page) " | Generado por AtlasERP";
+  }
+
+  /* ─── Utilidades de corte de página ─────────────────────────────────────── */
+
+  .page-break-before {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
