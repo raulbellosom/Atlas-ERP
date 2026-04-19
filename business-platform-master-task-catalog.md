@@ -2978,91 +2978,91 @@
 
 ## T-2400 Refinar alcance de HR Core
 
-- PENDIENTE
+- CERRADA
 
 ## T-2401 Definir entidades de HR
 
-- PENDIENTE
+- CERRADA
 
 ## T-2402 Crear modelos HR en Prisma
 
-- PENDIENTE
+- CERRADA
 
 ## T-2403 Crear migraciones HR
 
-- PENDIENTE
+- CERRADA
 
 ## T-2404 Crear seeds HR demo
 
-- PENDIENTE
+- CERRADA
 
 ## T-2405 Crear módulo backend Employees
 
-- PENDIENTE
+- CERRADA
 
 ## T-2406 Crear módulo backend Departments
 
-- PENDIENTE
+- CERRADA
 
 ## T-2407 Crear módulo backend Positions
 
-- PENDIENTE
+- CERRADA
 
 ## T-2408 Crear módulo backend Attendance
 
-- PENDIENTE
+- CERRADA
 
 ## T-2409 Crear módulo backend Incidents
 
-- PENDIENTE
+- CERRADA
 
 ## T-2410 Crear módulo backend Contracts/Documents
 
-- PENDIENTE
+- CERRADA
 
 ## T-2411 Crear endpoints HR base
 
-- PENDIENTE
+- CERRADA
 
 ## T-2412 Crear UI web de empleados
 
-- PENDIENTE
+- CERRADA
 
 ## T-2413 Crear UI web de asistencia
 
-- PENDIENTE
+- CERRADA
 
 ## T-2414 Crear UI web de incidencias
 
-- PENDIENTE
+- CERRADA
 
 ## T-2415 Crear UI web de documentos HR
 
-- PENDIENTE
+- CERRADA
 
 ## T-2416 Crear permisos HR
 
-- PENDIENTE
+- CERRADA
 
 ## T-2417 Crear reportes HR base
 
-- PENDIENTE
+- CERRADA
 
 ## T-2418 Crear integración con Financial Ops si aplica
 
-- PENDIENTE
+- CERRADA
 
 ## T-2419 Crear integración con futuras nóminas
 
-- PENDIENTE
+- CERRADA
 
 ## T-2420 Crear pruebas HR
 
-- PENDIENTE
+- CERRADA
 
 ## T-2421 Aprobar HR Core
 
-- PENDIENTE
+- CERRADA
 
 ---
 

@@ -51,6 +51,13 @@ model Organization {
   fiscalPeriods          FiscalPeriod[]
   journalEntries         JournalEntry[]
   accountingPostingErrors AccountingPostingError[]
+  departments             Department[]
+  positions               Position[]
+  employees               Employee[]
+  contracts               Contract[]
+  leaveRequests           LeaveRequest[]
+  leaveBalances           LeaveBalance[]
+  employeeDocuments       EmployeeDocument[]
 
   @@index([isActive])
   @@map("organizations")
@@ -1190,4 +1197,194 @@ enum JournalEntryStatus {
   DRAFT
   POSTED
   REVERSED
+}
+
+// ─── HR Core ──────────────────────────────────────────────────────────────────
+
+enum EmploymentStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+  SUSPENDED
+}
+
+enum ContractType {
+  PERMANENT
+  TEMPORARY
+  FREELANCE
+  INTERNSHIP
+}
+
+enum LeaveType {
+  VACATION
+  SICK
+  PERSONAL
+  MATERNITY
+  PATERNITY
+  UNPAID
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Department {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+  positions    Position[]
+
+  @@index([organizationId])
+  @@map("departments")
+}
+
+model Position {
+  id             String    @id @default(cuid())
+  organizationId String
+  departmentId   String
+  name           String
+  description    String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+  employees    Employee[]
+
+  @@index([organizationId])
+  @@index([departmentId])
+  @@map("positions")
+}
+
+model Employee {
+  id             String           @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  positionId     String?
+  employeeCode   String
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  curp           String?
+  rfc            String?
+  birthDate      DateTime?
+  hireDate       DateTime
+  status         EmploymentStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  organization  Organization       @relation(fields: [organizationId], references: [id])
+  department    Department?        @relation(fields: [departmentId], references: [id])
+  position      Position?          @relation(fields: [positionId], references: [id])
+  contracts     Contract[]
+  leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
+  documents     EmployeeDocument[]
+
+  @@unique([organizationId, employeeCode])
+  @@index([organizationId])
+  @@map("employees")
+}
+
+model Contract {
+  id             String       @id @default(cuid())
+  organizationId String
+  employeeId     String
+  contractType   ContractType
+  baseSalary     Decimal      @db.Decimal(14, 2)
+  currencyCode   String       @default("MXN")
+  startDate      DateTime
+  endDate        DateTime?
+  isActive       Boolean      @default(true)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId])
+  @@index([employeeId])
+  @@map("contracts")
+}
+
+model LeaveRequest {
+  id             String             @id @default(cuid())
+  organizationId String
+  employeeId     String
+  leaveType      LeaveType
+  status         LeaveRequestStatus @default(PENDING)
+  startDate      DateTime
+  endDate        DateTime
+  days           Decimal            @db.Decimal(5, 1)
+  reason         String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId])
+  @@index([employeeId])
+  @@map("leave_requests")
+}
+
+model LeaveBalance {
+  id             String    @id @default(cuid())
+  organizationId String
+  employeeId     String
+  leaveType      LeaveType
+  year           Int
+  totalDays      Decimal   @db.Decimal(5, 1)
+  usedDays       Decimal   @db.Decimal(5, 1) @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, leaveType, year])
+  @@index([organizationId])
+  @@map("leave_balances")
+}
+
+model EmployeeDocument {
+  id             String    @id @default(cuid())
+  organizationId String
+  employeeId     String
+  documentType   String
+  filename       String
+  mimeType       String?
+  sizeBytes      Int?
+  uploadedById   String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId])
+  @@index([employeeId])
+  @@map("employee_documents")
 }

@@ -84,6 +84,45 @@ export const prismaMock = {
     create: jest.fn(),
     update: jest.fn(),
   },
+  department: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  position: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  employee: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  contract: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    updateMany: jest.fn(),
+  },
+  leaveRequest: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  leaveBalance: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    upsert: jest.fn(),
+  },
+  employeeDocument: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+  },
   $transaction: jest.fn((fn: unknown): unknown =>
     typeof fn === 'function' ? (fn as (tx: unknown) => unknown)(prismaMock) : Promise.resolve(fn),
   ),
