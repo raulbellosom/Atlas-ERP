@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { LoggerModule } from 'nestjs-pino';
 import { RequestAuditInterceptor } from '../../common/interceptors/request-audit.interceptor';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -28,7 +30,9 @@ import { ReceivablesLiteModule } from '../receivables-lite/receivables-lite.modu
 import { RolesModule } from '../roles/roles.module';
 import { SettingsModule } from '../settings/settings.module';
 import { SessionsModule } from '../sessions/sessions.module';
+import { MetricsModule } from '../metrics/metrics.module';
 import { SyncModule } from '../sync/sync.module';
+import { TelemetryModule } from '../telemetry/telemetry.module';
 import { TransfersModule } from '../transfers/transfers.module';
 import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
@@ -36,7 +40,39 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env['LOG_LEVEL'] ?? 'info',
+        transport:
+          process.env['NODE_ENV'] !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+        serializers: {
+          req(req: Record<string, unknown>) {
+            const { authorization: _auth, ...safeHeaders } =
+              (req['headers'] as Record<string, unknown>) ?? {};
+            return { ...req, headers: safeHeaders };
+          },
+        },
+        customProps: (req: Record<string, unknown>) => {
+          const user = req['user'] as Record<string, unknown> | undefined;
+          return {
+            traceId:
+              (req['headers'] as Record<string, string>)?.['x-trace-id'] ?? crypto.randomUUID(),
+            userId: user?.['sub'],
+            organizationId: user?.['organizationId'],
+          };
+        },
+      },
+    }),
     ApiConfigModule,
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
     PrismaModule,
     SecurityModule,
     StorageModule,
@@ -61,6 +97,8 @@ import { AppService } from './app.service';
     SessionsModule,
     SettingsModule,
     SyncModule,
+    TelemetryModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

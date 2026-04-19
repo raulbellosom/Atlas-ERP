@@ -7,8 +7,9 @@
 /** @type {import("lint-staged").Config} */
 export default {
   // TypeScript y JavaScript: lint + format
-  "*.{ts,tsx}": ["eslint --fix --max-warnings=0", "prettier --write"],
-  "*.{js,jsx}": ["eslint --fix --max-warnings=0", "prettier --write"],
+  // --no-warn-ignored needed for ESLint v9 flat config in monorepo (files outside root config scope)
+  "*.{ts,tsx}": ["eslint --fix --max-warnings=0 --no-warn-ignored", "prettier --write"],
+  "*.{js,jsx}": ["eslint --fix --max-warnings=0 --no-warn-ignored", "prettier --write"],
 
   // JSON, YAML, Markdown: solo format
   "*.{json,jsonc}": ["prettier --write"],
