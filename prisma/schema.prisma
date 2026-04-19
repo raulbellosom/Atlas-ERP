@@ -46,6 +46,11 @@ model Organization {
   counterpartiesLite     CounterpartyLite[]
   receivablesLite        ReceivableLite[]
   payablesLite           PayableLite[]
+  chartOfAccounts        ChartOfAccount[]
+  postingRules           PostingRule[]
+  fiscalPeriods          FiscalPeriod[]
+  journalEntries         JournalEntry[]
+  accountingPostingErrors AccountingPostingError[]
 
   @@index([isActive])
   @@map("organizations")
@@ -329,6 +334,7 @@ model FinancialMovement {
   occurredAt     DateTime
   description    String?
   reference      String?
+  categoryCode   String?
   metadata       Json?
   isReconciled   Boolean                 @default(false)
   createdAt      DateTime                @default(now())
@@ -868,6 +874,137 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+// ─── Accounting Core ─────────────────────────────────────────────────────────
+
+model ChartOfAccount {
+  id             String      @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  accountType    AccountType
+  isActive       Boolean     @default(true)
+  parentId       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent       ChartOfAccount?    @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children     ChartOfAccount[]   @relation("AccountHierarchy")
+  debitRules   PostingRule[]      @relation("DebitAccount")
+  creditRules  PostingRule[]      @relation("CreditAccount")
+  debitLines   JournalEntryLine[] @relation("DebitLine")
+  creditLines  JournalEntryLine[] @relation("CreditLine")
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("chart_of_accounts")
+}
+
+model PostingRule {
+  id              String              @id @default(cuid())
+  organizationId  String
+  categoryCode    String
+  movementType    PostingMovementType
+  debitAccountId  String
+  creditAccountId String
+  description     String?
+  isActive        Boolean             @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  debitAccount   ChartOfAccount @relation("DebitAccount", fields: [debitAccountId], references: [id], onDelete: Restrict)
+  creditAccount  ChartOfAccount @relation("CreditAccount", fields: [creditAccountId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, categoryCode])
+  @@index([organizationId])
+  @@map("posting_rules")
+}
+
+model FiscalPeriod {
+  id             String             @id @default(cuid())
+  organizationId String
+  year           Int
+  month          Int
+  status         FiscalPeriodStatus @default(OPEN)
+  closedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  journalEntries JournalEntry[]
+
+  @@unique([organizationId, year, month])
+  @@index([organizationId])
+  @@map("fiscal_periods")
+}
+
+model JournalEntry {
+  id             String             @id @default(cuid())
+  organizationId String
+  fiscalPeriodId String
+  idempotencyKey String             @unique
+  description    String?
+  status         JournalEntryStatus @default(DRAFT)
+  postedAt       DateTime?
+  createdById    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  fiscalPeriod FiscalPeriod       @relation(fields: [fiscalPeriodId], references: [id], onDelete: Restrict)
+  lines        JournalEntryLine[]
+
+  @@index([organizationId])
+  @@index([fiscalPeriodId])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id              String   @id @default(cuid())
+  journalEntryId  String
+  debitAccountId  String?
+  creditAccountId String?
+  amount          Decimal
+  currencyCode    String   @default("MXN")
+  description     String?
+
+  createdAt DateTime @default(now())
+
+  journalEntry   JournalEntry    @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  debitAccount   ChartOfAccount? @relation("DebitLine", fields: [debitAccountId], references: [id], onDelete: SetNull)
+  creditAccount  ChartOfAccount? @relation("CreditLine", fields: [creditAccountId], references: [id], onDelete: SetNull)
+
+  @@index([journalEntryId])
+  @@map("journal_entry_lines")
+}
+
+model AccountingPostingError {
+  id             String    @id @default(cuid())
+  organizationId String
+  movementId     String
+  eventType      String
+  reason         String
+  payload        Json
+  retryCount     Int       @default(0)
+  resolvedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([movementId])
+  @@map("accounting_posting_errors")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
 enum SourceType {
   WEB
   DESKTOP
@@ -1027,4 +1164,30 @@ enum RefreshTokenStatus {
   ROTATED
   REVOKED
   EXPIRED
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+enum PostingMovementType {
+  INCOME
+  EXPENSE
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum FiscalPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  REVERSED
 }
