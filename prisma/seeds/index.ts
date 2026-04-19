@@ -14,6 +14,7 @@ import { seedUsers } from './users.seed';
 import { seedFeatureFlags } from './feature-flags.seed';
 import { seedSettings } from './settings.seed';
 import { seedFinancialOperationsCore } from './financial-operations.seed';
+import { seedAccounting } from './accounting.seed';
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
   await seedFeatureFlags(prisma);
   await seedSettings(prisma, organizationId);
   await seedFinancialOperationsCore(prisma, organizationId);
+  await seedAccounting(prisma, organizationId);
 
   console.log('[seeds] Pipeline completado con seeds foundation + financial demo activas.');
 }

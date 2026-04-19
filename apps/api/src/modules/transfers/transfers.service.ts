@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, SourceType, TransferStatus } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import {
+  ACCOUNTING_EVENTS,
+  TransferPostingPayload,
+} from '../accounting/events/financial-posting.payload';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ListTransfersQueryDto } from './dto/list-transfers.query.dto';
 import { UpdateTransferDto } from './dto/update-transfer.dto';
@@ -30,9 +35,12 @@ type TransferSummary = Prisma.TransferGetPayload<{ select: typeof TRANSFER_SELEC
 
 @Injectable()
 export class TransfersService {
+  private readonly logger = new Logger(TransfersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(input: CreateTransferDto): Promise<TransferSummary> {
@@ -73,6 +81,28 @@ export class TransfersService {
       },
     });
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'TRANSFER_CREATED',
+        transferId: created.id,
+        fromAccountId: created.fromBankAccountId,
+        toAccountId: created.toBankAccountId,
+      }),
+    );
+
+    const transferPayload: TransferPostingPayload = {
+      eventType: 'transfer.completed',
+      tenantId: created.organizationId,
+      transferId: created.id,
+      amount: Number(created.amount),
+      currency: created.currencyCode,
+      sourceAccountId: created.fromBankAccountId,
+      destinationAccountId: created.toBankAccountId,
+      transferDate: created.occurredAt,
+      userId: created.initiatedById ?? created.approvedById ?? '',
+    };
+    this.eventEmitter.emit(ACCOUNTING_EVENTS.TRANSFER_COMPLETED, transferPayload);
+
     return created;
   }
 
@@ -81,9 +111,7 @@ export class TransfersService {
       deletedAt: null,
       ...(query.organizationId ? { organizationId: query.organizationId } : {}),
       ...(query.branchId ? { branchId: query.branchId } : {}),
-      ...(query.fromBankAccountId
-        ? { fromBankAccountId: query.fromBankAccountId }
-        : {}),
+      ...(query.fromBankAccountId ? { fromBankAccountId: query.fromBankAccountId } : {}),
       ...(query.toBankAccountId ? { toBankAccountId: query.toBankAccountId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.from || query.to
@@ -129,9 +157,7 @@ export class TransfersService {
       ...(input.incomingMovementId !== undefined
         ? { incomingMovementId: input.incomingMovementId }
         : {}),
-      ...(input.initiatedById !== undefined
-        ? { initiatedById: input.initiatedById }
-        : {}),
+      ...(input.initiatedById !== undefined ? { initiatedById: input.initiatedById } : {}),
       ...(input.approvedById !== undefined ? { approvedById: input.approvedById } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.amount !== undefined ? { amount: input.amount } : {}),

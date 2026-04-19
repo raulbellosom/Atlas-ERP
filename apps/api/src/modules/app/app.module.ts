@@ -35,6 +35,7 @@ import { SyncModule } from '../sync/sync.module';
 import { TelemetryModule } from '../telemetry/telemetry.module';
 import { TransfersModule } from '../transfers/transfers.module';
 import { UsersModule } from '../users/users.module';
+import { AccountingModule } from '../accounting/accounting.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -99,6 +100,7 @@ import { AppService } from './app.service';
     SyncModule,
     TelemetryModule,
     MetricsModule,
+    AccountingModule,
   ],
   controllers: [AppController],
   providers: [

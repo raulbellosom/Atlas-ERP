@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { FinancialMovementStatus, Prisma, SourceType } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AttachmentsService } from '../attachments/attachments.service';
 import { AuditService } from '../audit/audit.service';
+import {
+  ACCOUNTING_EVENTS,
+  FinancialPostingPayload,
+} from '../accounting/events/financial-posting.payload';
 import { CreateFinancialMovementDto } from './dto/create-financial-movement.dto';
 import { ListFinancialMovementsQueryDto } from './dto/list-financial-movements.query.dto';
 import { UploadMovementAttachmentDto } from './dto/upload-movement-attachment.dto';
@@ -32,15 +37,16 @@ type FinancialMovementSummary = Prisma.FinancialMovementGetPayload<{
 
 @Injectable()
 export class FinancialMovementsService {
+  private readonly logger = new Logger(FinancialMovementsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly attachmentsService: AttachmentsService,
     private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async create(
-    input: CreateFinancialMovementDto,
-  ): Promise<FinancialMovementSummary> {
+  async create(input: CreateFinancialMovementDto): Promise<FinancialMovementSummary> {
     const created = await this.prisma.financialMovement.create({
       data: {
         organizationId: input.organizationId,
@@ -54,6 +60,7 @@ export class FinancialMovementsService {
         occurredAt: new Date(input.occurredAt),
         description: input.description,
         reference: input.reference,
+        categoryCode: (input as any).categoryCode,
         isReconciled: input.isReconciled ?? false,
       },
       select: FINANCIAL_MOVEMENT_SELECT,
@@ -76,12 +83,33 @@ export class FinancialMovementsService {
       },
     });
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'MOVEMENT_CREATED',
+        movementId: created.id,
+        type: created.movementType,
+        accountId: created.bankAccountId,
+      }),
+    );
+
+    const eventPayload: FinancialPostingPayload = {
+      eventType: 'financial.movement.created',
+      tenantId: created.organizationId,
+      movementId: created.id,
+      amount: Number(created.amount),
+      currency: created.currencyCode,
+      bankAccountId: created.bankAccountId,
+      categoryCode: (input as any).categoryCode ?? created.movementType,
+      movementDate: created.occurredAt,
+      description: created.description ?? '',
+      userId: input.createdById ?? '',
+    };
+    this.eventEmitter.emit(ACCOUNTING_EVENTS.FINANCIAL_MOVEMENT_CREATED, eventPayload);
+
     return created;
   }
 
-  async findAll(
-    query: ListFinancialMovementsQueryDto,
-  ): Promise<FinancialMovementSummary[]> {
+  async findAll(query: ListFinancialMovementsQueryDto): Promise<FinancialMovementSummary[]> {
     const where: Prisma.FinancialMovementWhereInput = {
       deletedAt: null,
       ...(query.organizationId ? { organizationId: query.organizationId } : {}),
@@ -90,9 +118,7 @@ export class FinancialMovementsService {
       ...(query.createdById ? { createdById: query.createdById } : {}),
       ...(query.movementType ? { movementType: query.movementType } : {}),
       ...(query.status ? { status: query.status } : {}),
-      ...(query.isReconciled !== undefined
-        ? { isReconciled: query.isReconciled }
-        : {}),
+      ...(query.isReconciled !== undefined ? { isReconciled: query.isReconciled } : {}),
       ...(query.from || query.to
         ? {
             occurredAt: {
@@ -132,24 +158,16 @@ export class FinancialMovementsService {
     }
 
     const data: Prisma.FinancialMovementUncheckedUpdateInput = {
-      ...(input.bankAccountId !== undefined
-        ? { bankAccountId: input.bankAccountId }
-        : {}),
+      ...(input.bankAccountId !== undefined ? { bankAccountId: input.bankAccountId } : {}),
       ...(input.branchId !== undefined ? { branchId: input.branchId } : {}),
-      ...(input.movementType !== undefined
-        ? { movementType: input.movementType }
-        : {}),
+      ...(input.movementType !== undefined ? { movementType: input.movementType } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.amount !== undefined ? { amount: input.amount } : {}),
       ...(input.currencyCode !== undefined ? { currencyCode: input.currencyCode } : {}),
-      ...(input.occurredAt !== undefined
-        ? { occurredAt: new Date(input.occurredAt) }
-        : {}),
+      ...(input.occurredAt !== undefined ? { occurredAt: new Date(input.occurredAt) } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.reference !== undefined ? { reference: input.reference } : {}),
-      ...(input.isReconciled !== undefined
-        ? { isReconciled: input.isReconciled }
-        : {}),
+      ...(input.isReconciled !== undefined ? { isReconciled: input.isReconciled } : {}),
     };
 
     const updated = await this.prisma.financialMovement.update({
@@ -226,9 +244,7 @@ export class FinancialMovementsService {
     }
 
     if (dto.organizationId !== movement.organizationId) {
-      throw new NotFoundException(
-        'El movimiento no pertenece a la organización enviada.',
-      );
+      throw new NotFoundException('El movimiento no pertenece a la organización enviada.');
     }
 
     const attachment = await this.attachmentsService.uploadAttachment(
