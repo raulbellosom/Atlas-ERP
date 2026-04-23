@@ -11,46 +11,55 @@ datasource db {
 }
 
 model Organization {
-  id        String    @id @default(cuid())
-  name      String
-  slug      String    @unique
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  legalName        String?
+  commercialName   String?
+  primaryColor     String?
+  address          String?
+  logoAttachmentId String?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
 
-  branches               Branch[]
-  users                  User[]
-  roles                  Role[]
-  auditLogs              AuditLog[]
-  attachments            Attachment[]
-  settings               Setting[]
-  devices                DeviceRegistry[]
-  syncSessions           SyncSession[]
-  syncItems              SyncItem[]
-  conflicts              ConflictRecord[]
-  conflictResolutions    ConflictResolution[]
-  syncLogs               SyncLog[]
-  notifications          Notification[]
-  sessions               Session[]
-  refreshTokens          RefreshToken[]
-  passwordResetTokens    PasswordResetToken[]
-  bankAccountTypes       BankAccountType[]
-  bankAccounts           BankAccount[]
-  financialMovements     FinancialMovement[]
-  movementAttachments    FinancialMovementAttachment[]
-  transfers              Transfer[]
-  reconciliationSessions ReconciliationSession[]
-  reconciliationItems    ReconciliationItem[]
-  balanceSnapshots       BalanceSnapshot[]
-  counterpartiesLite     CounterpartyLite[]
-  receivablesLite        ReceivableLite[]
-  payablesLite           PayableLite[]
-  chartOfAccounts        ChartOfAccount[]
-  postingRules           PostingRule[]
-  fiscalPeriods          FiscalPeriod[]
-  journalEntries         JournalEntry[]
+  logoAttachment          Attachment?                   @relation("OrganizationLogo", fields: [logoAttachmentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  branches                Branch[]
+  users                   User[]
+  roles                   Role[]
+  auditLogs               AuditLog[]
+  attachments             Attachment[]
+  settings                Setting[]
+  devices                 DeviceRegistry[]
+  syncSessions            SyncSession[]
+  syncItems               SyncItem[]
+  conflicts               ConflictRecord[]
+  conflictResolutions     ConflictResolution[]
+  syncLogs                SyncLog[]
+  notifications           Notification[]
+  sessions                Session[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  bankAccountTypes        BankAccountType[]
+  bankAccounts            BankAccount[]
+  financialMovements      FinancialMovement[]
+  movementAttachments     FinancialMovementAttachment[]
+  transfers               Transfer[]
+  reconciliationSessions  ReconciliationSession[]
+  reconciliationItems     ReconciliationItem[]
+  balanceSnapshots        BalanceSnapshot[]
+  counterpartiesLite      CounterpartyLite[]
+  receivablesLite         ReceivableLite[]
+  payablesLite            PayableLite[]
+  chartOfAccounts         ChartOfAccount[]
+  postingRules            PostingRule[]
+  fiscalPeriods           FiscalPeriod[]
+  journalEntries          JournalEntry[]
   accountingPostingErrors AccountingPostingError[]
+  taskCatalogItems        TaskCatalogItem[]
+  taskStatusHistory       TaskStatusHistory[]
+  taskIngestionRuns       TaskIngestionRun[]
   departments             Department[]
   positions               Position[]
   employees               Employee[]
@@ -58,8 +67,12 @@ model Organization {
   leaveRequests           LeaveRequest[]
   leaveBalances           LeaveBalance[]
   employeeDocuments       EmployeeDocument[]
+  moduleInstallations     TenantModuleInstallation[]
+  moduleInstallJobs       ModuleInstallJob[]
+  moduleAuditEvents       ModuleLifecycleAuditEvent[]
 
   @@index([isActive])
+  @@index([logoAttachmentId])
   @@map("organizations")
 }
 
@@ -129,6 +142,9 @@ model User {
   createdCounterpartiesLite    CounterpartyLite[]            @relation("UserCreatedCounterpartiesLite")
   createdReceivablesLite       ReceivableLite[]              @relation("UserCreatedReceivablesLite")
   createdPayablesLite          PayableLite[]                 @relation("UserCreatedPayablesLite")
+  assignedTaskCatalogItems     TaskCatalogItem[]             @relation("TaskAssigneeUser")
+  taskStatusChanges            TaskStatusHistory[]           @relation("TaskStatusChangedBy")
+  taskIngestionRunsTriggered   TaskIngestionRun[]            @relation("TaskIngestionTriggeredBy")
 
   @@unique([organizationId, email])
   @@index([organizationId, isActive])
@@ -148,11 +164,12 @@ model Role {
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
 
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  parentRole      Role?            @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
-  childRoles      Role[]           @relation("RoleHierarchy")
-  userRoles       UserRole[]
-  rolePermissions RolePermission[]
+  organization             Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  parentRole               Role?             @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  childRoles               Role[]            @relation("RoleHierarchy")
+  userRoles                UserRole[]
+  rolePermissions          RolePermission[]
+  assignedTaskCatalogItems TaskCatalogItem[] @relation("TaskAssigneeRole")
 
   @@unique([organizationId, name])
   @@index([organizationId, isActive])
@@ -245,6 +262,7 @@ model Attachment {
   deletedAt      DateTime?
 
   organization        Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  logoOrganizations   Organization[]                @relation("OrganizationLogo")
   uploadedBy          User?                         @relation("UserAttachments", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   movementAttachments FinancialMovementAttachment[]
 
@@ -271,6 +289,34 @@ model Setting {
   @@index([key])
   @@index([isActive])
   @@map("settings")
+}
+
+model SetupState {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("setup_states")
+}
+
+model SetupUpload {
+  id          String    @id @default(cuid())
+  storagePath String    @unique
+  filename    String
+  mimeType    String
+  sizeBytes   Int
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([expiresAt])
+  @@index([consumedAt])
+  @@map("setup_uploads")
 }
 
 model BankAccountType {
@@ -921,9 +967,9 @@ model PostingRule {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  debitAccount   ChartOfAccount @relation("DebitAccount", fields: [debitAccountId], references: [id], onDelete: Restrict)
-  creditAccount  ChartOfAccount @relation("CreditAccount", fields: [creditAccountId], references: [id], onDelete: Restrict)
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  debitAccount  ChartOfAccount @relation("DebitAccount", fields: [debitAccountId], references: [id], onDelete: Restrict)
+  creditAccount ChartOfAccount @relation("CreditAccount", fields: [creditAccountId], references: [id], onDelete: Restrict)
 
   @@unique([organizationId, categoryCode])
   @@index([organizationId])
@@ -972,19 +1018,19 @@ model JournalEntry {
 }
 
 model JournalEntryLine {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   journalEntryId  String
   debitAccountId  String?
   creditAccountId String?
   amount          Decimal
-  currencyCode    String   @default("MXN")
+  currencyCode    String  @default("MXN")
   description     String?
 
   createdAt DateTime @default(now())
 
-  journalEntry   JournalEntry    @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-  debitAccount   ChartOfAccount? @relation("DebitLine", fields: [debitAccountId], references: [id], onDelete: SetNull)
-  creditAccount  ChartOfAccount? @relation("CreditLine", fields: [creditAccountId], references: [id], onDelete: SetNull)
+  journalEntry  JournalEntry    @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  debitAccount  ChartOfAccount? @relation("DebitLine", fields: [debitAccountId], references: [id], onDelete: SetNull)
+  creditAccount ChartOfAccount? @relation("CreditLine", fields: [creditAccountId], references: [id], onDelete: SetNull)
 
   @@index([journalEntryId])
   @@map("journal_entry_lines")
@@ -1011,6 +1057,116 @@ model AccountingPostingError {
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
+
+model TaskCatalogItem {
+  id                String       @id @default(cuid())
+  taskKey           String
+  title             String
+  description       String?
+  status            TaskStatus   @default(DRAFT)
+  priority          TaskPriority @default(MEDIUM)
+  category          TaskCategory @default(OTHER)
+  moduleKey         String?
+  featureKey        String?
+  deadlineAt        DateTime?
+  assigneeUserId    String?
+  assigneeRoleId    String?
+  organizationId    String?
+  source            TaskSource
+  sourceRef         String?
+  sourceFingerprint String?
+  sourceLastSeenAt  DateTime?
+  metadata          Json?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  organization  Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assigneeUser  User?               @relation("TaskAssigneeUser", fields: [assigneeUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assigneeRole  Role?               @relation("TaskAssigneeRole", fields: [assigneeRoleId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  dependencies  TaskDependency[]    @relation("TaskDependenciesFrom")
+  blockedBy     TaskDependency[]    @relation("TaskDependenciesTo")
+  statusHistory TaskStatusHistory[]
+
+  @@unique([taskKey, source])
+  @@index([taskKey])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([moduleKey])
+  @@index([deadlineAt])
+  @@index([assigneeUserId])
+  @@index([assigneeRoleId])
+  @@index([source])
+  @@index([organizationId])
+  @@map("task_catalog_items")
+}
+
+model TaskDependency {
+  id              String             @id @default(cuid())
+  taskId          String
+  dependsOnTaskId String
+  type            TaskDependencyType @default(BLOCKS)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  task      TaskCatalogItem @relation("TaskDependenciesFrom", fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  dependsOn TaskCatalogItem @relation("TaskDependenciesTo", fields: [dependsOnTaskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([taskId, dependsOnTaskId, type])
+  @@index([taskId])
+  @@index([dependsOnTaskId])
+  @@index([type])
+  @@map("task_dependencies")
+}
+
+model TaskStatusHistory {
+  id              String      @id @default(cuid())
+  taskId          String
+  fromStatus      TaskStatus?
+  toStatus        TaskStatus
+  changedByUserId String?
+  reason          String?
+  organizationId  String?
+  createdAt       DateTime    @default(now())
+
+  task         TaskCatalogItem @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  changedBy    User?           @relation("TaskStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  organization Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([changedByUserId])
+  @@index([organizationId])
+  @@index([toStatus])
+  @@map("task_status_history")
+}
+
+model TaskIngestionRun {
+  id                String      @id @default(cuid())
+  source            TaskSource?
+  status            String
+  scannedCount      Int         @default(0)
+  upsertedCount     Int         @default(0)
+  archivedCount     Int         @default(0)
+  errorCount        Int         @default(0)
+  errors            Json?
+  startedAt         DateTime    @default(now())
+  finishedAt        DateTime?
+  organizationId    String?
+  triggeredByUserId String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  triggeredBy  User?         @relation("TaskIngestionTriggeredBy", fields: [triggeredByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([startedAt])
+  @@index([source, startedAt])
+  @@index([status, startedAt])
+  @@index([organizationId])
+  @@index([triggeredByUserId])
+  @@map("task_ingestion_runs")
+}
 
 enum SourceType {
   WEB
@@ -1158,6 +1314,47 @@ enum NotificationStatus {
   UNREAD
   READ
   ARCHIVED
+}
+
+enum TaskStatus {
+  DRAFT
+  IN_PROGRESS
+  BLOCKED
+  REVIEW
+  CLOSED
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskSource {
+  DOC_MASTER
+  DOC_TASK_FILE
+  DOC_PENDING_REGISTRY
+  CODE_TODO
+  CODE_GAP
+  MANUAL
+}
+
+enum TaskCategory {
+  API
+  WORKER
+  DATABASE
+  DESKTOP
+  WEB
+  DOCS
+  INFRA
+  OTHER
+}
+
+enum TaskDependencyType {
+  BLOCKS
+  RELATES
 }
 
 enum SessionStatus {
@@ -1355,7 +1552,7 @@ model LeaveBalance {
   leaveType      LeaveType
   year           Int
   totalDays      Decimal   @db.Decimal(5, 1)
-  usedDays       Decimal   @db.Decimal(5, 1) @default(0)
+  usedDays       Decimal   @default(0) @db.Decimal(5, 1)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -1387,4 +1584,137 @@ model EmployeeDocument {
   @@index([organizationId])
   @@index([employeeId])
   @@map("employee_documents")
+}
+
+// ─── Module Store ─────────────────────────────────────────────────────────────
+
+enum ModuleLifecycleState {
+  ACTIVE
+  DEPRECATED
+  DISABLED
+}
+
+enum ModuleInstallStatus {
+  INSTALLED
+  DISABLED
+  UPGRADING
+  ERROR
+}
+
+enum ModuleJobOperation {
+  INSTALL
+  UNINSTALL
+  UPGRADE
+}
+
+enum ModuleJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+}
+
+model ModuleDefinition {
+  moduleKey      String               @id
+  name           String
+  description    String?
+  isCore         Boolean              @default(false)
+  ownerModule    String?
+  lifecycleState ModuleLifecycleState @default(ACTIVE)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  versions      ModuleVersion[]
+  dependencies  ModuleDependency[]          @relation("SourceModule")
+  dependents    ModuleDependency[]          @relation("DependsOnModule")
+  installations TenantModuleInstallation[]
+  jobs          ModuleInstallJob[]
+  auditEvents   ModuleLifecycleAuditEvent[]
+
+  @@map("module_definitions")
+}
+
+model ModuleVersion {
+  id                 String   @id @default(cuid())
+  moduleKey          String
+  version            String
+  compatibilityRange String
+  manifestChecksum   String
+  publishedAt        DateTime @default(now())
+
+  module ModuleDefinition @relation(fields: [moduleKey], references: [moduleKey], onDelete: Cascade)
+
+  @@unique([moduleKey, version])
+  @@map("module_versions")
+}
+
+model ModuleDependency {
+  id                 String  @id @default(cuid())
+  moduleKey          String
+  dependsOnModuleKey String
+  versionConstraint  String
+  isHardDependency   Boolean @default(true)
+
+  module    ModuleDefinition @relation("SourceModule", fields: [moduleKey], references: [moduleKey], onDelete: Cascade)
+  dependsOn ModuleDefinition @relation("DependsOnModule", fields: [dependsOnModuleKey], references: [moduleKey], onDelete: Restrict)
+
+  @@unique([moduleKey, dependsOnModuleKey])
+  @@map("module_dependencies")
+}
+
+model TenantModuleInstallation {
+  id             String              @id @default(cuid())
+  organizationId String
+  moduleKey      String
+  version        String
+  status         ModuleInstallStatus @default(INSTALLED)
+  installedAt    DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  lastJobId      String?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  module       ModuleDefinition @relation(fields: [moduleKey], references: [moduleKey], onDelete: Restrict)
+
+  @@unique([organizationId, moduleKey])
+  @@map("tenant_module_installations")
+}
+
+model ModuleInstallJob {
+  id             String             @id @default(cuid())
+  organizationId String
+  moduleKey      String
+  operation      ModuleJobOperation
+  status         ModuleJobStatus    @default(PENDING)
+  requestId      String             @unique
+  traceId        String?
+  logJson        Json?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  module       ModuleDefinition @relation(fields: [moduleKey], references: [moduleKey], onDelete: Restrict)
+
+  @@index([organizationId, status])
+  @@index([requestId])
+  @@map("module_install_jobs")
+}
+
+model ModuleLifecycleAuditEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  moduleKey      String
+  action         String
+  actorUserId    String
+  beforeState    Json?
+  afterState     Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  module       ModuleDefinition @relation(fields: [moduleKey], references: [moduleKey], onDelete: Restrict)
+
+  @@index([organizationId, moduleKey])
+  @@map("module_lifecycle_audit_events")
 }

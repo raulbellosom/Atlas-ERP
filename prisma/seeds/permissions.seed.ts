@@ -176,6 +176,37 @@ const FOUNDATION_PERMISSIONS: PermissionSeed[] = [
     action: 'attachment.write',
     description: 'Subir y vincular adjuntos en operaciones financieras.',
   },
+  {
+    key: 'module_store:read',
+    module: 'module_store',
+    action: 'read',
+    description: 'Consultar catálogo de módulos e instalaciones por instancia.',
+  },
+  {
+    key: 'module_store:install',
+    module: 'module_store',
+    action: 'install',
+    description: 'Instalar módulos en la instancia.',
+  },
+  {
+    key: 'module_store:uninstall',
+    module: 'module_store',
+    action: 'uninstall',
+    description: 'Desinstalar (deshabilitar) módulos en la instancia.',
+  },
+  {
+    key: 'module_store:upgrade',
+    module: 'module_store',
+    action: 'upgrade',
+    description: 'Actualizar versión de un módulo instalado.',
+  },
+  {
+    key: 'module_store:admin',
+    module: 'module_store',
+    action: 'admin',
+    description:
+      'Administrar el catálogo global de módulos (agregar versiones, cambiar lifecycle).',
+  },
 ];
 
 const ROLE_PERMISSION_KEYS: Record<string, string[]> = {
@@ -277,7 +308,9 @@ export async function seedPermissionsAndRoleMapping(
       const permissionId = permissionByKey.get(permissionKey);
 
       if (!permissionId) {
-        throw new Error(`[seeds][permissions] Permiso no encontrado para mapping: ${permissionKey}`);
+        throw new Error(
+          `[seeds][permissions] Permiso no encontrado para mapping: ${permissionKey}`,
+        );
       }
 
       await prisma.rolePermission.upsert({

@@ -37,6 +37,7 @@ import { TransfersModule } from '../transfers/transfers.module';
 import { UsersModule } from '../users/users.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { HrModule } from '../hr/hr.module';
+import { ModuleStoreModule } from '../module-store/module-store.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -103,6 +104,7 @@ import { AppService } from './app.service';
     MetricsModule,
     AccountingModule,
     HrModule,
+    ModuleStoreModule,
   ],
   controllers: [AppController],
   providers: [
