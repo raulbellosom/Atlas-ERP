@@ -21,6 +21,7 @@ const mockPrisma = {
   },
   moduleInstallJob: {
     create: jest.fn(),
+    update: jest.fn(),
     findFirst: jest.fn(),
   },
   moduleLifecycleAuditEvent: {
@@ -30,13 +31,22 @@ const mockPrisma = {
 
 describe('ModuleStoreService', () => {
   let service: ModuleStoreService;
+  const originalProvider = process.env.MODULE_STORE_PROVIDER;
+  const originalRolloutStage = process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    delete process.env.MODULE_STORE_PROVIDER;
+    delete process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE;
     const module = await Test.createTestingModule({
       providers: [ModuleStoreService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
     service = module.get(ModuleStoreService);
+  });
+
+  afterAll(() => {
+    process.env.MODULE_STORE_PROVIDER = originalProvider;
+    process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = originalRolloutStage;
   });
 
   describe('getCatalog', () => {
@@ -80,6 +90,86 @@ describe('ModuleStoreService', () => {
   });
 
   describe('install', () => {
+    it('rejects remote package without security metadata when provider is remote', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'hr',
+        version: '2.0.0',
+        manifestChecksum: 'checksum-hr-2-0-0',
+      });
+
+      await expect(
+        service.install({ organizationId: 'org-1', moduleKey: 'hr', version: '2.0.0' }, 'user-1'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('enforces canary organization allowlist for remote packages', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'accounting',
+        version: '1.0.0',
+        manifestChecksum: 'curated-v1',
+      });
+
+      await expect(
+        service.install(
+          { organizationId: 'org-not-canary', moduleKey: 'accounting', version: '1.0.0' },
+          'user-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('throws ConflictException if module has no interoperability contract', async () => {
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'custom-module',
+        version: '1.0.0',
+      });
+
+      await expect(
+        service.install(
+          { organizationId: 'org-1', moduleKey: 'custom-module', version: '1.0.0' },
+          'user-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('returns existing job when requestId already exists (idempotent)', async () => {
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'accounting',
+        version: '1.0.0',
+      });
+      mockPrisma.moduleInstallJob.findFirst.mockResolvedValue({
+        id: 'job-existing',
+        status: 'COMPLETED',
+        requestId: 'req-123',
+      });
+
+      const result = await service.install(
+        {
+          organizationId: 'org-1',
+          moduleKey: 'accounting',
+          version: '1.0.0',
+          requestId: 'req-123',
+        },
+        'user-1',
+      );
+
+      expect(result.id).toBe('job-existing');
+      expect(mockPrisma.moduleInstallJob.create).not.toHaveBeenCalled();
+    });
+
     it('throws ConflictException if module already installed', async () => {
       mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue({
         moduleKey: 'accounting',
@@ -113,6 +203,10 @@ describe('ModuleStoreService', () => {
         version: '1.0.0',
       });
       mockPrisma.moduleInstallJob.create.mockResolvedValue({
+        id: 'job-1',
+        status: 'RUNNING',
+      });
+      mockPrisma.moduleInstallJob.update.mockResolvedValue({
         id: 'job-1',
         status: 'COMPLETED',
       });
@@ -152,6 +246,10 @@ describe('ModuleStoreService', () => {
       mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
       mockPrisma.moduleInstallJob.create.mockResolvedValue({
         id: 'job-2',
+        status: 'RUNNING',
+      });
+      mockPrisma.moduleInstallJob.update.mockResolvedValue({
+        id: 'job-2',
         status: 'COMPLETED',
       });
       mockPrisma.tenantModuleInstallation.update.mockResolvedValue({});
@@ -189,6 +287,69 @@ describe('ModuleStoreService', () => {
       });
       const result = await service.getJob('job-1', 'org-1');
       expect(result.id).toBe('job-1');
+    });
+  });
+
+  describe('upgrade', () => {
+    it('throws NotFoundException if module is not installed', async () => {
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.upgrade(
+          {
+            organizationId: 'org-1',
+            moduleKey: 'accounting',
+            fromVersion: '1.0.0',
+            toVersion: '1.1.0',
+          },
+          'user-1',
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws ConflictException if fromVersion does not match installed version', async () => {
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue({ version: '1.0.1' });
+
+      await expect(
+        service.upgrade(
+          {
+            organizationId: 'org-1',
+            moduleKey: 'accounting',
+            fromVersion: '1.0.0',
+            toVersion: '1.1.0',
+          },
+          'user-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('upgrades module and returns completed job', async () => {
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue({ version: '1.0.0' });
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({ version: '1.1.0' });
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleInstallJob.create.mockResolvedValue({
+        id: 'job-upgrade-1',
+        status: 'RUNNING',
+      });
+      mockPrisma.moduleInstallJob.update.mockResolvedValue({
+        id: 'job-upgrade-1',
+        status: 'COMPLETED',
+      });
+      mockPrisma.tenantModuleInstallation.update.mockResolvedValue({});
+      mockPrisma.moduleLifecycleAuditEvent.create.mockResolvedValue({});
+
+      const result = await service.upgrade(
+        {
+          organizationId: 'org-1',
+          moduleKey: 'accounting',
+          fromVersion: '1.0.0',
+          toVersion: '1.1.0',
+        },
+        'user-1',
+      );
+
+      expect(result.status).toBe('COMPLETED');
+      expect(mockPrisma.tenantModuleInstallation.update).toHaveBeenCalled();
     });
   });
 });

@@ -1,6 +1,6 @@
 import { IsOptional, IsString, MinLength } from 'class-validator';
 
-export class InstallModuleDto {
+export class UpgradeModuleDto {
   @IsString()
   @MinLength(1)
   organizationId!: string;
@@ -11,7 +11,11 @@ export class InstallModuleDto {
 
   @IsString()
   @MinLength(1)
-  version!: string;
+  fromVersion!: string;
+
+  @IsString()
+  @MinLength(1)
+  toVersion!: string;
 
   @IsOptional()
   @IsString()

@@ -1,4 +1,4 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UninstallModuleDto {
   @IsString()
@@ -8,4 +8,9 @@ export class UninstallModuleDto {
   @IsString()
   @MinLength(1)
   moduleKey!: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  requestId?: string;
 }
