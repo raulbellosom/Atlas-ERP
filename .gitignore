@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # Dependencias
 node_modules/
 .pnpm-store/
