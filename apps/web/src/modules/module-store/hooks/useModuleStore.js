@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { moduleStoreApi } from '../api/moduleStore.api.js';
 import { addModuleVersion, setModuleLifecycle } from '../api/module-store.api.js';
+import { INSTALLED_MODULES_QUERY_KEY } from '@/hooks/useInstalledModules';
 
 export function useModuleCatalog(params = {}) {
   return useQuery({
@@ -24,7 +25,7 @@ export function useInstallModule(organizationId) {
   return useMutation({
     mutationFn: (payload) => moduleStoreApi.install(payload, organizationId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['module-store', 'installed', organizationId] });
+      qc.invalidateQueries({ queryKey: INSTALLED_MODULES_QUERY_KEY });
     },
   });
 }
@@ -34,7 +35,7 @@ export function useUninstallModule(organizationId) {
   return useMutation({
     mutationFn: (payload) => moduleStoreApi.uninstall(payload, organizationId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['module-store', 'installed', organizationId] });
+      qc.invalidateQueries({ queryKey: INSTALLED_MODULES_QUERY_KEY });
     },
   });
 }
@@ -44,7 +45,7 @@ export function useUpgradeModule(organizationId) {
   return useMutation({
     mutationFn: (payload) => moduleStoreApi.upgrade(payload, organizationId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['module-store', 'installed', organizationId] });
+      qc.invalidateQueries({ queryKey: INSTALLED_MODULES_QUERY_KEY });
     },
   });
 }

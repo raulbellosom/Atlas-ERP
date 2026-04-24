@@ -123,7 +123,7 @@ export default function ModuleStorePage() {
     error: installedError,
     refetch: refetchInstalled,
   } = useQuery({
-    queryKey: ['module-store-installed', organizationId],
+    queryKey: INSTALLED_MODULES_QUERY_KEY,
     queryFn: fetchInstalledModules,
     enabled: Boolean(organizationId),
   });
@@ -150,10 +150,13 @@ export default function ModuleStorePage() {
     () => modules.find((row) => row.moduleKey === selectedModuleKey) ?? null,
     [modules, selectedModuleKey],
   );
+  const selectedModuleLifecycleState = selectedModule?.lifecycleState ?? null;
 
   useEffect(() => {
-    if (selectedModule) setAdminLifecycle(selectedModule.lifecycleState ?? 'ACTIVE');
-  }, [selectedModule?.moduleKey]);
+    if (selectedModuleLifecycleState) {
+      setAdminLifecycle(selectedModuleLifecycleState);
+    }
+  }, [selectedModuleLifecycleState]);
 
   const handleSaveLifecycle = useCallback(async () => {
     if (!selectedModule) return;
@@ -220,7 +223,7 @@ export default function ModuleStorePage() {
     const status = currentJobQuery.data?.status;
     if (!status) return;
     if (status === 'COMPLETED') {
-      void queryClient.invalidateQueries({ queryKey: ['module-store-installed'] });
+      void queryClient.invalidateQueries({ queryKey: INSTALLED_MODULES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['module-store-catalog'] });
       toast.success('Operación completada correctamente.');
       setActiveJobId(null);
@@ -300,7 +303,7 @@ export default function ModuleStorePage() {
       }
       try {
         await executeOnlineOperation(op);
-        await queryClient.invalidateQueries({ queryKey: ['module-store-installed'] });
+        await queryClient.invalidateQueries({ queryKey: INSTALLED_MODULES_QUERY_KEY });
         await queryClient.invalidateQueries({ queryKey: ['module-store-catalog'] });
       } catch (err) {
         handleError(err);
