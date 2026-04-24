@@ -21,12 +21,12 @@ import { ListFinancialMovementsQueryDto } from './dto/list-financial-movements.q
 import { UploadMovementAttachmentDto } from './dto/upload-movement-attachment.dto';
 import { UpdateFinancialMovementDto } from './dto/update-financial-movement.dto';
 import { FinancialMovementsService } from './financial-movements.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/financial-movements')
 export class FinancialMovementsController {
-  constructor(
-    private readonly financialMovementsService: FinancialMovementsService,
-  ) {}
+  constructor(private readonly financialMovementsService: FinancialMovementsService) {}
 
   @RequireAllPermissions('finops:financial_movement:write')
   @Post()
@@ -68,12 +68,7 @@ export class FinancialMovementsController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentOrganizationId() requesterOrganizationId?: string,
   ) {
-    return this.financialMovementsService.uploadProof(
-      id,
-      dto,
-      file,
-      requesterOrganizationId,
-    );
+    return this.financialMovementsService.uploadProof(id, dto, file, requesterOrganizationId);
   }
 
   @RequireAllPermissions('finops:financial_movement:read')
@@ -84,10 +79,7 @@ export class FinancialMovementsController {
 
   @RequireAllPermissions('finops:financial_movement:write')
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateFinancialMovementDto,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdateFinancialMovementDto) {
     const updated = await this.financialMovementsService.update(id, dto);
     if (!updated) {
       throw new NotFoundException('Movimiento financiero no encontrado.');

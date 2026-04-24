@@ -15,7 +15,9 @@ import { BalanceSummaryQueryDto } from './dto/balance-summary.query.dto';
 import { ListBankAccountsQueryDto } from './dto/list-bank-accounts.query.dto';
 import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
 import { BankAccountsService } from './bank-accounts.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/bank-accounts')
 export class BankAccountsController {
   constructor(private readonly bankAccountsService: BankAccountsService) {}

@@ -14,7 +14,9 @@ import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ListTransfersQueryDto } from './dto/list-transfers.query.dto';
 import { UpdateTransferDto } from './dto/update-transfer.dto';
 import { TransfersService } from './transfers.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/transfers')
 export class TransfersController {
   constructor(private readonly transfersService: TransfersService) {}

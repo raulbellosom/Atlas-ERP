@@ -14,7 +14,9 @@ import { CreatePayableLiteDto } from './dto/create-payable-lite.dto';
 import { ListPayablesLiteQueryDto } from './dto/list-payables-lite.query.dto';
 import { UpdatePayableLiteDto } from './dto/update-payable-lite.dto';
 import { PayablesLiteService } from './payables-lite.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/payables-lite')
 export class PayablesLiteController {
   constructor(private readonly payablesLiteService: PayablesLiteService) {}

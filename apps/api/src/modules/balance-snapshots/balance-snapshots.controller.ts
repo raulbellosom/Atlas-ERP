@@ -2,12 +2,12 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
 import { ListBalanceSnapshotsQueryDto } from './dto/list-balance-snapshots.query.dto';
 import { BalanceSnapshotsService } from './balance-snapshots.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/balance-snapshots')
 export class BalanceSnapshotsController {
-  constructor(
-    private readonly balanceSnapshotsService: BalanceSnapshotsService,
-  ) {}
+  constructor(private readonly balanceSnapshotsService: BalanceSnapshotsService) {}
 
   @RequireAllPermissions('finops:balance_snapshot:read')
   @Get()

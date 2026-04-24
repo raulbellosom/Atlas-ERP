@@ -14,12 +14,12 @@ import { CreateReceivableLiteDto } from './dto/create-receivable-lite.dto';
 import { ListReceivablesLiteQueryDto } from './dto/list-receivables-lite.query.dto';
 import { UpdateReceivableLiteDto } from './dto/update-receivable-lite.dto';
 import { ReceivablesLiteService } from './receivables-lite.service';
+import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
 
+@RequireModuleInstalled('financial-operations')
 @Controller('v1/receivables-lite')
 export class ReceivablesLiteController {
-  constructor(
-    private readonly receivablesLiteService: ReceivablesLiteService,
-  ) {}
+  constructor(private readonly receivablesLiteService: ReceivablesLiteService) {}
 
   @RequireAllPermissions('finops:receivable:write')
   @Post()
