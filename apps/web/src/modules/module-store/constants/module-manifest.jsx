@@ -26,7 +26,7 @@ const MODULE_MANIFEST = {
   accounting: {
     label: 'Contabilidad',
     category: 'Finanzas',
-    route: null,
+    route: '/accounting',
     accentColor: 'bg-emerald-500/10',
     accentFg: 'text-emerald-600',
     icon: ({ size = 28, className = '' }) => (

@@ -26,8 +26,10 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 import { financialOperationsRoutes } from '@/modules/financial-operations/routes';
 import FinOpsLayout from '@/modules/financial-operations/components/FinOpsLayout';
 import HRLayout from '@/modules/hr/components/HRLayout';
+import AccountingLayout from '@/modules/accounting/components/AccountingLayout';
 
 const HRHomePage = lazy(() => import('@/modules/hr/pages/HRHomePage'));
+const AccountingHomePage = lazy(() => import('@/modules/accounting/pages/AccountingHomePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +80,23 @@ function App() {
                       <Route path="employees" element={<HRHomePage />} />
                       <Route path="departments" element={<HRHomePage />} />
                       <Route path="leaves" element={<HRHomePage />} />
+                    </Route>
+
+                    <Route
+                      path="/accounting"
+                      element={
+                        <RequireModule moduleKey="accounting">
+                          <AccountingLayout />
+                        </RequireModule>
+                      }
+                    >
+                      <Route index element={<AccountingHomePage />} />
+                      <Route path="chart-of-accounts" element={<AccountingHomePage />} />
+                      <Route path="journal-entries" element={<AccountingHomePage />} />
+                      <Route path="fiscal-periods" element={<AccountingHomePage />} />
+                      <Route path="reports/income-statement" element={<AccountingHomePage />} />
+                      <Route path="reports/balance-sheet" element={<AccountingHomePage />} />
+                      <Route path="reports/trial-balance" element={<AccountingHomePage />} />
                     </Route>
 
                     <Route
