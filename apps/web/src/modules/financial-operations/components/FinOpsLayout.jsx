@@ -129,8 +129,8 @@ const FINOPS_NAV = [
     label: 'Informes',
     items: [
       {
-        to: '/financial-operations/reports/income-statement',
-        label: 'Resultados',
+        to: '/financial-operations/reports/movements',
+        label: 'Movimientos',
         icon: (
           <svg
             width="17"
@@ -150,8 +150,8 @@ const FINOPS_NAV = [
         ),
       },
       {
-        to: '/financial-operations/reports/balance-sheet',
-        label: 'Balance',
+        to: '/financial-operations/reports/movements-by-account',
+        label: 'Por cuenta',
         icon: (
           <svg
             width="17"
@@ -163,14 +163,15 @@ const FINOPS_NAV = [
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M3 9h18M9 21V9" />
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="M2 10h20M6 15h4" />
+            <circle cx="17" cy="15" r="1" fill="currentColor" />
           </svg>
         ),
       },
       {
-        to: '/financial-operations/reports/cash-flow',
-        label: 'Flujo de caja',
+        to: '/financial-operations/reports/balances',
+        label: 'Saldos',
         icon: (
           <svg
             width="17"
@@ -182,13 +183,14 @@ const FINOPS_NAV = [
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            <line x1="12" y1="2" x2="12" y2="22" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
         ),
       },
       {
-        to: '/financial-operations/reports/trial-balance',
-        label: 'Balance de comprobación',
+        to: '/financial-operations/reports/transfers',
+        label: 'Transferencias',
         icon: (
           <svg
             width="17"
@@ -200,12 +202,48 @@ const FINOPS_NAV = [
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" />
-            <line x1="3" y1="12" x2="3.01" y2="12" />
-            <line x1="3" y1="18" x2="3.01" y2="18" />
+            <polyline points="17 1 21 5 17 9" />
+            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+            <polyline points="7 23 3 19 7 15" />
+            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+          </svg>
+        ),
+      },
+      {
+        to: '/financial-operations/reports/receivables',
+        label: 'CxC',
+        icon: (
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+            <path d="M5 7.5C5 5.57 6.57 4 8.5 4s3.5 1.57 3.5 3.5" />
+          </svg>
+        ),
+      },
+      {
+        to: '/financial-operations/reports/payables',
+        label: 'CxP',
+        icon: (
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+            <path d="M19 16.5C19 18.43 17.43 20 15.5 20s-3.5-1.57-3.5-3.5" />
           </svg>
         ),
       },
