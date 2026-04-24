@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { RequestAuditInterceptor } from '../../common/interceptors/request-audit.interceptor';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { ModuleInstallGuard } from '../../common/guards/module-install.guard';
 import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ScopeGuard } from '../../common/guards/scope.guard';
@@ -57,11 +58,12 @@ import { AppService } from './app.service';
             return { ...req, headers: safeHeaders };
           },
         },
-        customProps: (req: Record<string, unknown>) => {
-          const user = req['user'] as Record<string, unknown> | undefined;
+        customProps: (req, _res) => {
+          const request = req as unknown as Record<string, unknown>;
+          const user = request['user'] as Record<string, unknown> | undefined;
           return {
             traceId:
-              (req['headers'] as Record<string, string>)?.['x-trace-id'] ?? crypto.randomUUID(),
+              (request['headers'] as Record<string, string>)?.['x-trace-id'] ?? crypto.randomUUID(),
             userId: user?.['sub'],
             organizationId: user?.['organizationId'],
           };
@@ -128,6 +130,10 @@ import { AppService } from './app.service';
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ModuleInstallGuard,
     },
     {
       provide: APP_INTERCEPTOR,
