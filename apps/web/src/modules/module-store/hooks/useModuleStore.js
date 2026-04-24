@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { moduleStoreApi } from '../api/moduleStore.api.js';
+import { addModuleVersion, setModuleLifecycle } from '../api/module-store.api.js';
 
 export function useModuleCatalog(params = {}) {
   return useQuery({
@@ -44,6 +45,27 @@ export function useUpgradeModule(organizationId) {
     mutationFn: (payload) => moduleStoreApi.upgrade(payload, organizationId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['module-store', 'installed', organizationId] });
+    },
+  });
+}
+
+export function useSetLifecycle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ moduleKey, lifecycleState }) =>
+      setModuleLifecycle(moduleKey, { lifecycleState }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['module-store-catalog'] });
+    },
+  });
+}
+
+export function useAddVersion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ moduleKey, ...payload }) => addModuleVersion(moduleKey, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['module-store-catalog'] });
     },
   });
 }

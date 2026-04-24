@@ -4,11 +4,15 @@ import useAuthStore from '@/store/auth.store';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { useApiError } from '@/hooks/useApiError';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/components/ui/Toast';
 import PageHeader from '@/components/ui/PageHeader';
 import SearchInput from '@/components/ui/SearchInput';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import SidePanel from '@/components/ui/SidePanel';
+import Select from '@/components/ui/Select';
+import Input from '@/components/ui/Input';
 import {
   fetchInstalledModules,
   fetchModuleCatalog,
@@ -17,6 +21,7 @@ import {
   uninstallModule,
   upgradeModule,
 } from '../api/module-store.api';
+import { useAddVersion, useSetLifecycle } from '../hooks/useModuleStore';
 
 const LOCAL_QUEUE_KEY = 'atlas-module-store-queue-v1';
 
@@ -82,12 +87,23 @@ export default function ModuleStorePage() {
   const organizationId = user?.organizationId;
   const isOnline = useOnlineStatus();
   const { pendingCount } = useSyncStatus();
+  const { hasAny } = usePermissions();
+  const isStoreAdmin = hasAny('module_store:admin');
 
   const [search, setSearch] = useState('');
   const [selectedModuleKey, setSelectedModuleKey] = useState(null);
   const [activeJobId, setActiveJobId] = useState(null);
   const [localQueue, setLocalQueue] = useState(() => readLocalQueue());
   const [isFlushingQueue, setIsFlushingQueue] = useState(false);
+
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const [adminLifecycle, setAdminLifecycle] = useState('');
+  const [newVersion, setNewVersion] = useState('');
+  const [newCompatRange, setNewCompatRange] = useState('');
+  const [newChecksum, setNewChecksum] = useState('');
+
+  const setLifecycleMutation = useSetLifecycle();
+  const addVersionMutation = useAddVersion();
 
   const {
     data: catalog = [],
@@ -134,6 +150,49 @@ export default function ModuleStorePage() {
     () => modules.find((row) => row.moduleKey === selectedModuleKey) ?? null,
     [modules, selectedModuleKey],
   );
+
+  useEffect(() => {
+    if (selectedModule) setAdminLifecycle(selectedModule.lifecycleState ?? 'ACTIVE');
+  }, [selectedModule?.moduleKey]);
+
+  const handleSaveLifecycle = useCallback(async () => {
+    if (!selectedModule) return;
+    try {
+      await setLifecycleMutation.mutateAsync({
+        moduleKey: selectedModule.moduleKey,
+        lifecycleState: adminLifecycle,
+      });
+      toast.success('Lifecycle actualizado.');
+    } catch (err) {
+      handleError(err);
+    }
+  }, [adminLifecycle, handleError, selectedModule, setLifecycleMutation, toast]);
+
+  const handleAddVersion = useCallback(async () => {
+    if (!selectedModule || !newVersion.trim()) return;
+    try {
+      await addVersionMutation.mutateAsync({
+        moduleKey: selectedModule.moduleKey,
+        version: newVersion.trim(),
+        compatibilityRange: newCompatRange.trim() || '>=1.0.0',
+        manifestChecksum: newChecksum.trim() || 'manual',
+      });
+      toast.success(`Versión ${newVersion.trim()} agregada.`);
+      setNewVersion('');
+      setNewCompatRange('');
+      setNewChecksum('');
+    } catch (err) {
+      handleError(err);
+    }
+  }, [
+    addVersionMutation,
+    handleError,
+    newChecksum,
+    newCompatRange,
+    newVersion,
+    selectedModule,
+    toast,
+  ]);
 
   const installMutation = useMutation({ mutationFn: installModule });
   const uninstallMutation = useMutation({ mutationFn: uninstallModule });
@@ -483,13 +542,36 @@ export default function ModuleStorePage() {
                       {selectedModule.moduleKey}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 shrink-0">
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                     {selectedModule.isCore && <Badge variant="accent">Core obligatorio</Badge>}
                     <Badge
                       variant={selectedModule.lifecycleState === 'ACTIVE' ? 'success' : 'warning'}
                     >
                       {selectedModule.lifecycleState}
                     </Badge>
+                    {isStoreAdmin && (
+                      <button
+                        type="button"
+                        aria-label="Administrar módulo"
+                        onClick={() => setAdminPanelOpen(true)}
+                        className="ml-1 rounded-md p-1.5 text-text-disabled hover:text-text-primary hover:bg-surface transition-colors focus-visible:shadow-focus"
+                      >
+                        <svg
+                          width={15}
+                          height={15}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -656,6 +738,85 @@ export default function ModuleStorePage() {
             )}
           </section>
         </div>
+      )}
+      {/* Admin panel */}
+      {isStoreAdmin && selectedModule && (
+        <SidePanel
+          open={adminPanelOpen}
+          onClose={() => setAdminPanelOpen(false)}
+          title={`Administrar — ${selectedModule.name}`}
+          description={selectedModule.moduleKey}
+          size="md"
+        >
+          <div className="space-y-8">
+            {/* Lifecycle */}
+            <section className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                Lifecycle
+              </h3>
+              <Select
+                label="Estado de lifecycle"
+                value={adminLifecycle}
+                onValueChange={setAdminLifecycle}
+                options={[
+                  { value: 'ACTIVE', label: 'ACTIVE' },
+                  { value: 'DEPRECATED', label: 'DEPRECATED' },
+                  { value: 'DISABLED', label: 'DISABLED' },
+                ]}
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                loading={setLifecycleMutation.isPending}
+                disabled={
+                  setLifecycleMutation.isPending || adminLifecycle === selectedModule.lifecycleState
+                }
+                onClick={() => void handleSaveLifecycle()}
+              >
+                Guardar lifecycle
+              </Button>
+            </section>
+
+            <hr className="border-border" />
+
+            {/* Add version */}
+            <section className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                Agregar versión
+              </h3>
+              <Input
+                label="Versión"
+                placeholder="1.1.0"
+                value={newVersion}
+                onChange={(e) => setNewVersion(e.target.value)}
+                size="sm"
+              />
+              <Input
+                label="Compatibility range"
+                placeholder=">=1.0.0"
+                value={newCompatRange}
+                onChange={(e) => setNewCompatRange(e.target.value)}
+                size="sm"
+              />
+              <Input
+                label="Manifest checksum"
+                placeholder="sha256:abc123..."
+                value={newChecksum}
+                onChange={(e) => setNewChecksum(e.target.value)}
+                size="sm"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={addVersionMutation.isPending}
+                disabled={addVersionMutation.isPending || !newVersion.trim()}
+                onClick={() => void handleAddVersion()}
+              >
+                Agregar versión
+              </Button>
+            </section>
+          </div>
+        </SidePanel>
       )}
     </div>
   );

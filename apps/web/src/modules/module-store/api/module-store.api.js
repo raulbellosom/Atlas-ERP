@@ -37,3 +37,19 @@ export async function fetchModuleJob(jobId) {
   const response = await apiClient.get(`/v1/module-store/jobs/${jobId}`);
   return unwrapPayload(response);
 }
+
+export async function setModuleLifecycle(moduleKey, payload) {
+  const response = await apiClient.patch(
+    `/v1/module-store/definitions/${moduleKey}/lifecycle`,
+    payload,
+  );
+  return unwrapPayload(response);
+}
+
+export async function addModuleVersion(moduleKey, payload) {
+  const response = await apiClient.post(
+    `/v1/module-store/definitions/${moduleKey}/versions`,
+    payload,
+  );
+  return unwrapPayload(response);
+}
