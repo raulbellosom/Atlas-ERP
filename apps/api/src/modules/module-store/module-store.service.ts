@@ -2,8 +2,10 @@
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { AddVersionDto } from './dto/add-version.dto';
 import { CatalogQueryDto } from './dto/catalog-query.dto';
 import { InstallModuleDto } from './dto/install.dto';
+import { SetLifecycleDto } from './dto/set-lifecycle.dto';
 import {
   findRemotePackageSecurityRecord,
   isRolloutStageAllowed,
@@ -424,6 +426,54 @@ export class ModuleStoreService {
       throw new NotFoundException(`Job "${jobId}" no encontrado.`);
     }
     return job;
+  }
+
+  async setLifecycle(moduleKey: string, dto: SetLifecycleDto) {
+    const existing = await this.prisma.moduleDefinition.findFirst({
+      where: { moduleKey },
+      select: { moduleKey: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Módulo "${moduleKey}" no encontrado en el catálogo.`);
+    }
+    return this.prisma.moduleDefinition.update({
+      where: { moduleKey },
+      data: { lifecycleState: dto.lifecycleState },
+      select: { moduleKey: true, name: true, lifecycleState: true },
+    });
+  }
+
+  async addVersion(moduleKey: string, dto: AddVersionDto) {
+    const existing = await this.prisma.moduleDefinition.findFirst({
+      where: { moduleKey },
+      select: { moduleKey: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Módulo "${moduleKey}" no encontrado en el catálogo.`);
+    }
+    const conflict = await this.prisma.moduleVersion.findFirst({
+      where: { moduleKey, version: dto.version },
+    });
+    if (conflict) {
+      throw new ConflictException(
+        `La versión "${dto.version}" ya existe para el módulo "${moduleKey}".`,
+      );
+    }
+    return this.prisma.moduleVersion.create({
+      data: {
+        moduleKey,
+        version: dto.version,
+        compatibilityRange: dto.compatibilityRange,
+        manifestChecksum: dto.manifestChecksum,
+      },
+      select: {
+        id: true,
+        moduleKey: true,
+        version: true,
+        compatibilityRange: true,
+        publishedAt: true,
+      },
+    });
   }
 
   private async _checkDependencies(organizationId: string, moduleKey: string) {

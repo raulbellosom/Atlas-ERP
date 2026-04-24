@@ -1,4 +1,14 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
@@ -6,8 +16,10 @@ import {
   CurrentOrganizationId,
   RequireOrganizationScope,
 } from '../../common/decorators/scope.decorator';
+import { AddVersionDto } from './dto/add-version.dto';
 import { CatalogQueryDto } from './dto/catalog-query.dto';
 import { InstallModuleDto } from './dto/install.dto';
+import { SetLifecycleDto } from './dto/set-lifecycle.dto';
 import { UninstallModuleDto } from './dto/uninstall.dto';
 import { UpgradeModuleDto } from './dto/upgrade.dto';
 import { ModuleStoreService } from './module-store.service';
@@ -84,5 +96,17 @@ export class ModuleStoreController {
   ) {
     if (!organizationId) throw new NotFoundException('Organización requerida.');
     return this.moduleStoreService.getJob(jobId, organizationId);
+  }
+
+  @Patch('definitions/:moduleKey/lifecycle')
+  @RequireAllPermissions('module_store:admin')
+  setLifecycle(@Param('moduleKey') moduleKey: string, @Body() dto: SetLifecycleDto) {
+    return this.moduleStoreService.setLifecycle(moduleKey, dto);
+  }
+
+  @Post('definitions/:moduleKey/versions')
+  @RequireAllPermissions('module_store:admin')
+  addVersion(@Param('moduleKey') moduleKey: string, @Body() dto: AddVersionDto) {
+    return this.moduleStoreService.addVersion(moduleKey, dto);
   }
 }
