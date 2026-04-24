@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth.store';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
@@ -23,6 +24,7 @@ import {
 } from '../api/module-store.api';
 import { useAddVersion, useSetLifecycle } from '../hooks/useModuleStore';
 import { INSTALLED_MODULES_QUERY_KEY } from '@/hooks/useInstalledModules';
+import { getModuleMeta } from '@/modules/module-store/constants/module-manifest';
 
 const LOCAL_QUEUE_KEY = 'atlas-module-store-queue-v1';
 
@@ -81,6 +83,7 @@ function normalizeModules(catalog, installed) {
 }
 
 export default function ModuleStorePage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { handleError } = useApiError();
   const { toast } = useToast();
@@ -730,6 +733,20 @@ export default function ModuleStorePage() {
                         Desinstalar
                       </Button>
                     )}
+
+                    {selectedInstallation?.status === 'INSTALLED' &&
+                      (() => {
+                        const meta = getModuleMeta(selectedModule.moduleKey);
+                        return meta.route ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => navigate(meta.route)}
+                          >
+                            Abrir {meta.label}
+                          </Button>
+                        ) : null;
+                      })()}
 
                     {selectedModule.isCore && (
                       <p className="self-center text-xs text-text-disabled">

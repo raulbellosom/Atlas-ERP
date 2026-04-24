@@ -24,6 +24,9 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 import { financialOperationsRoutes } from '@/modules/financial-operations/routes';
 import FinOpsLayout from '@/modules/financial-operations/components/FinOpsLayout';
+import HRLayout from '@/modules/hr/components/HRLayout';
+
+const HRHomePage = lazy(() => import('@/modules/hr/pages/HRHomePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +62,20 @@ function App() {
                     <Route path="/sync" element={<SyncCenterPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/module-store" element={<ModuleStorePage />} />
+                  </Route>
+
+                  <Route
+                    path="/hr"
+                    element={
+                      <RequireModule moduleKey="hr">
+                        <HRLayout />
+                      </RequireModule>
+                    }
+                  >
+                    <Route index element={<HRHomePage />} />
+                    <Route path="employees" element={<HRHomePage />} />
+                    <Route path="departments" element={<HRHomePage />} />
+                    <Route path="leaves" element={<HRHomePage />} />
                   </Route>
 
                   <Route

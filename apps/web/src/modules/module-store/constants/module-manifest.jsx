@@ -50,7 +50,7 @@ const MODULE_MANIFEST = {
   hr: {
     label: 'Recursos Humanos',
     category: 'Personas',
-    route: null,
+    route: '/hr',
     accentColor: 'bg-violet-500/10',
     accentFg: 'text-violet-600',
     icon: ({ size = 28, className = '' }) => (
