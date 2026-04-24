@@ -33,6 +33,9 @@ const EmployeesPage = lazy(() => import('@/modules/hr/pages/EmployeesPage'));
 const DepartmentsPage = lazy(() => import('@/modules/hr/pages/DepartmentsPage'));
 const LeavesPage = lazy(() => import('@/modules/hr/pages/LeavesPage'));
 const AccountingHomePage = lazy(() => import('@/modules/accounting/pages/AccountingHomePage'));
+const ChartOfAccountsPage = lazy(() => import('@/modules/accounting/pages/ChartOfAccountsPage'));
+const JournalEntriesPage = lazy(() => import('@/modules/accounting/pages/JournalEntriesPage'));
+const FiscalPeriodsPage = lazy(() => import('@/modules/accounting/pages/FiscalPeriodsPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,9 +97,9 @@ function App() {
                       }
                     >
                       <Route index element={<AccountingHomePage />} />
-                      <Route path="chart-of-accounts" element={<AccountingHomePage />} />
-                      <Route path="journal-entries" element={<AccountingHomePage />} />
-                      <Route path="fiscal-periods" element={<AccountingHomePage />} />
+                      <Route path="chart-of-accounts" element={<ChartOfAccountsPage />} />
+                      <Route path="journal-entries" element={<JournalEntriesPage />} />
+                      <Route path="fiscal-periods" element={<FiscalPeriodsPage />} />
                       <Route path="reports/income-statement" element={<AccountingHomePage />} />
                       <Route path="reports/balance-sheet" element={<AccountingHomePage />} />
                       <Route path="reports/trial-balance" element={<AccountingHomePage />} />
