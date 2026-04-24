@@ -349,8 +349,8 @@ export default function ModuleStorePage() {
   const unmetDeps = useMemo(() => {
     if (!selectedModule?.dependencies?.length) return [];
     return selectedModule.dependencies
-      .filter((dep) => dep.hard !== false)
-      .filter((dep) => !installedKeysSet.has(dep.moduleKey));
+      .filter((dep) => dep.isHardDependency !== false)
+      .filter((dep) => !installedKeysSet.has(dep.dependsOnModuleKey));
   }, [selectedModule, installedKeysSet]);
 
   return (
@@ -652,8 +652,8 @@ export default function ModuleStorePage() {
                       <p className="font-medium mb-1">Dependencias requeridas no instaladas:</p>
                       <ul className="list-disc list-inside space-y-0.5">
                         {unmetDeps.map((dep) => (
-                          <li key={dep.moduleKey} className="font-mono text-xs">
-                            {dep.moduleKey}
+                          <li key={dep.dependsOnModuleKey} className="font-mono text-xs">
+                            {dep.dependsOnModuleKey}
                             {dep.versionConstraint && (
                               <span className="text-amber-600 ml-1">({dep.versionConstraint})</span>
                             )}

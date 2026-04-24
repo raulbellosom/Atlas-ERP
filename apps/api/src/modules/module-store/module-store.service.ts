@@ -22,6 +22,87 @@ import { UpgradeModuleDto } from './dto/upgrade.dto';
 const CORE_MODULES = new Set(['core-platform']);
 type CatalogProviderKind = 'curated' | 'remote_stub';
 
+type RemoteCatalogVersionCandidate = {
+  version: string;
+  compatibilityRange?: string;
+  manifestChecksum?: string;
+  publishedAt?: string;
+};
+
+type RemoteCatalogModuleCandidate = {
+  moduleKey: string;
+  name?: string;
+  description?: string | null;
+  isCore?: boolean;
+  lifecycleState?: string;
+  createdAt?: string;
+  versions: RemoteCatalogVersionCandidate[];
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function parseCommaSeparatedValues(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+function parseRemoteCatalogRows(payload: unknown): RemoteCatalogModuleCandidate[] {
+  const rowsRaw = Array.isArray(payload)
+    ? payload
+    : isRecord(payload) && Array.isArray(payload.items)
+      ? payload.items
+      : [];
+
+  const parsed: RemoteCatalogModuleCandidate[] = [];
+
+  for (const row of rowsRaw) {
+    if (!isRecord(row) || typeof row.moduleKey !== 'string') {
+      continue;
+    }
+
+    const versionsRaw = Array.isArray(row.versions) ? row.versions : [];
+    const versions: RemoteCatalogVersionCandidate[] = [];
+
+    for (const versionRow of versionsRaw) {
+      if (!isRecord(versionRow) || typeof versionRow.version !== 'string') {
+        continue;
+      }
+
+      versions.push({
+        version: versionRow.version,
+        compatibilityRange:
+          typeof versionRow.compatibilityRange === 'string'
+            ? versionRow.compatibilityRange
+            : undefined,
+        manifestChecksum:
+          typeof versionRow.manifestChecksum === 'string' ? versionRow.manifestChecksum : undefined,
+        publishedAt:
+          typeof versionRow.publishedAt === 'string' ? versionRow.publishedAt : undefined,
+      });
+    }
+
+    parsed.push({
+      moduleKey: row.moduleKey,
+      name: typeof row.name === 'string' ? row.name : undefined,
+      description:
+        typeof row.description === 'string' || row.description === null
+          ? row.description
+          : undefined,
+      isCore: typeof row.isCore === 'boolean' ? row.isCore : undefined,
+      lifecycleState: typeof row.lifecycleState === 'string' ? row.lifecycleState : undefined,
+      createdAt: typeof row.createdAt === 'string' ? row.createdAt : undefined,
+      versions,
+    });
+  }
+
+  return parsed;
+}
+
 const CATALOG_SELECT = {
   moduleKey: true,
   name: true,
@@ -36,6 +117,13 @@ const CATALOG_SELECT = {
       publishedAt: true,
     },
     orderBy: { publishedAt: 'desc' as const },
+  },
+  dependencies: {
+    select: {
+      dependsOnModuleKey: true,
+      versionConstraint: true,
+      isHardDependency: true,
+    },
   },
 } satisfies Prisma.ModuleDefinitionSelect;
 
@@ -73,12 +161,7 @@ export class ModuleStoreService {
   async getCatalog(query: CatalogQueryDto) {
     const provider = this._resolveCatalogProvider();
     if (provider === 'remote_stub') {
-      this.logger.warn(
-        JSON.stringify({
-          event: 'MODULE_STORE_REMOTE_PROVIDER_STUB',
-          message: 'Falling back to curated provider',
-        }),
-      );
+      return this._getCatalogFromRemoteProvider(query);
     }
     return this._getCatalogFromCuratedProvider(query);
   }
@@ -101,8 +184,137 @@ export class ModuleStoreService {
     }));
   }
 
+  private async _getCatalogFromRemoteProvider(query: CatalogQueryDto) {
+    const remoteCatalogUrl = process.env['MODULE_STORE_REMOTE_CATALOG_URL']?.trim();
+    if (!remoteCatalogUrl) {
+      this.logger.warn(
+        JSON.stringify({
+          event: 'MODULE_STORE_REMOTE_PROVIDER_STUB',
+          message: 'Missing MODULE_STORE_REMOTE_CATALOG_URL, falling back to curated provider.',
+        }),
+      );
+      return this._getCatalogFromCuratedProvider(query);
+    }
+
+    try {
+      const url = new URL(remoteCatalogUrl);
+      if (query.search) {
+        url.searchParams.set('search', query.search);
+      }
+      if (query.includeDeprecated) {
+        url.searchParams.set('includeDeprecated', 'true');
+      }
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Remote catalog responded with status ${response.status}.`);
+      }
+
+      const payload: unknown = await response.json();
+      const rows = parseRemoteCatalogRows(payload);
+      return rows.map((row) => {
+        const validatedVersions = row.versions.map((versionRow) => {
+          const manifestChecksum = String(versionRow.manifestChecksum ?? '');
+          this._verifyRemoteCatalogVersion({
+            moduleKey: row.moduleKey,
+            version: versionRow.version,
+            manifestChecksum,
+          });
+          return {
+            version: versionRow.version,
+            compatibilityRange: versionRow.compatibilityRange ?? '>=1.0.0',
+            publishedAt: versionRow.publishedAt ?? new Date().toISOString(),
+          };
+        });
+
+        return {
+          moduleKey: row.moduleKey,
+          name: row.name ?? row.moduleKey,
+          description: row.description ?? null,
+          isCore: Boolean(row.isCore),
+          lifecycleState: row.lifecycleState ?? 'ACTIVE',
+          createdAt: row.createdAt ?? new Date().toISOString(),
+          versions: validatedVersions,
+          interoperability: getModuleInteroperabilityContract(row.moduleKey),
+        };
+      });
+    } catch (error) {
+      this.logger.warn(
+        JSON.stringify({
+          event: 'MODULE_STORE_REMOTE_PROVIDER_FALLBACK',
+          message: `Remote catalog unavailable, fallback to curated provider: ${String(error)}`,
+        }),
+      );
+      return this._getCatalogFromCuratedProvider(query);
+    }
+  }
+
   private _resolveCatalogProvider(): CatalogProviderKind {
     return process.env['MODULE_STORE_PROVIDER'] === 'remote' ? 'remote_stub' : 'curated';
+  }
+
+  private _getTrustedRemoteSigners(): string[] {
+    const configured = parseCommaSeparatedValues(
+      process.env['MODULE_STORE_REMOTE_TRUSTED_SIGNERS'],
+    );
+    if (configured.length > 0) {
+      return configured;
+    }
+    return ['atlas-sign-v1'];
+  }
+
+  private _getCanaryOrganizationAllowlist(
+    packageAllowlist: readonly string[] | undefined,
+  ): Set<string> {
+    const configured = parseCommaSeparatedValues(process.env['MODULE_STORE_REMOTE_CANARY_ORGS']);
+    return new Set([...(packageAllowlist ?? []), ...configured]);
+  }
+
+  private _getPartialRolloutPercent(): number {
+    const raw = Number(process.env['MODULE_STORE_REMOTE_PARTIAL_PERCENT'] ?? '');
+    if (!Number.isFinite(raw)) return 100;
+    return Math.max(0, Math.min(100, Math.floor(raw)));
+  }
+
+  private _isOrganizationInRolloutBucket(
+    organizationId: string,
+    thresholdPercent: number,
+  ): boolean {
+    let hash = 0;
+    for (let index = 0; index < organizationId.length; index += 1) {
+      hash = (hash * 31 + organizationId.charCodeAt(index)) >>> 0;
+    }
+    return hash % 100 < thresholdPercent;
+  }
+
+  private _isOrganizationAllowedForPackageRollout(input: {
+    organizationId: string;
+    packageStage: RemoteRolloutStage;
+    packageAllowlist?: readonly string[];
+  }): boolean {
+    const canaryAllowlist = this._getCanaryOrganizationAllowlist(input.packageAllowlist);
+
+    if (input.packageStage === 'total') {
+      return true;
+    }
+
+    if (input.packageStage === 'canary') {
+      return canaryAllowlist.has(input.organizationId);
+    }
+
+    if (canaryAllowlist.has(input.organizationId)) {
+      return true;
+    }
+
+    return this._isOrganizationInRolloutBucket(
+      input.organizationId,
+      this._getPartialRolloutPercent(),
+    );
   }
 
   async getInstalled(organizationId: string) {
@@ -549,7 +761,13 @@ export class ModuleStoreService {
       );
     }
 
-    if (!verifySignature(securityRecord.checksum, securityRecord.signature)) {
+    if (
+      !verifySignature(
+        securityRecord.checksum,
+        securityRecord.signature,
+        this._getTrustedRemoteSigners(),
+      )
+    ) {
       throw new ConflictException(
         `Firma invalida para paquete remoto ${input.moduleKey}@${input.version}.`,
       );
@@ -563,18 +781,58 @@ export class ModuleStoreService {
     }
 
     if (
-      securityRecord.rolloutStage === 'canary' &&
-      securityRecord.allowedOrganizationIds?.length &&
-      !securityRecord.allowedOrganizationIds.includes(input.organizationId)
+      !this._isOrganizationAllowedForPackageRollout({
+        organizationId: input.organizationId,
+        packageStage: securityRecord.rolloutStage,
+        packageAllowlist: securityRecord.allowedOrganizationIds,
+      })
     ) {
       throw new ConflictException(
-        `Paquete ${input.moduleKey}@${input.version} solo habilitado para organizaciones canary.`,
+        `Paquete ${input.moduleKey}@${input.version} no habilitado para la organizacion en la etapa de rollout.`,
       );
     }
   }
 
   private _isRemoteProviderEnabled(): boolean {
     return this._resolveCatalogProvider() === 'remote_stub';
+  }
+
+  private _verifyRemoteCatalogVersion(input: {
+    moduleKey: string;
+    version: string;
+    manifestChecksum: string;
+  }) {
+    const securityRecord = findRemotePackageSecurityRecord(input.moduleKey, input.version);
+    if (!securityRecord) {
+      throw new ConflictException(
+        `No existe metadata de seguridad para catalogo remoto ${input.moduleKey}@${input.version}.`,
+      );
+    }
+
+    if (securityRecord.checksum !== input.manifestChecksum) {
+      throw new ConflictException(
+        `Checksum invalido para catalogo remoto ${input.moduleKey}@${input.version}.`,
+      );
+    }
+
+    if (
+      !verifySignature(
+        securityRecord.checksum,
+        securityRecord.signature,
+        this._getTrustedRemoteSigners(),
+      )
+    ) {
+      throw new ConflictException(
+        `Firma invalida para catalogo remoto ${input.moduleKey}@${input.version}.`,
+      );
+    }
+
+    const activeStage = this._getRemoteRolloutStage();
+    if (!isRolloutStageAllowed(activeStage, securityRecord.rolloutStage)) {
+      throw new ConflictException(
+        `Version remota ${input.moduleKey}@${input.version} fuera de rollout (${activeStage}).`,
+      );
+    }
   }
 
   private _getRemoteRolloutStage(): RemoteRolloutStage {
