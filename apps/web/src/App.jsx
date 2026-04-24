@@ -29,6 +29,9 @@ import HRLayout from '@/modules/hr/components/HRLayout';
 import AccountingLayout from '@/modules/accounting/components/AccountingLayout';
 
 const HRHomePage = lazy(() => import('@/modules/hr/pages/HRHomePage'));
+const EmployeesPage = lazy(() => import('@/modules/hr/pages/EmployeesPage'));
+const DepartmentsPage = lazy(() => import('@/modules/hr/pages/DepartmentsPage'));
+const LeavesPage = lazy(() => import('@/modules/hr/pages/LeavesPage'));
 const AccountingHomePage = lazy(() => import('@/modules/accounting/pages/AccountingHomePage'));
 
 const queryClient = new QueryClient({
@@ -77,9 +80,9 @@ function App() {
                       }
                     >
                       <Route index element={<HRHomePage />} />
-                      <Route path="employees" element={<HRHomePage />} />
-                      <Route path="departments" element={<HRHomePage />} />
-                      <Route path="leaves" element={<HRHomePage />} />
+                      <Route path="employees" element={<EmployeesPage />} />
+                      <Route path="departments" element={<DepartmentsPage />} />
+                      <Route path="leaves" element={<LeavesPage />} />
                     </Route>
 
                     <Route
