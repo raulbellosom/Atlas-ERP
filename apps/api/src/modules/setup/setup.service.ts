@@ -361,6 +361,8 @@ export class SetupService {
         logoDataUrl: dto.logoDataUrl ?? null,
       });
 
+      await this.autoInstallCoreModules(tx, organization.id);
+
       await tx.setupState.upsert({
         where: { key: SETUP_STATE_KEY },
         update: {
@@ -572,6 +574,42 @@ export class SetupService {
           value: setting.value,
           description: setting.description,
           isActive: true,
+        },
+      });
+    }
+  }
+
+  private async autoInstallCoreModules(
+    tx: Prisma.TransactionClient,
+    organizationId: string,
+  ): Promise<void> {
+    const coreModules = await tx.moduleDefinition.findMany({
+      where: { isCore: true, lifecycleState: 'ACTIVE' },
+      include: {
+        versions: {
+          orderBy: { publishedAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    for (const mod of coreModules) {
+      const latestVersion = mod.versions[0]?.version;
+      if (!latestVersion) continue;
+
+      await tx.tenantModuleInstallation.upsert({
+        where: {
+          organizationId_moduleKey: {
+            organizationId,
+            moduleKey: mod.moduleKey,
+          },
+        },
+        update: {},
+        create: {
+          organizationId,
+          moduleKey: mod.moduleKey,
+          version: latestVersion,
+          status: 'INSTALLED',
         },
       });
     }

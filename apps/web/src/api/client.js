@@ -1,5 +1,5 @@
-import axios from "axios";
-import { env } from "@/config/env.js";
+import axios from 'axios';
+import { env } from '@/config/env.js';
 
 /**
  * Cliente HTTP base para el backend AtlasERP API.
@@ -10,7 +10,7 @@ import { env } from "@/config/env.js";
 export const apiClient = axios.create({
   baseURL: env.apiUrl,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   timeout: 15_000,
 });
@@ -19,7 +19,7 @@ export const apiClient = axios.create({
 
 function readAuthState() {
   try {
-    const raw = localStorage.getItem("atlas-auth");
+    const raw = localStorage.getItem('atlas-auth');
     return raw ? (JSON.parse(raw)?.state ?? null) : null;
   } catch {
     return null;
@@ -28,10 +28,10 @@ function readAuthState() {
 
 function writeAuthState(patch) {
   try {
-    const raw = localStorage.getItem("atlas-auth");
+    const raw = localStorage.getItem('atlas-auth');
     const stored = raw ? JSON.parse(raw) : { state: {}, version: 0 };
     stored.state = { ...stored.state, ...patch };
-    localStorage.setItem("atlas-auth", JSON.stringify(stored));
+    localStorage.setItem('atlas-auth', JSON.stringify(stored));
   } catch {
     // Ignorar
   }
@@ -44,6 +44,7 @@ function clearAuthState() {
     refreshToken: null,
     isAuthenticated: false,
   });
+  delete apiClient.defaults.headers.common['Authorization'];
 }
 
 // ─── Request interceptor: adjuntar access token ──────────────────────────────
@@ -52,7 +53,7 @@ apiClient.interceptors.request.use((config) => {
   const state = readAuthState();
   const token = state?.accessToken;
   if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
   return config;
 });
@@ -75,10 +76,11 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    // Solo interceptar 401 en requests que no sean el propio endpoint de refresh
-    const isRefreshEndpoint = originalRequest?.url?.includes("/v1/auth/refresh");
+    // Solo interceptar 401 en requests que no sean endpoints de auth propios
+    // (login, refresh, logout) — si fallan, el componente debe manejar el error.
+    const isAuthEndpoint = originalRequest?.url?.includes('/v1/auth/');
 
-    if (status === 401 && !isRefreshEndpoint && !originalRequest._retried) {
+    if (status === 401 && !isAuthEndpoint && !originalRequest._retried) {
       originalRequest._retried = true;
 
       if (_isRefreshing) {
@@ -86,7 +88,7 @@ apiClient.interceptors.response.use(
         return new Promise((resolve, reject) => {
           _refreshQueue.push({ resolve, reject });
         }).then((token) => {
-          originalRequest.headers["Authorization"] = `Bearer ${token}`;
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
           return apiClient(originalRequest);
         });
       }
@@ -96,14 +98,14 @@ apiClient.interceptors.response.use(
 
       if (!refreshToken) {
         clearAuthState();
-        window.location.href = "/login";
+        window.location.href = '/login';
         return Promise.reject(normalizeError(error));
       }
 
       _isRefreshing = true;
 
       try {
-        const res = await apiClient.post("/v1/auth/refresh", { refreshToken });
+        const res = await apiClient.post('/v1/auth/refresh', { refreshToken });
         const data = res.data?.data ?? res.data;
         const newAccessToken = data?.accessToken;
         const newRefreshToken = data?.refreshToken;
@@ -112,14 +114,15 @@ apiClient.interceptors.response.use(
           accessToken: newAccessToken,
           ...(newRefreshToken && { refreshToken: newRefreshToken }),
         });
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
 
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
         clearAuthState();
-        window.location.href = "/login";
+        window.location.href = '/login';
         return Promise.reject(normalizeError(refreshError));
       } finally {
         _isRefreshing = false;
@@ -131,11 +134,15 @@ apiClient.interceptors.response.use(
 );
 
 function normalizeError(error) {
-  // Si ya fue normalizado (viene de la cola), retornarlo tal cual
-  if (error?.code && !error?.response) return error;
+  if (error instanceof Error && error._normalized) return error;
   const status = error?.response?.status;
-  const code = error?.response?.data?.code ?? "UNKNOWN";
-  const message =
-    error?.response?.data?.message ?? error?.message ?? "Error desconocido";
-  return { status, code, message, raw: error };
+  const code = error?.response?.data?.code ?? 'UNKNOWN';
+  const message = error?.response?.data?.message ?? error?.message ?? 'Error desconocido';
+  const normalized = new Error(message);
+  normalized._normalized = true;
+  normalized.status = status;
+  normalized.code = code;
+  normalized.response = { status, data: error?.response?.data ?? {} };
+  normalized.raw = error;
+  return normalized;
 }

@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
-import { useInstalledModules } from '@/hooks/useInstalledModules';
 
 /**
  * Sidebar — Meridian v2 Design System
@@ -38,128 +37,6 @@ const NAV_GROUPS = [
             <rect x="14" y="3" width="7" height="7" rx="1.5" />
             <rect x="3" y="14" width="7" height="7" rx="1.5" />
             <rect x="14" y="14" width="7" height="7" rx="1.5" />
-          </svg>
-        ),
-      },
-    ],
-  },
-  {
-    label: 'Tesorería',
-    moduleKey: 'financial-operations',
-    items: [
-      {
-        to: '/financial-operations/bank-accounts',
-        label: 'Cuentas',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="2" y="5" width="20" height="14" rx="2" />
-            <path d="M2 10h20" />
-            <path d="M6 15h4" />
-            <circle cx="17" cy="15" r="1" fill="currentColor" />
-          </svg>
-        ),
-      },
-      {
-        to: '/financial-operations/movements',
-        label: 'Movimientos',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-            <polyline points="16 7 22 7 22 13" />
-          </svg>
-        ),
-      },
-      {
-        to: '/financial-operations/balances',
-        label: 'Saldos',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="12" y1="2" x2="12" y2="22" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        ),
-      },
-      {
-        to: '/financial-operations/reconciliation',
-        label: 'Conciliación',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 11l3 3L22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
-        ),
-      },
-      {
-        to: '/financial-operations/receivables',
-        label: 'CxC',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-            <path d="M5 7.5C5 5.57 6.57 4 8.5 4s3.5 1.57 3.5 3.5" />
-          </svg>
-        ),
-      },
-      {
-        to: '/financial-operations/payables',
-        label: 'CxP',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-            <path d="M19 16.5C19 18.43 17.43 20 15.5 20s-3.5-1.57-3.5-3.5" />
           </svg>
         ),
       },
@@ -366,7 +243,6 @@ function AtlasLogo() {
 function SidebarContent({ onNavigate }) {
   const { pendingCount } = useSyncStatus();
   const location = useLocation();
-  const { installedModules, isLoading: isLoadingModules } = useInstalledModules();
 
   return (
     <div className="flex flex-col h-full">
@@ -388,11 +264,7 @@ function SidebarContent({ onNavigate }) {
 
       {/* ── Navegación ── */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6" role="navigation">
-        {NAV_GROUPS.filter((group) => {
-          if (!group.moduleKey) return true;
-          if (isLoadingModules) return true;
-          return installedModules.has(group.moduleKey);
-        }).map((group) => (
+        {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {/* Etiqueta de sección */}
             <p className="px-3 mb-1.5 text-[0.625rem] font-semibold tracking-[0.12em] uppercase text-ink-500 select-none">

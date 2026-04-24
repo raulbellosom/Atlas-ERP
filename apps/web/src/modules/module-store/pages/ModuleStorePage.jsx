@@ -22,6 +22,7 @@ import {
   upgradeModule,
 } from '../api/module-store.api';
 import { useAddVersion, useSetLifecycle } from '../hooks/useModuleStore';
+import { INSTALLED_MODULES_QUERY_KEY } from '@/hooks/useInstalledModules';
 
 const LOCAL_QUEUE_KEY = 'atlas-module-store-queue-v1';
 
@@ -339,6 +340,19 @@ export default function ModuleStorePage() {
   const isError = isCatalogError || isInstalledError;
   const activeJobStatus = currentJobQuery.data?.status;
 
+  const installedKeysSet = useMemo(
+    () =>
+      new Set((installed ?? []).filter((r) => r.status === 'INSTALLED').map((r) => r.moduleKey)),
+    [installed],
+  );
+
+  const unmetDeps = useMemo(() => {
+    if (!selectedModule?.dependencies?.length) return [];
+    return selectedModule.dependencies
+      .filter((dep) => dep.hard !== false)
+      .filter((dep) => !installedKeysSet.has(dep.moduleKey));
+  }, [selectedModule, installedKeysSet]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -632,6 +646,23 @@ export default function ModuleStorePage() {
                     </div>
                   </dl>
 
+                  {/* Unmet dependencies warning */}
+                  {unmetDeps.length > 0 && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      <p className="font-medium mb-1">Dependencias requeridas no instaladas:</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {unmetDeps.map((dep) => (
+                          <li key={dep.moduleKey} className="font-mono text-xs">
+                            {dep.moduleKey}
+                            {dep.versionConstraint && (
+                              <span className="text-amber-600 ml-1">({dep.versionConstraint})</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2">
                     {(!selectedInstallation || selectedInstallation.status === 'DISABLED') && (
@@ -639,7 +670,7 @@ export default function ModuleStorePage() {
                         variant="primary"
                         size="sm"
                         loading={installMutation.isPending}
-                        disabled={busy || !latestVersion || !canOperate}
+                        disabled={busy || !latestVersion || !canOperate || unmetDeps.length > 0}
                         onClick={() =>
                           void submitOperation({
                             type: 'install',

@@ -59,22 +59,22 @@ function App() {
                     <Route path="/sync" element={<SyncCenterPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/module-store" element={<ModuleStorePage />} />
+                  </Route>
 
-                    <Route
-                      path="/financial-operations"
-                      element={
-                        <RequireModule moduleKey="financial-operations">
-                          <FinOpsLayout />
-                        </RequireModule>
-                      }
-                    >
-                      <Route index element={<Navigate to="bank-accounts" replace />} />
-                      {financialOperationsRoutes
-                        .filter((r) => !r.index)
-                        .map((r) => (
-                          <Route key={r.path} path={r.path} element={<r.element />} />
-                        ))}
-                    </Route>
+                  <Route
+                    path="/financial-operations"
+                    element={
+                      <RequireModule moduleKey="financial-operations">
+                        <FinOpsLayout />
+                      </RequireModule>
+                    }
+                  >
+                    <Route index element={<Navigate to="bank-accounts" replace />} />
+                    {financialOperationsRoutes
+                      .filter((r) => !r.index)
+                      .map((r) => (
+                        <Route key={r.path} path={r.path} element={<r.element />} />
+                      ))}
                   </Route>
                 </Route>
 
