@@ -281,7 +281,7 @@ function SidebarContent({ onNavigate }) {
             Tesorería
           </span>
           <span className="text-[9px] text-blue-400/60 tracking-[0.20em] uppercase font-mono mt-0.5">
-            Financial Ops
+            Tesorería
           </span>
         </div>
       </div>
@@ -377,9 +377,7 @@ function MobileSidebar({ open, onClose }) {
           style={{ background: 'var(--gradient-sidebar)' }}
         >
           <Dialog.Title className="sr-only">Menú de Tesorería</Dialog.Title>
-          <Dialog.Description className="sr-only">
-            Navegación de Financial Operations
-          </Dialog.Description>
+          <Dialog.Description className="sr-only">Navegación de Tesorería</Dialog.Description>
           <SidebarContent onNavigate={onClose} />
         </Dialog.Content>
       </Dialog.Portal>

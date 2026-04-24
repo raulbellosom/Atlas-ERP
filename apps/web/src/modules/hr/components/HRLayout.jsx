@@ -141,10 +141,10 @@ function SidebarContent({ onNavigate }) {
             className="text-[15px] font-bold tracking-tight text-white leading-tight"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            RRHH
+            Recursos Humanos
           </span>
           <span className="text-[9px] text-violet-400/60 tracking-[0.20em] uppercase font-mono mt-0.5">
-            Human Resources
+            RRHH
           </span>
         </div>
       </div>
@@ -234,7 +234,7 @@ function MobileSidebar({ open, onClose }) {
           ].join(' ')}
           style={{ background: 'var(--gradient-sidebar)' }}
         >
-          <Dialog.Title className="sr-only">Menú de RRHH</Dialog.Title>
+          <Dialog.Title className="sr-only">Menú de Recursos Humanos</Dialog.Title>
           <Dialog.Description className="sr-only">
             Navegación de Recursos Humanos
           </Dialog.Description>

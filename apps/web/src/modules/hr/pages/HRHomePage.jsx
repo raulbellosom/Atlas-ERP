@@ -21,8 +21,8 @@ export default function HRHomePage() {
       <div className="max-w-sm">
         <h1 className="text-xl font-semibold text-text-primary mb-2">Recursos Humanos</h1>
         <p className="text-sm text-text-secondary">
-          El módulo de RRHH está instalado. Las funcionalidades de empleados, departamentos y
-          ausencias estarán disponibles próximamente.
+          El módulo de Recursos Humanos está instalado. Las funcionalidades de empleados,
+          departamentos y ausencias estarán disponibles próximamente.
         </p>
       </div>
     </div>
