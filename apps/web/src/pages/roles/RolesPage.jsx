@@ -1,14 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/api/client";
-import useAuthStore from "@/store/auth.store";
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/api/client';
+import useAuthStore from '@/store/auth.store';
+import { useApiError } from '@/hooks/useApiError';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import Table from '@/components/ui/Table';
+import Badge from '@/components/ui/Badge';
+import SearchInput from '@/components/ui/SearchInput';
+import PageHeader from '@/components/ui/PageHeader';
 
 function useRoles(organizationId) {
   return useQuery({
-    queryKey: ["roles", organizationId],
+    queryKey: ['roles', organizationId],
     queryFn: async () => {
-      const res = await apiClient.get("/v1/roles", {
-        params: { organizationId },
-      });
+      const res = await apiClient.get('/v1/roles', { params: { organizationId } });
       const payload = res.data?.data ?? res.data;
       return Array.isArray(payload) ? payload : (payload?.items ?? []);
     },
@@ -16,89 +20,96 @@ function useRoles(organizationId) {
   });
 }
 
+const roleMatcher = (r, q) =>
+  r.name?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q);
+
+const COLUMNS = [
+  {
+    key: 'name',
+    header: 'Nombre',
+    sortable: true,
+    render: (r) => <span className="font-medium text-text-primary">{r.name}</span>,
+  },
+  {
+    key: 'level',
+    header: 'Nivel',
+    sortable: true,
+    render: (r) => <span className="font-mono text-xs text-text-secondary">{r.level ?? 0}</span>,
+  },
+  {
+    key: 'description',
+    header: 'Descripción',
+    render: (r) => <span className="text-sm text-text-secondary">{r.description ?? '—'}</span>,
+  },
+  {
+    key: 'isActive',
+    header: 'Estado',
+    render: (r) =>
+      r.isActive !== false ? (
+        <Badge variant="green" size="xs">
+          Activo
+        </Badge>
+      ) : (
+        <Badge variant="gray" size="xs">
+          Inactivo
+        </Badge>
+      ),
+  },
+];
+
 export default function RolesPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
+  const { handleError } = useApiError();
 
-  const { data: roles = [], isLoading, isError } = useRoles(organizationId);
+  const { data: roles = [], isLoading, error } = useRoles(organizationId);
+  const { query, setQuery, results } = useGlobalSearch(roles, roleMatcher);
+
+  if (error) handleError(error);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Roles</h1>
-        <p className="text-sm text-text-secondary mt-1">
-          Roles y permisos de la organización
-        </p>
+      <PageHeader title="Roles" description="Roles y permisos de acceso de la organización" />
+
+      <div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-surface-subtle">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            className="text-amber-500 shrink-0"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 3h12M3 7h8M5 11h4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className="label-caps text-[10px]">Búsqueda</span>
+        </div>
+        <div className="p-4">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Buscar por nombre o descripción…"
+            className="w-full sm:w-80"
+          />
+        </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-lg overflow-hidden">
-        {isLoading && (
-          <div className="px-6 py-8 text-sm text-text-secondary text-center">
-            Cargando roles...
-          </div>
-        )}
-        {isError && (
-          <div className="px-6 py-8 text-sm text-red-600 text-center">
-            No se pudieron cargar los roles.
-          </div>
-        )}
-        {!isLoading && !isError && (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface-subtle">
-                <Th>Nombre</Th>
-                <Th>Nivel</Th>
-                <Th>Descripción</Th>
-                <Th>Estado</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {roles.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-text-disabled">
-                    Sin roles registrados.
-                  </td>
-                </tr>
-              )}
-              {roles.map((r) => (
-                <tr key={r.id} className="hover:bg-surface-subtle transition-colors">
-                  <Td>
-                    <span className="font-medium text-text-primary">{r.name}</span>
-                  </Td>
-                  <Td>
-                    <span className="font-mono text-xs text-text-secondary">{r.level ?? 0}</span>
-                  </Td>
-                  <Td>{r.description ?? "—"}</Td>
-                  <Td>
-                    <span
-                      className={[
-                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                        r.isActive
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-600",
-                      ].join(" ")}
-                    >
-                      {r.isActive ? "Activo" : "Inactivo"}
-                    </span>
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Table
+        columns={COLUMNS}
+        data={results}
+        isLoading={isLoading}
+        sortable
+        emptyTitle="Sin roles"
+        emptyDescription={
+          query ? `No se encontraron roles para "${query}"` : 'No hay roles configurados'
+        }
+      />
     </div>
   );
-}
-
-function Th({ children }) {
-  return (
-    <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }) {
-  return <td className="px-4 py-3 text-text-primary">{children}</td>;
 }
