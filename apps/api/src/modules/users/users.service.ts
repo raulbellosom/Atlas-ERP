@@ -14,6 +14,8 @@ const USER_SELECT = {
   organizationId: true,
   branchId: true,
   email: true,
+  firstName: true,
+  lastName: true,
   displayName: true,
   phone: true,
   address: true,
@@ -23,7 +25,7 @@ const USER_SELECT = {
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.UserSelect;
+} as Prisma.UserSelect;
 
 const USER_AUTH_SELECT = {
   id: true,
@@ -75,14 +77,24 @@ export class UsersService {
     const user = await this.prisma.user.findFirst({ where: { id: userId, deletedAt: null } });
     if (!user) throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND });
 
+    const firstName = dto.firstName !== undefined ? dto.firstName : undefined;
+    const lastName = dto.lastName !== undefined ? dto.lastName : undefined;
+    const derivedDisplayName =
+      firstName !== undefined || lastName !== undefined
+        ? [firstName ?? user.firstName ?? '', lastName ?? user.lastName ?? ''].join(' ').trim() ||
+          user.displayName
+        : undefined;
+
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(dto.displayName !== undefined && { displayName: dto.displayName }),
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(derivedDisplayName !== undefined && { displayName: derivedDisplayName }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
         ...(dto.address !== undefined && { address: dto.address }),
         ...('avatarAttachmentId' in dto && { avatarAttachmentId: dto.avatarAttachmentId ?? null }),
-      },
+      } as Prisma.UserUpdateInput,
       select: USER_SELECT,
     });
   }

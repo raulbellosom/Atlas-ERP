@@ -107,6 +107,8 @@ model User {
   organizationId     String
   branchId           String?
   email              String
+  firstName          String?
+  lastName           String?
   displayName        String
   phone              String?
   address            String?

@@ -120,6 +120,25 @@ const NAV_GROUPS = [
           </svg>
         ),
       },
+      {
+        to: '/profile',
+        label: 'Mi Perfil',
+        icon: (
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        ),
+      },
     ],
   },
   {
@@ -206,25 +225,6 @@ const NAV_GROUPS = [
             <path d="M21 8a2 2 0 0 0-1.05-1.76l-7-3.94a2 2 0 0 0-1.9 0l-7 3.94A2 2 0 0 0 3 8v8a2 2 0 0 0 1.05 1.76l7 3.94a2 2 0 0 0 1.9 0l7-3.94A2 2 0 0 0 21 16z" />
             <path d="m3.3 7 8.7 5 8.7-5" />
             <path d="M12 22V12" />
-          </svg>
-        ),
-      },
-      {
-        to: '/profile',
-        label: 'Mi Perfil',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
           </svg>
         ),
       },

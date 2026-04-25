@@ -8,14 +8,13 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { useProfile, useUpdateProfile, useUploadAvatar, useAvatarUrl } from './useProfile';
 
-/* ── Avatar display ──────────────────────────────────────────────────────── */
 function AvatarDisplay({ url, displayName, size = 80 }) {
   if (url) {
     return (
       <img
         src={url}
-        alt={`Avatar de ${displayName ?? 'usuario'}`}
-        className="rounded-full object-cover border border-border"
+        alt={`Foto de ${displayName ?? 'usuario'}`}
+        className="rounded-full object-cover border border-border shrink-0"
         style={{ width: size, height: size }}
       />
     );
@@ -37,8 +36,7 @@ function AvatarDisplay({ url, displayName, size = 80 }) {
   );
 }
 
-/* ── Read-only field ─────────────────────────────────────────────────────── */
-function Field({ label, value, mono }) {
+function ReadField({ label, value, mono }) {
   return (
     <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
       <span className="text-xs font-medium text-text-secondary w-36 shrink-0">{label}</span>
@@ -47,7 +45,6 @@ function Field({ label, value, mono }) {
   );
 }
 
-/* ── Main page ───────────────────────────────────────────────────────────── */
 export default function MiPerfilPage() {
   const storeUser = useAuthStore((s) => s.user);
   const { handleError } = useApiError();
@@ -59,20 +56,21 @@ export default function MiPerfilPage() {
   const updateMutation = useUpdateProfile();
   const uploadMutation = useUploadAvatar();
 
-  const [form, setForm] = useState({ displayName: '', phone: '', address: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', address: '' });
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
     setForm({
-      displayName: profile.displayName ?? '',
+      firstName: profile.firstName ?? '',
+      lastName: profile.lastName ?? '',
       phone: profile.phone ?? '',
       address: profile.address ?? '',
     });
     setDirty(false);
   }, [profile]);
 
-  function handleChange(field, value) {
+  function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setDirty(true);
   }
@@ -81,7 +79,8 @@ export default function MiPerfilPage() {
     e.preventDefault();
     try {
       await updateMutation.mutateAsync({
-        displayName: form.displayName || undefined,
+        firstName: form.firstName || undefined,
+        lastName: form.lastName || undefined,
         phone: form.phone || undefined,
         address: form.address || undefined,
       });
@@ -129,9 +128,9 @@ export default function MiPerfilPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <PageHeader title="Mi Perfil" description="Información personal y configuración de cuenta" />
+      <PageHeader title="Mi Perfil" description="Información personal y datos de tu cuenta" />
 
-      {/* ── Avatar ── */}
+      {/* ── Foto de perfil ── */}
       <div className="rounded-xl border border-border bg-surface-card p-6">
         <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-5">
           Foto de perfil
@@ -170,29 +169,40 @@ export default function MiPerfilPage() {
         </div>
       </div>
 
-      {/* ── Personal info ── */}
+      {/* ── Datos personales ── */}
       <form onSubmit={handleSave} className="rounded-xl border border-border bg-surface-card p-6">
         <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-5">
-          Información personal
+          Datos personales
         </h2>
         {isLoading ? (
           <p className="text-sm text-text-disabled py-4">Cargando…</p>
         ) : (
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-text-secondary">Nombre de display</label>
-              <Input
-                value={form.displayName}
-                onChange={(e) => handleChange('displayName', e.target.value)}
-                placeholder="Tu nombre visible"
-                maxLength={100}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-text-secondary">Nombre</label>
+                <Input
+                  value={form.firstName}
+                  onChange={(e) => set('firstName', e.target.value)}
+                  placeholder="Tu nombre"
+                  maxLength={80}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-text-secondary">Apellidos</label>
+                <Input
+                  value={form.lastName}
+                  onChange={(e) => set('lastName', e.target.value)}
+                  placeholder="Tus apellidos"
+                  maxLength={80}
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-text-secondary">Teléfono</label>
               <Input
                 value={form.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
+                onChange={(e) => set('phone', e.target.value)}
                 placeholder="+52 55 1234 5678"
                 maxLength={30}
               />
@@ -201,7 +211,7 @@ export default function MiPerfilPage() {
               <label className="text-xs font-medium text-text-secondary">Dirección</label>
               <Input
                 value={form.address}
-                onChange={(e) => handleChange('address', e.target.value)}
+                onChange={(e) => set('address', e.target.value)}
                 placeholder="Calle, colonia, ciudad"
                 maxLength={255}
               />
@@ -222,24 +232,24 @@ export default function MiPerfilPage() {
         )}
       </form>
 
-      {/* ── Account info (read-only) ── */}
+      {/* ── Cuenta ── */}
       <div className="rounded-xl border border-border bg-surface-card p-6">
         <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
           Cuenta
         </h2>
-        <Field label="Correo electrónico" value={user?.email} />
-        <Field label="ID de usuario" value={user?.id} mono />
+        <ReadField label="Correo electrónico" value={user?.email} />
+        <ReadField label="ID de usuario" value={user?.id} mono />
         <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
           <span className="text-xs font-medium text-text-secondary w-36 shrink-0">Estado</span>
           <Badge variant={statusVariant} size="xs">
             {statusLabel}
           </Badge>
         </div>
-        <Field
+        <ReadField
           label="Último acceso"
           value={user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString('es-MX') : null}
         />
-        <Field
+        <ReadField
           label="Miembro desde"
           value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString('es-MX') : null}
         />
