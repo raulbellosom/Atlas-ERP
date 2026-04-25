@@ -103,22 +103,26 @@ model Branch {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  organizationId String
-  branchId       String?
-  email          String
-  displayName    String
-  passwordHash   String?
-  isActive       Boolean   @default(true)
-  isLocked       Boolean   @default(false)
-  lockedAt       DateTime?
-  lastLoginAt    DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
+  id                 String    @id @default(cuid())
+  organizationId     String
+  branchId           String?
+  email              String
+  displayName        String
+  phone              String?
+  address            String?
+  avatarAttachmentId String?
+  passwordHash       String?
+  isActive           Boolean   @default(true)
+  isLocked           Boolean   @default(false)
+  lockedAt           DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
-  organization                 Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  branch                       Branch?                       @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  branch           Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  avatarAttachment Attachment?  @relation("UserAvatarAttachment", fields: [avatarAttachmentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   userRoles                    UserRole[]
   auditLogs                    AuditLog[]                    @relation("UserAuditLogs")
   attachments                  Attachment[]                  @relation("UserAttachments")
@@ -263,6 +267,7 @@ model Attachment {
 
   organization        Organization                  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   logoOrganizations   Organization[]                @relation("OrganizationLogo")
+  avatarUsers         User[]                        @relation("UserAvatarAttachment")
   uploadedBy          User?                         @relation("UserAttachments", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   movementAttachments FinancialMovementAttachment[]
 

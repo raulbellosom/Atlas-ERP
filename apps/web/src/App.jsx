@@ -14,7 +14,7 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const SetupPage = lazy(() => import('@/pages/setup/SetupPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
-const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const MiPerfilPage = lazy(() => import('@/pages/profile/MiPerfilPage'));
 const ModuleStorePage = lazy(() => import('@/modules/module-store/pages/ModuleStorePage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const RolesPage = lazy(() => import('@/pages/roles/RolesPage'));
@@ -92,7 +92,8 @@ function App() {
                       <Route path="/audit" element={<AuditPage />} />
                       <Route path="/attachments" element={<AttachmentsPage />} />
                       <Route path="/sync" element={<SyncCenterPage />} />
-                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/profile" element={<MiPerfilPage />} />
+                      <Route path="/settings" element={<Navigate to="/profile" replace />} />
                       <Route path="/module-store" element={<ModuleStorePage />} />
                     </Route>
 

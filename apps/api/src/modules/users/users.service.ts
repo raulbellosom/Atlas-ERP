@@ -7,6 +7,7 @@ import { AuditService } from '../audit/audit.service';
 import { SessionsService } from '../sessions/sessions.service';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 const USER_SELECT = {
   id: true,
@@ -14,6 +15,9 @@ const USER_SELECT = {
   branchId: true,
   email: true,
   displayName: true,
+  phone: true,
+  address: true,
+  avatarAttachmentId: true,
   isActive: true,
   isLocked: true,
   lastLoginAt: true,
@@ -63,6 +67,22 @@ export class UsersService {
   async findOneById(id: string): Promise<UserSummary | null> {
     return this.prisma.user.findFirst({
       where: { id, deletedAt: null },
+      select: USER_SELECT,
+    });
+  }
+
+  async updateOwnProfile(userId: string, dto: UpdateProfileDto): Promise<UserSummary> {
+    const user = await this.prisma.user.findFirst({ where: { id: userId, deletedAt: null } });
+    if (!user) throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND });
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.displayName !== undefined && { displayName: dto.displayName }),
+        ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.address !== undefined && { address: dto.address }),
+        ...('avatarAttachmentId' in dto && { avatarAttachmentId: dto.avatarAttachmentId ?? null }),
+      },
       select: USER_SELECT,
     });
   }

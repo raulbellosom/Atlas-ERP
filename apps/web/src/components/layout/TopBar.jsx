@@ -442,8 +442,8 @@ export default function TopBar({ onMenuToggle }) {
                 <Dropdown.Separator className="h-px bg-border mx-1 mb-1" />
 
                 {/* ── Navigation items ── */}
-                <MenuItem icon={<IcoUser />} onSelect={() => navigate('/settings')}>
-                  Editar perfil
+                <MenuItem icon={<IcoUser />} onSelect={() => navigate('/profile')}>
+                  Mi Perfil
                 </MenuItem>
 
                 <Dropdown.Separator className="h-px bg-border mx-1 my-1" />
