@@ -18,6 +18,137 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/DropdownMenu';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import { useEmployees } from '@/modules/hr/hooks/useHr';
+
+function useRoles(organizationId) {
+  return useQuery({
+    queryKey: ['roles', organizationId],
+    queryFn: async () => {
+      const res = await apiClient.get('/v1/roles', { params: { organizationId } });
+      const payload = res.data?.data ?? res.data;
+      return Array.isArray(payload) ? payload : (payload?.items ?? []);
+    },
+    enabled: Boolean(organizationId),
+  });
+}
+
+function useInviteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) =>
+      apiClient.post('/v1/users/invite', data).then((r) => r.data?.data ?? r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+  });
+}
+
+const INVITE_EMPTY = { email: '', displayName: '', password: '', roleId: '' };
+
+function InviteUserModal({ open, onClose, organizationId }) {
+  const { handleError } = useApiError();
+  const { toast } = useToast();
+  const inviteMutation = useInviteUser();
+  const { data: roles = [] } = useRoles(organizationId);
+  const [form, setForm] = useState(INVITE_EMPTY);
+  const [errors, setErrors] = useState({});
+
+  function set(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
+  }
+
+  function validate() {
+    const errs = {};
+    if (!form.email.trim()) errs.email = 'Requerido';
+    if (!form.password || form.password.length < 8) errs.password = 'Mínimo 8 caracteres';
+    return errs;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+    try {
+      await inviteMutation.mutateAsync({
+        organizationId,
+        email: form.email.trim(),
+        displayName: form.displayName.trim() || undefined,
+        password: form.password,
+        roleId: form.roleId || undefined,
+      });
+      toast.success(`Usuario "${form.email}" invitado correctamente`);
+      setForm(INVITE_EMPTY);
+      onClose();
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
+  const roleOptions = roles.map((r) => ({ value: r.id, label: r.name }));
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Invitar usuario"
+      description="El usuario podrá acceder a la plataforma con estas credenciales"
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={inviteMutation.isPending}
+          >
+            {inviteMutation.isPending ? 'Invitando…' : 'Invitar'}
+          </Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Correo electrónico"
+          type="email"
+          required
+          value={form.email}
+          onChange={(e) => set('email', e.target.value)}
+          error={errors.email}
+        />
+        <Input
+          label="Nombre de display"
+          value={form.displayName}
+          onChange={(e) => set('displayName', e.target.value)}
+        />
+        <Input
+          label="Contraseña"
+          type="password"
+          required
+          value={form.password}
+          onChange={(e) => set('password', e.target.value)}
+          error={errors.password}
+        />
+        {roleOptions.length > 0 && (
+          <Select
+            label="Rol"
+            placeholder="Sin rol asignado"
+            options={roleOptions}
+            value={form.roleId}
+            onValueChange={(v) => set('roleId', v)}
+          />
+        )}
+      </form>
+    </Modal>
+  );
+}
 
 function useUsers(organizationId) {
   return useQuery({
@@ -69,9 +200,15 @@ export default function UsersPage() {
   const { toast } = useToast();
 
   const { data: users = [], isLoading, error } = useUsers(organizationId);
+  const { data: employees = [] } = useEmployees(organizationId);
   const { query, setQuery, results } = useGlobalSearch(users, userMatcher);
 
+  const employeeByUserId = Object.fromEntries(
+    employees.filter((e) => e.userId).map((e) => [e.userId, e]),
+  );
+
   const [actionTarget, setActionTarget] = useState(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const lockMutation = useUserAction('lock');
   const unlockMutation = useUserAction('unlock');
@@ -111,6 +248,20 @@ export default function UsersPage() {
       key: 'displayName',
       header: 'Nombre',
       render: (u) => <span className="text-sm text-text-secondary">{u.displayName ?? '—'}</span>,
+    },
+    {
+      key: '_hr',
+      header: 'Perfil HR',
+      render: (u) => {
+        const emp = employeeByUserId[u.id];
+        return emp ? (
+          <Badge variant="violet" size="xs">
+            {emp.firstName} {emp.lastName}
+          </Badge>
+        ) : (
+          <span className="text-text-disabled text-xs">—</span>
+        );
+      },
     },
     {
       key: 'status',
@@ -218,7 +369,17 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Usuarios" description="Miembros con acceso a la plataforma" />
+      <PageHeader
+        title="Usuarios"
+        description="Miembros con acceso a la plataforma"
+        actions={
+          isAdmin && (
+            <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
+              Invitar usuario
+            </Button>
+          )
+        }
+      />
 
       <div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-surface-subtle">
@@ -260,6 +421,12 @@ export default function UsersPage() {
             ? `No se encontraron usuarios para "${query}"`
             : 'No hay usuarios registrados en esta organización'
         }
+      />
+
+      <InviteUserModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        organizationId={organizationId}
       />
 
       <AlertDialog
