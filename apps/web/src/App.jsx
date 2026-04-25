@@ -27,6 +27,8 @@ import { financialOperationsRoutes } from '@/modules/financial-operations/routes
 import FinOpsLayout from '@/modules/financial-operations/components/FinOpsLayout';
 import HRLayout from '@/modules/hr/components/HRLayout';
 import AccountingLayout from '@/modules/accounting/components/AccountingLayout';
+import EmpresaLayout from '@/modules/empresa/components/EmpresaLayout';
+import InstanciaLayout from '@/modules/instancia/components/InstanciaLayout';
 
 const HRHomePage = lazy(() => import('@/modules/hr/pages/HRHomePage'));
 const EmployeesPage = lazy(() => import('@/modules/hr/pages/EmployeesPage'));
@@ -36,6 +38,26 @@ const AccountingHomePage = lazy(() => import('@/modules/accounting/pages/Account
 const ChartOfAccountsPage = lazy(() => import('@/modules/accounting/pages/ChartOfAccountsPage'));
 const JournalEntriesPage = lazy(() => import('@/modules/accounting/pages/JournalEntriesPage'));
 const FiscalPeriodsPage = lazy(() => import('@/modules/accounting/pages/FiscalPeriodsPage'));
+const IncomeStatementReportPage = lazy(
+  () => import('@/modules/accounting/pages/IncomeStatementReportPage'),
+);
+const BalanceSheetReportPage = lazy(
+  () => import('@/modules/accounting/pages/BalanceSheetReportPage'),
+);
+const TrialBalanceReportPage = lazy(
+  () => import('@/modules/accounting/pages/TrialBalanceReportPage'),
+);
+
+const EmpresaHomePage = lazy(() => import('@/modules/empresa/pages/EmpresaHomePage'));
+const EmpresaPerfilPage = lazy(() => import('@/modules/empresa/pages/EmpresaPerfilPage'));
+const EmpresaMarcaPage = lazy(() => import('@/modules/empresa/pages/EmpresaMarcaPage'));
+const EmpresaConfigPage = lazy(() => import('@/modules/empresa/pages/EmpresaConfigPage'));
+
+const InstanciaHomePage = lazy(() => import('@/modules/instancia/pages/InstanciaHomePage'));
+const InstanciaSessionsPage = lazy(() => import('@/modules/instancia/pages/InstanciaSessionsPage'));
+const InstanciaFeatureFlagsPage = lazy(
+  () => import('@/modules/instancia/pages/InstanciaFeatureFlagsPage'),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,9 +122,12 @@ function App() {
                       <Route path="chart-of-accounts" element={<ChartOfAccountsPage />} />
                       <Route path="journal-entries" element={<JournalEntriesPage />} />
                       <Route path="fiscal-periods" element={<FiscalPeriodsPage />} />
-                      <Route path="reports/income-statement" element={<AccountingHomePage />} />
-                      <Route path="reports/balance-sheet" element={<AccountingHomePage />} />
-                      <Route path="reports/trial-balance" element={<AccountingHomePage />} />
+                      <Route
+                        path="reports/income-statement"
+                        element={<IncomeStatementReportPage />}
+                      />
+                      <Route path="reports/balance-sheet" element={<BalanceSheetReportPage />} />
+                      <Route path="reports/trial-balance" element={<TrialBalanceReportPage />} />
                     </Route>
 
                     <Route
@@ -120,6 +145,19 @@ function App() {
                           <Route key={r.path} path={r.path} element={<r.element />} />
                         ))}
                     </Route>
+                  </Route>
+
+                  <Route path="/empresa" element={<EmpresaLayout />}>
+                    <Route index element={<EmpresaHomePage />} />
+                    <Route path="perfil" element={<EmpresaPerfilPage />} />
+                    <Route path="marca" element={<EmpresaMarcaPage />} />
+                    <Route path="configuracion" element={<EmpresaConfigPage />} />
+                  </Route>
+
+                  <Route path="/instancia" element={<InstanciaLayout />}>
+                    <Route index element={<InstanciaHomePage />} />
+                    <Route path="sesiones" element={<InstanciaSessionsPage />} />
+                    <Route path="funciones" element={<InstanciaFeatureFlagsPage />} />
                   </Route>
 
                   <Route path="/" element={<Navigate to="/login" replace />} />
