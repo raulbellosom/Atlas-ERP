@@ -83,7 +83,7 @@ export class SetupService {
           settings: {
             where: {
               key: {
-                in: ['organization.ui.brand_name', 'organization.ui.logo_data_url'],
+                in: ['organization.ui.logo_data_url'],
               },
             },
             select: {
@@ -97,11 +97,7 @@ export class SetupService {
       const settingsMap = new Map(
         (organization?.settings ?? []).map((setting) => [setting.key, setting.value]),
       );
-      const organizationName =
-        settingsMap.get('organization.ui.brand_name') ??
-        organization?.commercialName ??
-        organization?.name ??
-        null;
+      const organizationName = organization?.commercialName ?? organization?.name ?? null;
 
       let logoUrl: string | null = null;
       if (organization?.logoAttachment?.storagePath) {

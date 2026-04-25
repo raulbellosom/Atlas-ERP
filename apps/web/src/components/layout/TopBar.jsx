@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import * as Popover from '@radix-ui/react-popover';
@@ -13,15 +13,6 @@ import { INSTALLED_MODULES_QUERY_KEY } from '@/hooks/useInstalledModules';
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function getInitial(user) {
   return (user?.displayName ?? user?.email ?? 'U')[0].toUpperCase();
-}
-
-function readBranding() {
-  try {
-    const raw = localStorage.getItem('atlas-branding');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
 }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
@@ -280,56 +271,30 @@ function AppSwitcher() {
 export default function TopBar({ onMenuToggle }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [companyName, setCompanyName] = useState(null);
-  const [companyColor, setCompanyColor] = useState(null);
-  const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
   const [open, setOpen] = useState(false);
 
-  /* fetch org name + seed company color from branding */
-  useEffect(() => {
-    const branding = readBranding();
-    if (branding?.primaryColor) setCompanyColor(branding.primaryColor);
-    if (branding?.companyName) {
-      setCompanyName((prev) => prev ?? branding.companyName);
-    }
-    if (branding?.logoUrl) setCompanyLogoUrl(branding.logoUrl);
-    if (branding?.logoDataUrl && !branding?.logoUrl) setCompanyLogoUrl(branding.logoDataUrl);
-  }, []);
+  const { data: orgData } = useQuery({
+    queryKey: ['organization', user?.organizationId],
+    queryFn: () =>
+      apiClient.get(`/v1/organizations/${user.organizationId}`).then((r) => r.data?.data ?? r.data),
+    enabled: Boolean(user?.organizationId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    let mounted = true;
-    apiClient
-      .get('/v1/setup/status')
-      .then((res) => {
-        const data = res.data?.data ?? res.data;
-        const branding = data?.branding;
-        if (!mounted || !branding) return;
+  const { data: logoUrl = null } = useQuery({
+    queryKey: ['attachment-url', orgData?.logoAttachmentId],
+    queryFn: () =>
+      apiClient.get(`/v1/attachments/${orgData.logoAttachmentId}/download`).then((r) => {
+        const p = r.data?.data ?? r.data;
+        return p?.downloadUrl ?? null;
+      }),
+    enabled: Boolean(orgData?.logoAttachmentId),
+    staleTime: 4 * 60 * 1000,
+  });
 
-        if (branding.organizationName) setCompanyName(branding.organizationName);
-        if (branding.primaryColor) setCompanyColor(branding.primaryColor);
-        setCompanyLogoUrl(branding.logoUrl ?? branding.logoDataUrlLegacy ?? null);
-      })
-      .catch(() => {});
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user?.organizationId) return;
-    let mounted = true;
-    apiClient
-      .get(`/v1/organizations/${user.organizationId}`)
-      .then((res) => {
-        const data = res.data?.data ?? res.data;
-        if (mounted && data?.name) setCompanyName(data.name);
-      })
-      .catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, [user?.organizationId]);
+  const companyName = orgData?.commercialName || orgData?.name || null;
+  const companyColor = orgData?.primaryColor || null;
+  const companyLogoUrl = logoUrl;
 
   const handleLogout = () => {
     logout();

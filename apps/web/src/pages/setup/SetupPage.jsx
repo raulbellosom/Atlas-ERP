@@ -1493,17 +1493,6 @@ export default function SetupPage() {
         ...(form.logoFileName ? { logoFileName: form.logoFileName } : {}),
         ...(form.logoAttachmentId ? { logoAttachmentId: form.logoAttachmentId.trim() } : {}),
       });
-      try {
-        localStorage.setItem(
-          'atlas-branding',
-          JSON.stringify({
-            companyName: form.businessCommercialName.trim(),
-            primaryColor: form.primaryColor,
-          }),
-        );
-      } catch {
-        /* ignore */
-      }
       navigate('/login', { replace: true });
     } catch (err) {
       setSubmitError(
