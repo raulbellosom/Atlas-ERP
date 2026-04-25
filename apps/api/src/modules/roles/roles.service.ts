@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { CreateRoleDto } from './dto/create-role.dto';
 import { ListRolesQueryDto } from './dto/list-roles.query.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 const ROLE_SELECT = {
   id: true,
@@ -90,13 +92,45 @@ export class RolesService {
           },
         },
       },
-      orderBy: [
-        { permission: { module: 'asc' } },
-        { permission: { action: 'asc' } },
-      ],
+      orderBy: [{ permission: { module: 'asc' } }, { permission: { action: 'asc' } }],
     });
 
     return rolePermissions.map((rp) => rp.permission);
+  }
+
+  async create(dto: CreateRoleDto): Promise<RoleSummary> {
+    const role = await this.prisma.role.create({
+      data: {
+        organizationId: dto.organizationId,
+        name: dto.name,
+        description: dto.description,
+        level: dto.level ?? 1,
+        parentRoleId: dto.parentRoleId,
+        isActive: dto.isActive ?? true,
+      },
+      select: ROLE_SELECT,
+    });
+    return this.toSummary(role);
+  }
+
+  async update(id: string, dto: UpdateRoleDto): Promise<RoleSummary> {
+    const role = await this.prisma.role.update({
+      where: { id },
+      data: dto,
+      select: ROLE_SELECT,
+    });
+    return this.toSummary(role);
+  }
+
+  async setPermissions(roleId: string, permissionIds: string[]): Promise<PermissionRecord[]> {
+    await this.prisma.rolePermission.deleteMany({ where: { roleId } });
+    if (permissionIds.length) {
+      await this.prisma.rolePermission.createMany({
+        data: permissionIds.map((permissionId) => ({ roleId, permissionId })),
+        skipDuplicates: true,
+      });
+    }
+    return this.findPermissionsByRoleId(roleId);
   }
 
   /**
