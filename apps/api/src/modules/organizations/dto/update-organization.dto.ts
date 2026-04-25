@@ -1,10 +1,18 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class UpdateOrganizationDto {
   @IsOptional()
   @IsString()
   @MaxLength(160)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  @Matches(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, {
+    message: 'slug solo puede contener letras minúsculas, números y guiones',
+  })
+  slug?: string;
 
   @IsOptional()
   @IsString()

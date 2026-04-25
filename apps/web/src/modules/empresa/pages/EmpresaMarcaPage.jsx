@@ -10,6 +10,7 @@ import {
   useUpdateOrganization,
   useLogoUrl,
   useUploadLogo,
+  useSettings,
 } from '../hooks/useEmpresa';
 
 export default function EmpresaMarcaPage() {
@@ -21,6 +22,7 @@ export default function EmpresaMarcaPage() {
 
   const { data: org } = useOrganization(organizationId);
   const { data: logoUrl } = useLogoUrl(org?.logoAttachmentId);
+  const { data: settings = [] } = useSettings(organizationId);
   const updateMutation = useUpdateOrganization();
   const uploadMutation = useUploadLogo();
 
@@ -28,11 +30,14 @@ export default function EmpresaMarcaPage() {
   const [colorDirty, setColorDirty] = useState(false);
 
   useEffect(() => {
-    if (org?.primaryColor) {
-      setColor(org.primaryColor);
+    const settingColor =
+      settings.find((s) => s.key === 'organization.ui.primary_color')?.value ?? '';
+    const initial = org?.primaryColor || settingColor || '';
+    if (initial) {
+      setColor(initial);
       setColorDirty(false);
     }
-  }, [org?.primaryColor]);
+  }, [org?.primaryColor, settings]);
 
   function handleColorChange(val) {
     setColor(val);

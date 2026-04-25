@@ -121,8 +121,15 @@ export default function EmpresaConfigPage() {
   const { toast } = useToast();
 
   const { data: org } = useOrganization(organizationId);
-  const { data: settings = [], isLoading } = useSettings(organizationId);
+  const { data: rawSettings = [], isLoading } = useSettings(organizationId);
   const deleteMutation = useDeleteOrganization();
+
+  const HIDDEN_KEYS = new Set([
+    'organization.ui.primary_color',
+    'organization.ui.logo_data_url',
+    'organization.ui.brand_name',
+  ]);
+  const settings = rawSettings.filter((s) => !HIDDEN_KEYS.has(s.key));
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmName, setConfirmName] = useState('');

@@ -7,6 +7,15 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useOrganization, useUpdateOrganization } from '../hooks/useEmpresa';
 
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Mn}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export default function EmpresaPerfilPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
@@ -16,16 +25,25 @@ export default function EmpresaPerfilPage() {
   const { data: org, isLoading } = useOrganization(organizationId);
   const updateMutation = useUpdateOrganization();
 
-  const [form, setForm] = useState({ name: '', legalName: '', commercialName: '', address: '' });
+  const [form, setForm] = useState({
+    name: '',
+    slug: '',
+    legalName: '',
+    commercialName: '',
+    address: '',
+  });
+  const [slugManual, setSlugManual] = useState(false);
 
   useEffect(() => {
     if (org) {
       setForm({
         name: org.name ?? '',
+        slug: org.slug ?? '',
         legalName: org.legalName ?? '',
         commercialName: org.commercialName ?? '',
         address: org.address ?? '',
       });
+      setSlugManual(false);
     }
   }, [org]);
 
@@ -37,6 +55,20 @@ export default function EmpresaPerfilPage() {
     } catch (err) {
       handleError(err);
     }
+  }
+
+  function handleNameChange(e) {
+    const name = e.target.value;
+    setForm((prev) => ({
+      ...prev,
+      name,
+      ...(slugManual ? {} : { slug: slugify(name) }),
+    }));
+  }
+
+  function handleSlugChange(e) {
+    setSlugManual(true);
+    setForm((prev) => ({ ...prev, slug: e.target.value }));
   }
 
   function handleChange(field) {
@@ -53,15 +85,19 @@ export default function EmpresaPerfilPage() {
         <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">Nombre</label>
-            <Input value={form.name} onChange={handleChange('name')} required />
+            <Input value={form.name} onChange={handleNameChange} required />
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">Slug</label>
-            <div className="flex items-center h-9 px-3 rounded-lg border border-border bg-surface-subtle text-sm font-mono text-text-disabled select-all">
-              {org?.slug ?? '—'}
-            </div>
+            <Input
+              value={form.slug}
+              onChange={handleSlugChange}
+              className="font-mono text-sm"
+              placeholder="mi-organizacion"
+            />
             <p className="text-xs text-text-disabled mt-1">
-              El slug es inmutable y se usa en URLs.
+              Se actualiza automáticamente al cambiar el nombre. Cambiar el slug puede romper URLs
+              existentes.
             </p>
           </div>
           <div>
