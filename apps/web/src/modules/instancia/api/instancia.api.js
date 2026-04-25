@@ -1,7 +1,7 @@
 import { apiClient } from '@/api/client';
 
 export async function fetchHealth() {
-  const res = await apiClient.get('/api/health');
+  const res = await apiClient.get('/health');
   return res.data;
 }
 

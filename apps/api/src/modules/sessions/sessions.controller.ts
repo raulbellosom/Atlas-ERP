@@ -17,6 +17,7 @@ export class SessionsController {
     );
     return sessions.map((s) => ({
       id: s.id,
+      userId: s.userId,
       ipAddress: s.ipAddress,
       userAgent: s.userAgent,
       status: s.status,
@@ -27,10 +28,7 @@ export class SessionsController {
   }
 
   @Delete(':id')
-  async revokeSession(
-    @Param('id') sessionId: string,
-    @Req() _req: AuthenticatedRequest,
-  ) {
+  async revokeSession(@Param('id') sessionId: string, @Req() _req: AuthenticatedRequest) {
     await this.sessionsService.revokeSession(sessionId);
     return { message: 'Sesión revocada correctamente.' };
   }

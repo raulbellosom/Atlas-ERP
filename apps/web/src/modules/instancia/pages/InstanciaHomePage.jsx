@@ -1,23 +1,34 @@
 import PageHeader from '@/components/ui/PageHeader';
 import { useHealth } from '../hooks/useInstancia';
 
+function resolveState(status) {
+  if (status === 'ok' || status === true || status === 'up') return 'ok';
+  if (status === 'unknown' || status == null) return 'unknown';
+  return 'error';
+}
+
 function StatusDot({ status }) {
-  const ok = status === 'ok' || status === true || status === 'up';
-  return (
-    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ok ? 'bg-green-500' : 'bg-red-500'}`} />
-  );
+  const state = resolveState(status);
+  const cls = state === 'ok' ? 'bg-green-500' : state === 'error' ? 'bg-red-500' : 'bg-border';
+  return <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cls}`} />;
 }
 
 function HealthCard({ label, status, detail }) {
-  const ok = status === 'ok' || status === true || status === 'up';
+  const state = resolveState(status);
+  const textCls =
+    state === 'ok'
+      ? 'text-green-600 dark:text-green-400'
+      : state === 'error'
+        ? 'text-red-500'
+        : 'text-text-disabled';
+  const stateLabel = state === 'ok' ? 'Operativo' : state === 'error' ? 'Error' : 'No disponible';
+
   return (
     <div className="rounded-xl border border-border bg-surface-card p-5 flex items-start gap-3">
       <StatusDot status={status} />
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="text-sm font-medium text-text-primary">{label}</span>
-        <span className={`text-xs ${ok ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-          {ok ? 'Operativo' : 'Error'}
-        </span>
+        <span className={`text-xs ${textCls}`}>{stateLabel}</span>
         {detail && <span className="text-xs text-text-disabled mt-0.5 truncate">{detail}</span>}
       </div>
     </div>
