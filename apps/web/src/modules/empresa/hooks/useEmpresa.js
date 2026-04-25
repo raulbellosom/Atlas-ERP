@@ -8,7 +8,7 @@ import {
 
 export const EMPRESA_KEYS = {
   organization: (id) => ['organization', id],
-  settings: (orgId) => ['settings', orgId],
+  settings: (orgId) => ['empresa-settings', orgId],
 };
 
 export function useOrganization(organizationId) {
@@ -42,7 +42,7 @@ export function useUpdateSetting() {
   return useMutation({
     mutationFn: ({ id, value }) => updateSetting(id, value),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['settings'] });
+      qc.invalidateQueries({ queryKey: ['empresa-settings'] });
     },
   });
 }
