@@ -7,6 +7,7 @@ import {
 } from '../../common/query-filters';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { ListOrganizationsQueryDto } from './dto/list-organizations.query.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 const ORGANIZATION_SELECT = {
   id: true,
@@ -25,9 +26,7 @@ type OrganizationSummary = Prisma.OrganizationGetPayload<{
 export class OrganizationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(
-    query: ListOrganizationsQueryDto,
-  ): Promise<OrganizationSummary[]> {
+  async findAll(query: ListOrganizationsQueryDto): Promise<OrganizationSummary[]> {
     const where: Prisma.OrganizationWhereInput = {
       ...buildSoftDeleteFilter(false),
       ...buildIsActiveFilter(query.includeInactive),
@@ -51,6 +50,14 @@ export class OrganizationsService {
   async findOneBySlug(slug: string): Promise<OrganizationSummary | null> {
     return this.prisma.organization.findFirst({
       where: { slug, deletedAt: null },
+      select: ORGANIZATION_SELECT,
+    });
+  }
+
+  async update(id: string, dto: UpdateOrganizationDto): Promise<OrganizationSummary> {
+    return this.prisma.organization.update({
+      where: { id },
+      data: dto,
       select: ORGANIZATION_SELECT,
     });
   }

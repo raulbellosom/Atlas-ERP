@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { ListSettingsQueryDto } from './dto/list-settings.query.dto';
+import { UpdateSettingDto } from './dto/update-setting.dto';
 
 const SETTING_SELECT = {
   id: true,
@@ -62,10 +63,15 @@ export class SettingsService {
     });
   }
 
-  async findOneByKey(
-    key: string,
-    organizationId?: string,
-  ): Promise<SettingSummary | null> {
+  async update(id: string, dto: UpdateSettingDto): Promise<SettingSummary> {
+    return this.prisma.setting.update({
+      where: { id },
+      data: { value: dto.value },
+      select: SETTING_SELECT,
+    });
+  }
+
+  async findOneByKey(key: string, organizationId?: string): Promise<SettingSummary | null> {
     if (organizationId) {
       return this.prisma.setting.findFirst({
         where: {
