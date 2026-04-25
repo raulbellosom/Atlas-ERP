@@ -1,6 +1,7 @@
-import { Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
 import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UsersService } from './users.service';
 
@@ -21,6 +22,12 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOneById(id);
+  }
+
+  @RequireAllPermissions('auth:user:write')
+  @Post('invite')
+  invite(@Body() dto: InviteUserDto) {
+    return this.usersService.inviteUser(dto);
   }
 
   @RequireAllPermissions('auth:user:write')

@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ErrorCode } from '../../common/errors';
+import { PasswordService } from '../../common/security/password.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 
 const USER_SELECT = {
@@ -41,6 +43,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly sessionsService: SessionsService,
     private readonly auditService: AuditService,
+    private readonly passwordService: PasswordService,
   ) {}
 
   async findAll(query: ListUsersQueryDto): Promise<UserSummary[]> {
@@ -75,9 +78,27 @@ export class UsersService {
   }
 
   async findForAuth(
-    organizationId: string,
+    organizationId: string | undefined,
     email: string,
   ): Promise<UserForAuth | null> {
+    if (!organizationId) {
+      const candidates = await this.prisma.user.findMany({
+        where: {
+          email: email.toLowerCase().trim(),
+          deletedAt: null,
+        },
+        select: USER_AUTH_SELECT,
+        take: 2,
+        orderBy: [{ createdAt: 'asc' }],
+      });
+
+      if (candidates.length !== 1) {
+        return null;
+      }
+
+      return candidates[0] ?? null;
+    }
+
     return this.prisma.user.findFirst({
       where: {
         organizationId,
@@ -85,6 +106,16 @@ export class UsersService {
         deletedAt: null,
       },
       select: USER_AUTH_SELECT,
+    });
+  }
+
+  async countActiveAuthCandidatesByEmail(email: string): Promise<number> {
+    return this.prisma.user.count({
+      where: {
+        email: email.toLowerCase().trim(),
+        isActive: true,
+        deletedAt: null,
+      },
     });
   }
 
@@ -205,7 +236,11 @@ export class UsersService {
     return updated;
   }
 
-  async deactivateUser(userId: string, organizationId: string, actorId?: string): Promise<UserSummary> {
+  async deactivateUser(
+    userId: string,
+    organizationId: string,
+    actorId?: string,
+  ): Promise<UserSummary> {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
       select: { id: true, organizationId: true, isActive: true },
@@ -241,5 +276,23 @@ export class UsersService {
     });
 
     return updated;
+  }
+
+  async inviteUser(dto: InviteUserDto): Promise<UserSummary> {
+    const passwordHash = await this.passwordService.hash(dto.password);
+    const user = await this.prisma.user.create({
+      data: {
+        organizationId: dto.organizationId,
+        email: dto.email,
+        displayName: dto.displayName,
+        passwordHash,
+        isActive: true,
+      },
+      select: USER_SELECT,
+    });
+    if (dto.roleId) {
+      await this.prisma.userRole.create({ data: { userId: user.id, roleId: dto.roleId } });
+    }
+    return user;
   }
 }
