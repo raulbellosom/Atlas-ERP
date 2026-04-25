@@ -1,14 +1,30 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/api/client";
-import useAuthStore from "@/store/auth.store";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/api/client';
+import useAuthStore from '@/store/auth.store';
+import { useApiError } from '@/hooks/useApiError';
+import { formatDate } from '@/lib/i18n';
+import Table from '@/components/ui/Table';
+import Badge from '@/components/ui/Badge';
+import SearchInput from '@/components/ui/SearchInput';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
 
-function useAuditLogs({ organizationId, page, limit }) {
+const PAGE_SIZE = 20;
+
+const RESULT_VARIANTS = {
+  SUCCESS: 'green',
+  FAILURE: 'red',
+  ERROR: 'red',
+  WARNING: 'yellow',
+};
+
+function useAuditLogs(organizationId, page) {
   return useQuery({
-    queryKey: ["audit-logs", organizationId, page, limit],
+    queryKey: ['audit-logs', organizationId, page],
     queryFn: async () => {
-      const res = await apiClient.get("/v1/audit/logs", {
-        params: { organizationId, page, limit },
+      const res = await apiClient.get('/v1/audit/logs', {
+        params: { organizationId, page, limit: PAGE_SIZE },
       });
       return res.data?.data ?? res.data;
     },
@@ -17,153 +33,149 @@ function useAuditLogs({ organizationId, page, limit }) {
   });
 }
 
-const PAGE_SIZE = 20;
+const COLUMNS = [
+  {
+    key: 'action',
+    header: 'Acción',
+    render: (r) => <span className="text-xs font-mono text-brand-600">{r.action}</span>,
+  },
+  {
+    key: 'entityType',
+    header: 'Entidad',
+    render: (r) => (
+      <div className="flex flex-col">
+        <span className="text-sm text-text-secondary">{r.entityType ?? '—'}</span>
+        {r.entityId && (
+          <span className="text-xs font-mono text-text-disabled truncate max-w-30">
+            {r.entityId}
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
+    key: 'actorId',
+    header: 'Actor',
+    render: (r) => (
+      <span className="text-xs font-mono text-text-secondary truncate block max-w-30">
+        {r.actorId ?? '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'result',
+    header: 'Resultado',
+    render: (r) =>
+      r.result ? (
+        <Badge variant={RESULT_VARIANTS[r.result] ?? 'gray'} size="xs">
+          {r.result}
+        </Badge>
+      ) : (
+        <span className="text-text-disabled text-xs">—</span>
+      ),
+  },
+  {
+    key: 'createdAt',
+    header: 'Fecha',
+    render: (r) => (
+      <span className="text-xs text-text-secondary">
+        {r.createdAt ? formatDate(r.createdAt) : '—'}
+      </span>
+    ),
+  },
+];
 
 export default function AuditPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
+  const { handleError } = useApiError();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
 
-  const { data, isLoading, isError } = useAuditLogs({
-    organizationId,
-    page,
-    limit: PAGE_SIZE,
-  });
+  const { data, isLoading, error } = useAuditLogs(organizationId, page);
+
+  if (error) handleError(error);
 
   const items = data?.items ?? [];
   const pagination = data?.pagination;
+  const totalPages = pagination?.totalPages ?? 1;
+  const total = pagination?.total ?? 0;
+
+  const filtered = search
+    ? items.filter(
+        (l) =>
+          l.action?.toLowerCase().includes(search.toLowerCase()) ||
+          l.entityType?.toLowerCase().includes(search.toLowerCase()) ||
+          l.actorId?.toLowerCase().includes(search.toLowerCase()),
+      )
+    : items;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Auditoría</h1>
-        <p className="text-sm text-text-secondary mt-1">
-          Registro de acciones del sistema
-        </p>
+      <PageHeader title="Auditoría" description="Registro de acciones del sistema" />
+
+      <div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-surface-subtle">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            className="text-amber-500 shrink-0"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 3h12M3 7h8M5 11h4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className="label-caps text-[10px]">Búsqueda</span>
+        </div>
+        <div className="p-4">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar por acción, entidad o actor…"
+            className="w-full sm:w-80"
+          />
+        </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-lg overflow-hidden">
-        {isLoading && (
-          <div className="px-6 py-8 text-sm text-text-secondary text-center">
-            Cargando registros...
-          </div>
-        )}
-        {isError && (
-          <div className="px-6 py-8 text-sm text-red-600 text-center">
-            No se pudieron cargar los registros de auditoría.
-          </div>
-        )}
-        {!isLoading && !isError && (
-          <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-surface-subtle">
-                  <Th>Acción</Th>
-                  <Th>Entidad</Th>
-                  <Th>Actor</Th>
-                  <Th>Resultado</Th>
-                  <Th>Fecha</Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-text-disabled">
-                      Sin registros de auditoría.
-                    </td>
-                  </tr>
-                )}
-                {items.map((log) => (
-                  <tr key={log.id} className="hover:bg-surface-subtle transition-colors">
-                    <Td>
-                      <span className="font-mono text-xs text-brand-600">{log.action}</span>
-                    </Td>
-                    <Td>
-                      <span className="text-text-secondary">{log.entityType}</span>
-                      {log.entityId && (
-                        <span className="block font-mono text-xs text-text-disabled truncate max-w-32">
-                          {log.entityId}
-                        </span>
-                      )}
-                    </Td>
-                    <Td>
-                      <span className="font-mono text-xs text-text-secondary truncate block max-w-32">
-                        {log.actorId ?? "—"}
-                      </span>
-                    </Td>
-                    <Td>
-                      <span
-                        className={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                          log.result === "SUCCESS"
-                            ? "bg-green-50 text-green-700"
-                            : log.result
-                            ? "bg-red-50 text-red-700"
-                            : "bg-gray-100 text-gray-600",
-                        ].join(" ")}
-                      >
-                        {log.result ?? "—"}
-                      </span>
-                    </Td>
-                    <Td>
-                      {log.createdAt
-                        ? new Date(log.createdAt).toLocaleString("es")
-                        : "—"}
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <Table
+        columns={COLUMNS}
+        data={filtered}
+        isLoading={isLoading}
+        emptyTitle="Sin registros"
+        emptyDescription="No hay eventos de auditoría para este período"
+      />
 
-            {/* Paginación */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                <span className="text-xs text-text-secondary">
-                  Página {pagination.page} de {pagination.totalPages} ({pagination.total} registros)
-                </span>
-                <div className="flex gap-2">
-                  <PaginationBtn
-                    onClick={() => setPage((p) => p - 1)}
-                    disabled={page <= 1}
-                  >
-                    Anterior
-                  </PaginationBtn>
-                  <PaginationBtn
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={page >= pagination.totalPages}
-                  >
-                    Siguiente
-                  </PaginationBtn>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-text-secondary">
+          <span>
+            Página {page} de {totalPages} ({total} registros)
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-function Th({ children }) {
-  return (
-    <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }) {
-  return <td className="px-4 py-3">{children}</td>;
-}
-
-function PaginationBtn({ children, onClick, disabled }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="px-3 py-1 text-xs border border-border rounded-md text-text-secondary hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-    >
-      {children}
-    </button>
   );
 }
