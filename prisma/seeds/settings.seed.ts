@@ -48,6 +48,36 @@ const ORGANIZATION_SETTINGS: SettingSeed[] = [
     isActive: true,
   },
   {
+    key: 'organization.locale',
+    value: 'es-MX',
+    description: 'Idioma de la interfaz para esta organización.',
+    isActive: true,
+  },
+  {
+    key: 'organization.timezone',
+    value: 'America/Mexico_City',
+    description: 'Zona horaria de la organización.',
+    isActive: true,
+  },
+  {
+    key: 'organization.currency',
+    value: 'MXN',
+    description: 'Moneda principal de la organización.',
+    isActive: true,
+  },
+  {
+    key: 'organization.profile.industry',
+    value: '',
+    description: 'Sector o rubro de la organización.',
+    isActive: true,
+  },
+  {
+    key: 'organization.profile.company_size',
+    value: '',
+    description: 'Tamaño de la organización por número de empleados.',
+    isActive: true,
+  },
+  {
     key: 'organization.sync.enabled',
     value: 'true',
     description: 'Activa los flujos de sincronización para la organización activa.',
@@ -98,6 +128,7 @@ export async function seedSettings(prisma: PrismaClient, organizationId: string)
 
   await seedGlobalSettings(prisma);
   await seedOrganizationSettings(prisma, organizationId);
+  await backfillOrganizationSettings(prisma);
 
   console.log(
     `[seeds][settings] OK (${GLOBAL_SETTINGS.length} globales, ${ORGANIZATION_SETTINGS.length} por organización).`,
@@ -134,7 +165,6 @@ export async function seedOrganizationSettings(
         },
       },
       update: {
-        value: setting.value,
         description: setting.description,
         isActive: setting.isActive,
       },
@@ -146,5 +176,28 @@ export async function seedOrganizationSettings(
         isActive: setting.isActive,
       },
     });
+  }
+}
+
+export async function backfillOrganizationSettings(prisma: PrismaClient): Promise<void> {
+  const orgs = await prisma.organization.findMany({
+    where: { deletedAt: null, isActive: true },
+    select: { id: true },
+  });
+
+  for (const org of orgs) {
+    for (const setting of ORGANIZATION_SETTINGS) {
+      await prisma.setting.upsert({
+        where: { organizationId_key: { organizationId: org.id, key: setting.key } },
+        update: { description: setting.description, isActive: setting.isActive },
+        create: {
+          organizationId: org.id,
+          key: setting.key,
+          value: setting.value,
+          description: setting.description,
+          isActive: setting.isActive,
+        },
+      });
+    }
   }
 }

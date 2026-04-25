@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import AlertDialog from '@/components/ui/AlertDialog';
 import {
   useOrganization,
@@ -14,12 +15,100 @@ import {
   useDeleteOrganization,
 } from '../hooks/useEmpresa';
 
-function isBoolean(val) {
-  return val === 'true' || val === 'false';
-}
+const HIDDEN_KEYS = new Set([
+  'organization.ui.primary_color',
+  'organization.ui.logo_data_url',
+  'organization.ui.brand_name',
+]);
 
-function isNumeric(val) {
-  return val !== '' && val !== null && !isNaN(Number(val)) && !/[a-zA-Z]/.test(val);
+const SETTING_META = {
+  'organization.locale': {
+    label: 'Idioma',
+    type: 'select',
+    options: [
+      { value: 'es-MX', label: 'Español (México)' },
+      { value: 'es-ES', label: 'Español (España)' },
+      { value: 'es-AR', label: 'Español (Argentina)' },
+      { value: 'en-US', label: 'English (US)' },
+    ],
+  },
+  'organization.timezone': {
+    label: 'Zona horaria',
+    type: 'select',
+    options: [
+      { value: 'America/Mexico_City', label: 'Ciudad de México (UTC-6)' },
+      { value: 'America/Monterrey', label: 'Monterrey (UTC-6)' },
+      { value: 'America/Merida', label: 'Mérida (UTC-6)' },
+      { value: 'America/Tijuana', label: 'Tijuana (UTC-8)' },
+      { value: 'America/Bogota', label: 'Bogotá (UTC-5)' },
+      { value: 'America/Lima', label: 'Lima (UTC-5)' },
+      { value: 'America/Santiago', label: 'Santiago (UTC-4)' },
+      { value: 'America/Buenos_Aires', label: 'Buenos Aires (UTC-3)' },
+      { value: 'America/New_York', label: 'Nueva York (UTC-5)' },
+      { value: 'America/Los_Angeles', label: 'Los Ángeles (UTC-8)' },
+      { value: 'Europe/Madrid', label: 'Madrid (UTC+1)' },
+      { value: 'UTC', label: 'UTC' },
+    ],
+  },
+  'organization.currency': {
+    label: 'Moneda',
+    type: 'select',
+    options: [
+      { value: 'MXN', label: 'Peso mexicano (MXN)' },
+      { value: 'USD', label: 'Dólar estadounidense (USD)' },
+      { value: 'EUR', label: 'Euro (EUR)' },
+      { value: 'COP', label: 'Peso colombiano (COP)' },
+      { value: 'ARS', label: 'Peso argentino (ARS)' },
+      { value: 'CLP', label: 'Peso chileno (CLP)' },
+      { value: 'PEN', label: 'Sol peruano (PEN)' },
+      { value: 'BRL', label: 'Real brasileño (BRL)' },
+    ],
+  },
+  'organization.profile.industry': {
+    label: 'Industria',
+    type: 'select',
+    options: [
+      { value: 'tecnologia', label: 'Tecnología' },
+      { value: 'manufactura', label: 'Manufactura' },
+      { value: 'comercio', label: 'Comercio' },
+      { value: 'servicios', label: 'Servicios' },
+      { value: 'salud', label: 'Salud' },
+      { value: 'educacion', label: 'Educación' },
+      { value: 'finanzas', label: 'Finanzas' },
+      { value: 'construccion', label: 'Construcción' },
+      { value: 'transporte', label: 'Transporte y logística' },
+      { value: 'alimentos', label: 'Alimentos y bebidas' },
+      { value: 'otro', label: 'Otro' },
+    ],
+  },
+  'organization.profile.company_size': {
+    label: 'Tamaño de empresa',
+    type: 'select',
+    options: [
+      { value: '1-10', label: '1–10 empleados' },
+      { value: '11-50', label: '11–50 empleados' },
+      { value: '51-200', label: '51–200 empleados' },
+      { value: '201-500', label: '201–500 empleados' },
+      { value: '500+', label: 'Más de 500 empleados' },
+    ],
+  },
+  'organization.sync.enabled': {
+    label: 'Sincronización activa',
+    type: 'boolean',
+  },
+  'organization.audit.strict_mode': {
+    label: 'Auditoría estricta',
+    type: 'boolean',
+  },
+};
+
+function resolveType(key, value) {
+  const meta = SETTING_META[key];
+  if (meta?.type) return meta.type;
+  if (value === 'true' || value === 'false') return 'boolean';
+  if (value !== '' && value !== null && !isNaN(Number(value)) && !/[a-zA-Z]/.test(String(value)))
+    return 'number';
+  return 'text';
 }
 
 function SettingRow({ setting }) {
@@ -28,15 +117,17 @@ function SettingRow({ setting }) {
   const { toast } = useToast();
   const updateMutation = useUpdateSetting();
 
+  const meta = SETTING_META[setting.key];
+  const type = resolveType(setting.key, setting.value ?? '');
+  const label = meta?.label ?? setting.key;
+  const description = meta ? null : setting.description;
   const isDirty = value !== (setting.value ?? '');
-  const boolType = isBoolean(setting.value ?? '');
-  const numType = !boolType && isNumeric(setting.value ?? '');
 
   async function handleSave(overrideValue) {
     const saveValue = overrideValue !== undefined ? overrideValue : value;
     try {
       await updateMutation.mutateAsync({ id: setting.id, value: saveValue });
-      toast.success(`"${setting.key}" actualizado`);
+      toast.success(`${label} actualizado`);
     } catch (err) {
       handleError(err);
     }
@@ -49,15 +140,13 @@ function SettingRow({ setting }) {
   }
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+    <div className="flex items-center gap-3 py-3.5 border-b border-border last:border-0">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-mono text-text-primary truncate">{setting.key}</p>
-        {setting.description && (
-          <p className="text-xs text-text-disabled mt-0.5">{setting.description}</p>
-        )}
+        <p className="text-sm font-medium text-text-primary">{label}</p>
+        {description && <p className="text-xs text-text-disabled mt-0.5">{description}</p>}
       </div>
-      <div className="flex items-center gap-2 w-72 shrink-0">
-        {boolType ? (
+      <div className="flex items-center gap-2 w-64 shrink-0">
+        {type === 'boolean' && (
           <button
             type="button"
             role="switch"
@@ -79,22 +168,50 @@ function SettingRow({ setting }) {
               ].join(' ')}
             />
           </button>
-        ) : (
+        )}
+
+        {type === 'select' && (
+          <Select
+            value={value || undefined}
+            onValueChange={async (v) => {
+              setValue(v);
+              await handleSave(v);
+            }}
+            options={meta.options}
+            placeholder="Seleccionar…"
+            disabled={updateMutation.isPending}
+            className="flex-1"
+          />
+        )}
+
+        {type === 'number' && (
           <>
-            {numType ? (
-              <input
-                type="number"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="flex-1 text-sm h-9 px-3 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              />
-            ) : (
-              <Input
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="flex-1 text-sm"
-              />
+            <input
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="flex-1 text-sm h-9 px-3 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+            {isDirty && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleSave()}
+                disabled={updateMutation.isPending}
+              >
+                Guardar
+              </Button>
             )}
+          </>
+        )}
+
+        {type === 'text' && (
+          <>
+            <Input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="flex-1 text-sm"
+            />
             {isDirty && (
               <Button
                 variant="primary"
@@ -124,11 +241,6 @@ export default function EmpresaConfigPage() {
   const { data: rawSettings = [], isLoading } = useSettings(organizationId);
   const deleteMutation = useDeleteOrganization();
 
-  const HIDDEN_KEYS = new Set([
-    'organization.ui.primary_color',
-    'organization.ui.logo_data_url',
-    'organization.ui.brand_name',
-  ]);
   const settings = rawSettings.filter((s) => !HIDDEN_KEYS.has(s.key));
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -219,7 +331,6 @@ export default function EmpresaConfigPage() {
         </div>
       </div>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog
         open={deleteOpen}
         onOpenChange={(open) => {

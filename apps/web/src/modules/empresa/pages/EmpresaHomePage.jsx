@@ -1,6 +1,6 @@
 import useAuthStore from '@/store/auth.store';
 import PageHeader from '@/components/ui/PageHeader';
-import { useOrganization, useSettings } from '../hooks/useEmpresa';
+import { useOrganization, useSettings, useLogoUrl } from '../hooks/useEmpresa';
 
 function InfoCard({ label, value, mono }) {
   return (
@@ -17,6 +17,7 @@ export default function EmpresaHomePage() {
 
   const { data: org } = useOrganization(organizationId);
   const { data: settings = [] } = useSettings(organizationId);
+  const { data: logoUrl } = useLogoUrl(org?.logoAttachmentId);
 
   const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]));
   const primaryColor = org?.primaryColor || settingsMap['organization.ui.primary_color'];
@@ -42,10 +43,21 @@ export default function EmpresaHomePage() {
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
             Identidad visual
           </h2>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo de la organización"
+              className="h-16 max-w-full object-contain rounded-lg border border-border p-2 bg-surface"
+            />
+          ) : (
+            <div className="w-full h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-surface-subtle">
+              <span className="text-xs text-text-disabled">Sin logotipo</span>
+            </div>
+          )}
           {primaryColor ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <div
-                className="w-full h-16 rounded-lg border border-border"
+                className="w-full h-8 rounded-lg border border-border"
                 style={{ backgroundColor: primaryColor }}
               />
               <span className="text-xs font-mono text-text-secondary">{primaryColor}</span>
