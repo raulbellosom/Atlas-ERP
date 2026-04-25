@@ -1,11 +1,13 @@
-﻿# Dev Workflow Docs
+# Dev Workflow Docs
 
 ## Objetivo
+
 Definir y registrar la ejecución operativa del backlog por tasks.
 
 ## Índice
 
 ### Políticas y criterios
+
 - `00-task-operating-model.md`
 - `01-estructura-oficial-documentacion.md`
 - `02-criterios-task-terminada.md`
@@ -21,84 +23,14 @@ Definir y registrar la ejecución operativa del backlog por tasks.
 - `11-guia-debugging-docker.md`
 
 ### Meta-documentos operativos
+
 - `task-index.md`
 - `task-dependency-map.md`
 - `task-parallelization-criteria.md`
 - `task-pending-registry.md`
 
-### Tableros de bloque
-- `task-block-00-status.md` a `task-block-09-status.md` (Fase 0)
-- `task-block-10-status.md` a `task-block-19-status.md` (Fase 1)
-- `task-block-20-status.md` a `task-block-28-status.md` (Fase 2)
-- `task-block-29-status.md` a `task-block-37-status.md` (Fase 3)
-- `task-block-38-status.md` (Fase 4)
-- `task-block-39-status.md` (Fase 5, bloque 1)
-- `task-block-40-status.md` (Fase 5, bloque 2)
-- `task-block-41-status.md` (Fase 5, bloque 3)
-- `task-block-42-status.md` (Fase 5, bloque 4)
-- `task-block-43-status.md` (Fase 5, bloque 5)
-- `task-block-44-status.md` (Fase 5, bloque 6)
-- `task-block-45-status.md` (Fase 5, bloque 7)
-- `task-block-46-status.md` (Fase 5, bloque 8)
-- `task-block-47-status.md` (Fase 6, bloque 1)
-- `task-block-48-status.md` (Fase 6, bloque 2)
-- `task-block-49-status.md` (Fase 6, bloque 3)
-- `task-block-50-status.md` (Fase 6, bloque 4)
-- `task-block-51-status.md` (Fase 6, bloque 5)
-- `task-block-52-status.md` (Fase 6, bloque 6)
-- `task-block-53-status.md` (Fase 6, bloque 7)
-- `task-block-54-status.md` (Fase 6, bloque 8)
-- `task-block-55-status.md` (Fase 6, bloque 9)
-- `task-block-56-status.md` (Fase 6, bloque 10)
-- `task-block-57-status.md` (Fase 7, bloque 1)
-- `task-block-58-status.md` (Fase 7, bloque 2)
-- `task-block-59-status.md` (Fase 7, bloque 3)
-- `task-block-60-status.md` (Fase 7, bloque 4)
-- `task-block-61-status.md` (Fase 7, bloque 5)
-- `task-block-62-status.md` (Fase 7, bloque 6)
-- `task-block-63-status.md` (Fase 8, bloque 1)
-- `task-block-64-status.md` (Fase 8, bloque 2)
-- `task-block-65-status.md` (Fase 8, bloque 3)
-- `task-block-66-status.md` (Fase 8, bloque 4)
-- `task-block-67-status.md` (Fase 8, bloque 5)
-- `task-block-68-status.md` (Fase 8, bloque 6)
-- `task-block-69-status.md` (Fase 8, bloque 7)
-- `task-block-70-status.md` (Fase 8, bloque 8)
-- `task-block-71-status.md` (Fase 8, bloque 9 — cierre de fase)
-- `task-block-72-status.md` (Fase 9, bloque 1)
-- `task-block-73-status.md` (Fase 9, bloque 2)
-- `task-block-74-status.md` (Fase 9, bloque 3)
-- `task-block-75-status.md` (Fase 9, bloque 4)
-- `task-block-76-status.md` (Fase 9, bloque 5 — cierre de fase)
-- `task-block-77-status.md` (Fase 10, bloque 1)
-- `task-block-78-status.md` (Fase 10, bloque 2)
-- `task-block-79-status.md` (Fase 10, bloque 3)
-- `task-block-80-status.md` (Fase 10, bloque 4)
-- `task-block-81-status.md` (Fase 10, bloque 5)
-- `task-block-82-status.md` (Fase 10, bloque 6)
-- `task-block-83-status.md` (Fase 10, bloque 7)
-- `task-block-84-status.md` (Fase 11, bloque 1 — Design System Meridian)
-- `task-block-85-status.md` (Fase 10, bloque 8)
-- `task-block-86-status.md` (Fase 10, bloque 9)
-- `task-block-87-status.md` (Fase 10, bloque 10)
-- `task-block-88-status.md` (Fase 12, bloque 1)
-- `task-block-89-status.md` (Fase 12, bloque 2)
-- `task-block-90-status.md` (Fase 12, bloque 3)
-- `task-block-91-status.md` (Fase 12, bloque 4)
-- `task-block-92-status.md` (Fase 12, bloque 5)
-- `task-block-93-status.md` (Fase 13, bloque 1)
-- `task-block-94-status.md` (Fase 13, bloque 2)
-- `task-block-95-status.md` (Fase 13, bloque 3)
-- `task-block-96-status.md` (Fase 13, bloque 4)
-- `task-block-97-status.md` (Fase 13, bloque 5)
-- `task-block-98-status.md` (Fase 13, bloque 6)
-- `task-block-99-status.md` (Fase 13, bloque 7)
-- `task-block-100-status.md` (Fase 13, bloque 8 — cierre de fase)
-- `task-block-101-status.md` (Fase 11, bloque 3)
-- `task-block-102-status.md` (Fase 11, bloque 4)
-- `task-block-103-status.md` (Fase 11, bloque 5 — cierre de fase)
-
 ### Templates y checklists (`templates/`)
+
 - `task-detail-template.md`
 - `domain-blueprint-template.md`
 - `technical-blueprint-template.md`
@@ -107,76 +39,3 @@ Definir y registrar la ejecución operativa del backlog por tasks.
 - `module-acceptance-checklist.md`
 - `release-checklist.md`
 - `README.md`
-
-### Evidencia de cierre por fase
-- `tasks/fase-00-bloque-01/*` a `tasks/fase-00-bloque-10/*`
-- `tasks/fase-01-bloque-01/*` a `tasks/fase-01-bloque-10/*`
-- `tasks/fase-02-bloque-01/*` a `tasks/fase-02-bloque-09/*`
-- `tasks/fase-03-bloque-01/*` a `tasks/fase-03-bloque-09/*`
-- `tasks/fase-04-bloque-01/*`
-- `tasks/fase-05-bloque-01/*`
-- `tasks/fase-05-bloque-02/*`
-- `tasks/fase-05-bloque-03/*`
-- `tasks/fase-05-bloque-04/*`
-- `tasks/fase-05-bloque-05/*`
-- `tasks/fase-05-bloque-06/*`
-- `tasks/fase-05-bloque-07/*`
-- `tasks/fase-05-bloque-08/*`
-- `tasks/fase-06-bloque-01/*`
-- `tasks/fase-06-bloque-02/*`
-- `tasks/fase-06-bloque-03/*`
-- `tasks/fase-06-bloque-04/*`
-- `tasks/fase-06-bloque-05/*`
-- `tasks/fase-06-bloque-06/*`
-- `tasks/fase-06-bloque-07/*`
-- `tasks/fase-06-bloque-08/*`
-- `tasks/fase-06-bloque-09/*`
-- `tasks/fase-06-bloque-10/*`
-- `tasks/fase-07-bloque-01/*`
-- `tasks/fase-07-bloque-02/*`
-- `tasks/fase-07-bloque-03/*`
-- `tasks/fase-07-bloque-04/*`
-- `tasks/fase-07-bloque-05/*`
-- `tasks/fase-07-bloque-06/*`
-- `tasks/fase-08-bloque-01/*`
-- `tasks/fase-08-bloque-02/*`
-- `tasks/fase-08-bloque-03/*`
-- `tasks/fase-08-bloque-04/*`
-- `tasks/fase-08-bloque-05/*`
-- `tasks/fase-08-bloque-06/*`
-- `tasks/fase-08-bloque-07/*`
-- `tasks/fase-08-bloque-08/*`
-- `tasks/fase-08-bloque-09/*`
-- `tasks/fase-09-bloque-01/*`
-- `tasks/fase-09-bloque-02/*`
-- `tasks/fase-09-bloque-03/*`
-- `tasks/fase-09-bloque-04/*`
-- `tasks/fase-09-bloque-05/*`
-- `tasks/fase-10-bloque-01/*`
-- `tasks/fase-10-bloque-02/*`
-- `tasks/fase-10-bloque-03/*`
-- `tasks/fase-10-bloque-04/*`
-- `tasks/fase-10-bloque-05/*`
-- `tasks/fase-10-bloque-06/*`
-- `tasks/fase-10-bloque-07/*`
-- `tasks/fase-10-bloque-08/*`
-- `tasks/fase-10-bloque-09/*`
-- `tasks/fase-10-bloque-10/*`
-- `tasks/fase-11-bloque-01/*`
-- `tasks/fase-11-bloque-02/*`
-- `tasks/fase-11-bloque-03/*`
-- `tasks/fase-11-bloque-04/*`
-- `tasks/fase-11-bloque-05/*`
-- `tasks/fase-12-bloque-01/*`
-- `tasks/fase-12-bloque-02/*`
-- `tasks/fase-12-bloque-03/*`
-- `tasks/fase-12-bloque-04/*`
-- `tasks/fase-12-bloque-05/*`
-- `tasks/fase-13-bloque-01/*`
-- `tasks/fase-13-bloque-02/*`
-- `tasks/fase-13-bloque-03/*`
-- `tasks/fase-13-bloque-04/*`
-- `tasks/fase-13-bloque-05/*`
-- `tasks/fase-13-bloque-06/*`
-- `tasks/fase-13-bloque-07/*`
-- `tasks/fase-13-bloque-08/*`
