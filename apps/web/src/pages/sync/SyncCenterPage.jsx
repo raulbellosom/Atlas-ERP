@@ -1,71 +1,64 @@
-import { useSyncStatus } from "@/hooks/useSyncStatus";
-import { formatDateTime } from "@/lib/i18n";
+import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { formatDateTime } from '@/lib/i18n';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
 
-/**
- * Shell del centro de sincronizacion.
- * Muestra el estado actual de conectividad y operaciones pendientes.
- * El mecanismo de sync real se implementa en la fase de modulo offline.
- */
 export default function SyncCenterPage() {
-  const { isOnline, pendingCount, lastSyncAt, hasPending, clearPending } =
-    useSyncStatus();
+  const { isOnline, pendingCount, lastSyncAt, hasPending, clearPending } = useSyncStatus();
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">
-        Centro de sincronización
-      </h1>
+    <div className="space-y-6">
+      <PageHeader
+        title="Centro de sincronización"
+        description="Estado de sincronización de datos locales"
+      />
 
-      {/* Estado de conexion */}
-      <div className="rounded-lg border border-border bg-surface p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
-          Conexión
-        </h2>
-        <div className="flex items-center gap-3">
-          <span
-            className={[
-              "inline-block w-3 h-3 rounded-full",
-              isOnline ? "bg-green-500" : "bg-yellow-400",
-            ].join(" ")}
-          />
-          <span className="text-base font-medium text-text-primary">
-            {isOnline ? "En línea" : "Sin conexión"}
-          </span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Conexión"
+          value={isOnline ? 'En línea' : 'Sin conexión'}
+          dot={isOnline ? 'green' : 'yellow'}
+        />
+        <StatCard
+          label="Pendientes"
+          value={String(pendingCount)}
+          dot={pendingCount > 0 ? 'yellow' : 'green'}
+        />
+        <StatCard label="Última sync" value={lastSyncAt ? formatDateTime(lastSyncAt) : 'Nunca'} />
       </div>
 
-      {/* Pendientes */}
-      <div className="rounded-lg border border-border bg-surface p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
-          Cambios pendientes
-        </h2>
-
-        {hasPending ? (
-          <div className="flex items-center justify-between">
-            <span className="text-base text-text-primary">
-              {pendingCount} operación{pendingCount !== 1 ? "es" : ""} sin
-              sincronizar
-            </span>
-            <button
-              onClick={clearPending}
-              className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors"
-            >
-              Marcar como sincronizadas
-            </button>
+      {hasPending && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              Hay {pendingCount} operación{pendingCount !== 1 ? 'es' : ''} pendiente
+              {pendingCount !== 1 ? 's' : ''} de sincronización
+            </p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+              Se sincronizarán automáticamente cuando haya conexión disponible
+            </p>
           </div>
-        ) : (
-          <p className="text-sm text-text-secondary">
-            Todo sincronizado. No hay cambios pendientes.
-          </p>
-        )}
-      </div>
-
-      {/* Ultima sincronizacion */}
-      {lastSyncAt && (
-        <p className="text-xs text-text-disabled text-center">
-          Última sincronización: {formatDateTime(lastSyncAt)}
-        </p>
+          <Button variant="ghost" size="sm" onClick={clearPending}>
+            Limpiar cola
+          </Button>
+        </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, dot }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface-card p-5 flex flex-col gap-2">
+      <span className="text-xs text-text-secondary">{label}</span>
+      <div className="flex items-center gap-2">
+        {dot && (
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${dot === 'green' ? 'bg-green-500' : 'bg-amber-400'}`}
+          />
+        )}
+        <span className="text-lg font-semibold text-text-primary">{value}</span>
+      </div>
     </div>
   );
 }
