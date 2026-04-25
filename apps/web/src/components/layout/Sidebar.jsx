@@ -84,27 +84,6 @@ const NAV_GROUPS = [
         ),
       },
       {
-        to: '/empresa',
-        label: 'Empresa',
-        icon: (
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="2" y="7" width="20" height="15" rx="1" />
-            <path d="M16 22V7l-4-5-4 5v15" />
-            <line x1="9" y1="12" x2="9" y2="12.01" />
-            <line x1="15" y1="12" x2="15" y2="12.01" />
-          </svg>
-        ),
-      },
-      {
         to: '/attachments',
         label: 'Adjuntos',
         icon: (

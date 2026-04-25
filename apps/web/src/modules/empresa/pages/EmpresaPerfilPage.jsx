@@ -52,10 +52,17 @@ export default function EmpresaPerfilPage() {
       <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
         <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1.5">
-              Nombre (slug)
-            </label>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5">Nombre</label>
             <Input value={form.name} onChange={handleChange('name')} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5">Slug</label>
+            <div className="flex items-center h-9 px-3 rounded-lg border border-border bg-surface-subtle text-sm font-mono text-text-disabled select-all">
+              {org?.slug ?? '—'}
+            </div>
+            <p className="text-xs text-text-disabled mt-1">
+              El slug es inmutable y se usa en URLs.
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">

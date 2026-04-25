@@ -14,6 +14,14 @@ import {
   useDeleteOrganization,
 } from '../hooks/useEmpresa';
 
+function isBoolean(val) {
+  return val === 'true' || val === 'false';
+}
+
+function isNumeric(val) {
+  return val !== '' && val !== null && !isNaN(Number(val)) && !/[a-zA-Z]/.test(val);
+}
+
 function SettingRow({ setting }) {
   const [value, setValue] = useState(setting.value ?? '');
   const { handleError } = useApiError();
@@ -21,14 +29,23 @@ function SettingRow({ setting }) {
   const updateMutation = useUpdateSetting();
 
   const isDirty = value !== (setting.value ?? '');
+  const boolType = isBoolean(setting.value ?? '');
+  const numType = !boolType && isNumeric(setting.value ?? '');
 
-  async function handleSave() {
+  async function handleSave(overrideValue) {
+    const saveValue = overrideValue !== undefined ? overrideValue : value;
     try {
-      await updateMutation.mutateAsync({ id: setting.id, value });
+      await updateMutation.mutateAsync({ id: setting.id, value: saveValue });
       toast.success(`"${setting.key}" actualizado`);
     } catch (err) {
       handleError(err);
     }
+  }
+
+  async function handleToggle() {
+    const next = value === 'true' ? 'false' : 'true';
+    setValue(next);
+    await handleSave(next);
   }
 
   return (
@@ -40,20 +57,55 @@ function SettingRow({ setting }) {
         )}
       </div>
       <div className="flex items-center gap-2 w-72 shrink-0">
-        <Input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="flex-1 text-sm"
-        />
-        {isDirty && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSave}
+        {boolType ? (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={value === 'true'}
+            onClick={handleToggle}
             disabled={updateMutation.isPending}
+            className={[
+              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent',
+              'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+              'disabled:opacity-50',
+              value === 'true' ? 'bg-brand-500' : 'bg-border',
+            ].join(' ')}
           >
-            Guardar
-          </Button>
+            <span
+              className={[
+                'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm',
+                'transition-transform duration-200',
+                value === 'true' ? 'translate-x-4' : 'translate-x-0',
+              ].join(' ')}
+            />
+          </button>
+        ) : (
+          <>
+            {numType ? (
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="flex-1 text-sm h-9 px-3 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              />
+            ) : (
+              <Input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="flex-1 text-sm"
+              />
+            )}
+            {isDirty && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleSave()}
+                disabled={updateMutation.isPending}
+              >
+                Guardar
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>

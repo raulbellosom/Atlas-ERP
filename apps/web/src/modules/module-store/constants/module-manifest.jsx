@@ -72,6 +72,32 @@ const MODULE_MANIFEST = {
       </svg>
     ),
   },
+  empresa: {
+    label: 'Empresa',
+    category: 'Plataforma',
+    route: '/empresa',
+    accentColor: 'bg-amber-500/10',
+    accentFg: 'text-amber-600',
+    icon: ({ size = 28, className = '' }) => (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        aria-hidden="true"
+      >
+        <rect x="2" y="7" width="20" height="15" rx="1" />
+        <path d="M16 22V7l-4-5-4 5v15" />
+        <line x1="9" y1="12" x2="9" y2="12.01" />
+        <line x1="15" y1="12" x2="15" y2="12.01" />
+      </svg>
+    ),
+  },
 };
 
 const FALLBACK_META = {
