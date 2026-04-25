@@ -177,6 +177,42 @@ const FOUNDATION_PERMISSIONS: PermissionSeed[] = [
     description: 'Subir y vincular adjuntos en operaciones financieras.',
   },
   {
+    key: 'accounting:read',
+    module: 'accounting',
+    action: 'read',
+    description: 'Consultar informacion del modulo contable.',
+  },
+  {
+    key: 'accounting:write',
+    module: 'accounting',
+    action: 'write',
+    description: 'Crear y actualizar datos del modulo contable.',
+  },
+  {
+    key: 'accounting:admin',
+    module: 'accounting',
+    action: 'admin',
+    description: 'Administrar catalogos y configuraciones del modulo contable.',
+  },
+  {
+    key: 'hr:read',
+    module: 'hr',
+    action: 'read',
+    description: 'Consultar informacion del modulo de recursos humanos.',
+  },
+  {
+    key: 'hr:write',
+    module: 'hr',
+    action: 'write',
+    description: 'Crear y actualizar datos del modulo de recursos humanos.',
+  },
+  {
+    key: 'hr:admin',
+    module: 'hr',
+    action: 'admin',
+    description: 'Administrar operaciones criticas del modulo de recursos humanos.',
+  },
+  {
     key: 'module_store:read',
     module: 'module_store',
     action: 'read',
@@ -210,6 +246,7 @@ const FOUNDATION_PERMISSIONS: PermissionSeed[] = [
 ];
 
 const ROLE_PERMISSION_KEYS: Record<string, string[]> = {
+  owner: FOUNDATION_PERMISSIONS.map((permission) => permission.key),
   admin: FOUNDATION_PERMISSIONS.map((permission) => permission.key),
   tesorero: [
     'core:organization:read',
@@ -233,6 +270,8 @@ const ROLE_PERMISSION_KEYS: Record<string, string[]> = {
     'finops:payable:write',
     'finops:attachment:read',
     'finops:attachment:write',
+    'accounting:read',
+    'accounting:write',
   ],
   auditor: [
     'core:organization:read',
@@ -250,13 +289,12 @@ const ROLE_PERMISSION_KEYS: Record<string, string[]> = {
     'finops:receivable:read',
     'finops:payable:read',
     'finops:attachment:read',
+    'accounting:read',
+    'hr:read',
   ],
 };
 
-export async function seedPermissionsAndRoleMapping(
-  prisma: PrismaClient,
-  organizationId: string,
-): Promise<void> {
+export async function seedPermissionsCatalog(prisma: PrismaClient): Promise<void> {
   console.log('[seeds][permissions] Upsert de permisos foundation...');
 
   for (const permission of FOUNDATION_PERMISSIONS) {
@@ -277,6 +315,13 @@ export async function seedPermissionsAndRoleMapping(
       },
     });
   }
+}
+
+export async function seedPermissionsAndRoleMapping(
+  prisma: PrismaClient,
+  organizationId: string,
+): Promise<void> {
+  await seedPermissionsCatalog(prisma);
 
   const [roles, permissions] = await Promise.all([
     prisma.role.findMany({

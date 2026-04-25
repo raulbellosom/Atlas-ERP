@@ -1,6 +1,11 @@
 import type { PrismaClient } from '@prisma/client';
 
-const FOUNDATION_ROLES: Array<{ name: string; description: string; level: number }> = [
+export const FOUNDATION_ROLES: Array<{ name: string; description: string; level: number }> = [
+  {
+    name: 'owner',
+    description: 'Propietario del tenant con control total y gobierno de la instancia.',
+    level: 120,
+  },
   {
     name: 'admin',
     description: 'Acceso administrativo completo para configuracion y operacion.',

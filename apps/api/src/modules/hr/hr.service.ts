@@ -9,6 +9,7 @@ import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { ListEmployeesQueryDto } from './dto/list-employees.query.dto';
 import { ReviewLeaveRequestDto } from './dto/review-leave-request.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
 @Injectable()
 export class HrService {
@@ -181,6 +182,16 @@ export class HrService {
     });
     if (!emp) throw new NotFoundException('Empleado no encontrado.');
     return emp;
+  }
+
+  async updateEmployee(id: string, dto: UpdateEmployeeDto) {
+    const emp = await this.prisma.employee.findFirst({ where: { id, deletedAt: null } });
+    if (!emp) throw new NotFoundException('Empleado no encontrado.');
+    return this.prisma.employee.update({
+      where: { id },
+      data: dto,
+      include: { department: true, position: true },
+    });
   }
 
   async terminateEmployee(id: string, actorId?: string) {

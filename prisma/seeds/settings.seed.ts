@@ -1,4 +1,4 @@
-﻿import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 
 type SettingSeed = {
   key: string;
@@ -43,14 +43,14 @@ const GLOBAL_SETTINGS: SettingSeed[] = [
 const ORGANIZATION_SETTINGS: SettingSeed[] = [
   {
     key: 'organization.ui.brand_name',
-    value: 'AtlasERP Demo',
-    description: 'Nombre comercial mostrado en la UI para la organización demo.',
+    value: 'AtlasERP',
+    description: 'Nombre comercial mostrado en la UI para la organización activa.',
     isActive: true,
   },
   {
     key: 'organization.sync.enabled',
     value: 'true',
-    description: 'Activa los flujos de sincronización para la organización demo.',
+    description: 'Activa los flujos de sincronización para la organización activa.',
     isActive: true,
   },
   {
@@ -96,11 +96,36 @@ async function upsertGlobalSetting(prisma: PrismaClient, setting: SettingSeed): 
 export async function seedSettings(prisma: PrismaClient, organizationId: string): Promise<void> {
   console.log('[seeds][settings] Upsert de settings iniciales...');
 
+  await seedGlobalSettings(prisma);
+  await seedOrganizationSettings(prisma, organizationId);
+
+  console.log(
+    `[seeds][settings] OK (${GLOBAL_SETTINGS.length} globales, ${ORGANIZATION_SETTINGS.length} por organización).`,
+  );
+}
+
+export async function seedGlobalSettings(prisma: PrismaClient): Promise<void> {
+  console.log('[seeds][settings] Upsert de settings globales...');
+
   for (const setting of GLOBAL_SETTINGS) {
     await upsertGlobalSetting(prisma, setting);
   }
+}
 
-  for (const setting of ORGANIZATION_SETTINGS) {
+export async function seedOrganizationSettings(
+  prisma: PrismaClient,
+  organizationId: string,
+  options?: { brandName?: string },
+): Promise<void> {
+  console.log('[seeds][settings] Upsert de settings por organización...');
+
+  const organizationSettings = ORGANIZATION_SETTINGS.map((setting) =>
+    setting.key === 'organization.ui.brand_name' && options?.brandName
+      ? { ...setting, value: options.brandName }
+      : setting,
+  );
+
+  for (const setting of organizationSettings) {
     await prisma.setting.upsert({
       where: {
         organizationId_key: {
@@ -122,8 +147,4 @@ export async function seedSettings(prisma: PrismaClient, organizationId: string)
       },
     });
   }
-
-  console.log(
-    `[seeds][settings] OK (${GLOBAL_SETTINGS.length} globales, ${ORGANIZATION_SETTINGS.length} por organización).`,
-  );
 }

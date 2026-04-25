@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { CreateDepartmentDto } from './dto/create-department.dto';
@@ -7,6 +7,7 @@ import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { ListEmployeesQueryDto } from './dto/list-employees.query.dto';
 import { ReviewLeaveRequestDto } from './dto/review-leave-request.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { HrService } from './hr.service';
 
 @Controller('v1/hr')
@@ -74,6 +75,12 @@ export class HrController {
   @RequireAllPermissions('hr:read')
   getEmployee(@Param('id') id: string) {
     return this.hrService.getEmployee(id);
+  }
+
+  @Patch('employees/:id')
+  @RequireAllPermissions('hr:write')
+  updateEmployee(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
+    return this.hrService.updateEmployee(id, dto);
   }
 
   @Delete('employees/:id')
