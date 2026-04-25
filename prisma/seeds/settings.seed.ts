@@ -40,13 +40,8 @@ const GLOBAL_SETTINGS: SettingSeed[] = [
   },
 ];
 
+// Only true app configuration — identity/branding/address/fiscal data lives in Organization
 const ORGANIZATION_SETTINGS: SettingSeed[] = [
-  {
-    key: 'organization.ui.brand_name',
-    value: 'AtlasERP',
-    description: 'Nombre comercial mostrado en la UI para la organización activa.',
-    isActive: true,
-  },
   {
     key: 'organization.locale',
     value: 'es-MX',
@@ -63,18 +58,6 @@ const ORGANIZATION_SETTINGS: SettingSeed[] = [
     key: 'organization.currency',
     value: 'MXN',
     description: 'Moneda principal de la organización.',
-    isActive: true,
-  },
-  {
-    key: 'organization.profile.industry',
-    value: '',
-    description: 'Sector o rubro de la organización.',
-    isActive: true,
-  },
-  {
-    key: 'organization.profile.company_size',
-    value: '',
-    description: 'Tamaño de la organización por número de empleados.',
     isActive: true,
   },
   {
@@ -146,17 +129,10 @@ export async function seedGlobalSettings(prisma: PrismaClient): Promise<void> {
 export async function seedOrganizationSettings(
   prisma: PrismaClient,
   organizationId: string,
-  options?: { brandName?: string },
 ): Promise<void> {
   console.log('[seeds][settings] Upsert de settings por organización...');
 
-  const organizationSettings = ORGANIZATION_SETTINGS.map((setting) =>
-    setting.key === 'organization.ui.brand_name' && options?.brandName
-      ? { ...setting, value: options.brandName }
-      : setting,
-  );
-
-  for (const setting of organizationSettings) {
+  for (const setting of ORGANIZATION_SETTINGS) {
     await prisma.setting.upsert({
       where: {
         organizationId_key: {

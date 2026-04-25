@@ -1,6 +1,6 @@
 import useAuthStore from '@/store/auth.store';
 import PageHeader from '@/components/ui/PageHeader';
-import { useOrganization, useSettings, useLogoUrl } from '../hooks/useEmpresa';
+import { useOrganization, useLogoUrl } from '../hooks/useEmpresa';
 
 function InfoCard({ label, value, mono }) {
   return (
@@ -16,11 +16,10 @@ export default function EmpresaHomePage() {
   const organizationId = user?.organizationId;
 
   const { data: org } = useOrganization(organizationId);
-  const { data: settings = [] } = useSettings(organizationId);
   const { data: logoUrl } = useLogoUrl(org?.logoAttachmentId);
 
-  const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]));
-  const primaryColor = org?.primaryColor || settingsMap['organization.ui.primary_color'];
+  const primaryColor = org?.primaryColor;
+  const address = [org?.street, org?.city, org?.state, org?.postalCode].filter(Boolean).join(', ');
 
   return (
     <div className="space-y-6">
@@ -31,12 +30,18 @@ export default function EmpresaHomePage() {
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-4">
             Datos de la organización
           </h2>
-          <InfoCard label="Nombre legal" value={org?.legalName || org?.name} />
-          <InfoCard label="Nombre comercial" value={org?.commercialName || org?.name} />
+          <InfoCard label="Nombre comercial" value={org?.name} />
+          <InfoCard label="Razón social" value={org?.legalName} />
+          <InfoCard label="Tipo de persona" value={org?.legalEntityType} />
+          <InfoCard label="RFC" value={org?.rfc} mono />
+          <InfoCard label="Régimen fiscal" value={org?.fiscalRegime} />
           <InfoCard label="Slug" value={org?.slug} mono />
-          <InfoCard label="Dirección" value={org?.address} />
-          <InfoCard label="Industria" value={settingsMap['organization.profile.industry']} />
-          <InfoCard label="Tamaño" value={settingsMap['organization.profile.company_size']} />
+          <InfoCard label="Industria" value={org?.industry} />
+          <InfoCard label="Tamaño" value={org?.companySize} />
+          <InfoCard label="Teléfono" value={org?.phone} />
+          <InfoCard label="Correo" value={org?.email} />
+          <InfoCard label="Sitio web" value={org?.website} />
+          <InfoCard label="Dirección" value={address || undefined} />
         </div>
 
         <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth.store';
 import { useApiError } from '@/hooks/useApiError';
 import { useToast } from '@/components/ui/Toast';
@@ -12,13 +13,15 @@ import {
   useOrganization,
   useSettings,
   useUpdateSetting,
-  useDeleteOrganization,
+  usePurgeOrganization,
 } from '../hooks/useEmpresa';
 
 const HIDDEN_KEYS = new Set([
   'organization.ui.primary_color',
   'organization.ui.logo_data_url',
   'organization.ui.brand_name',
+  'organization.profile.industry',
+  'organization.profile.company_size',
 ]);
 
 const SETTING_META = {
@@ -62,34 +65,6 @@ const SETTING_META = {
       { value: 'CLP', label: 'Peso chileno (CLP)' },
       { value: 'PEN', label: 'Sol peruano (PEN)' },
       { value: 'BRL', label: 'Real brasileño (BRL)' },
-    ],
-  },
-  'organization.profile.industry': {
-    label: 'Industria',
-    type: 'select',
-    options: [
-      { value: 'tecnologia', label: 'Tecnología' },
-      { value: 'manufactura', label: 'Manufactura' },
-      { value: 'comercio', label: 'Comercio' },
-      { value: 'servicios', label: 'Servicios' },
-      { value: 'salud', label: 'Salud' },
-      { value: 'educacion', label: 'Educación' },
-      { value: 'finanzas', label: 'Finanzas' },
-      { value: 'construccion', label: 'Construcción' },
-      { value: 'transporte', label: 'Transporte y logística' },
-      { value: 'alimentos', label: 'Alimentos y bebidas' },
-      { value: 'otro', label: 'Otro' },
-    ],
-  },
-  'organization.profile.company_size': {
-    label: 'Tamaño de empresa',
-    type: 'select',
-    options: [
-      { value: '1-10', label: '1–10 empleados' },
-      { value: '11-50', label: '11–50 empleados' },
-      { value: '51-200', label: '51–200 empleados' },
-      { value: '201-500', label: '201–500 empleados' },
-      { value: '500+', label: 'Más de 500 empleados' },
     ],
   },
   'organization.sync.enabled': {
@@ -237,24 +212,24 @@ export default function EmpresaConfigPage() {
   const { handleError } = useApiError();
   const { toast } = useToast();
 
+  const queryClient = useQueryClient();
   const { data: org } = useOrganization(organizationId);
   const { data: rawSettings = [], isLoading } = useSettings(organizationId);
-  const deleteMutation = useDeleteOrganization();
+  const purgeMutation = usePurgeOrganization();
 
   const settings = rawSettings.filter((s) => !HIDDEN_KEYS.has(s.key));
 
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [confirmName, setConfirmName] = useState('');
+  const [purgeOpen, setPurgeOpen] = useState(false);
+  const [password, setPassword] = useState('');
 
-  const orgName = org?.name ?? '';
-  const deleteConfirmed = confirmName === orgName;
-
-  async function handleDelete() {
+  async function handlePurge() {
     try {
-      await deleteMutation.mutateAsync(organizationId);
-      toast.success('Organización eliminada');
+      await purgeMutation.mutateAsync({ id: organizationId, password });
+      toast.success('Organización eliminada. Redirigiendo a configuración inicial…');
+      queryClient.clear();
+      localStorage.removeItem('atlas-branding');
       logout();
-      navigate('/login');
+      navigate('/setup');
     } catch (err) {
       handleError(err);
     }
@@ -322,7 +297,7 @@ export default function EmpresaConfigPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setDeleteOpen(true)}
+              onClick={() => setPurgeOpen(true)}
               className="shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
             >
               Eliminar
@@ -332,38 +307,38 @@ export default function EmpresaConfigPage() {
       </div>
 
       <AlertDialog
-        open={deleteOpen}
+        open={purgeOpen}
         onOpenChange={(open) => {
-          setDeleteOpen(open);
-          if (!open) setConfirmName('');
+          setPurgeOpen(open);
+          if (!open) setPassword('');
         }}
-        title="¿Eliminar organización?"
+        title="¿Eliminar toda la organización?"
         description={
           <div className="space-y-3">
             <p className="text-sm text-text-secondary">
-              Se eliminarán permanentemente todos los datos de{' '}
-              <span className="font-semibold text-text-primary">{orgName}</span>: usuarios, roles,
-              empleados, movimientos financieros y configuraciones. Esta acción es irreversible.
+              Se eliminarán <span className="font-semibold text-text-primary">todos los datos</span>
+              : usuarios, roles, empleados, movimientos financieros, contabilidad y configuraciones.
+              Esta acción es irreversible y restablecerá la instancia al estado inicial.
             </p>
             <div>
               <p className="text-xs text-text-secondary mb-1.5">
-                Escribe <span className="font-mono font-semibold text-text-primary">{orgName}</span>{' '}
-                para confirmar:
+                Ingresa tu contraseña para confirmar:
               </p>
               <Input
-                value={confirmName}
-                onChange={(e) => setConfirmName(e.target.value)}
-                placeholder={orgName}
-                autoComplete="off"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña"
+                autoComplete="current-password"
               />
             </div>
           </div>
         }
         cancelLabel="Cancelar"
-        confirmLabel="Eliminar organización"
-        onConfirm={handleDelete}
+        confirmLabel="Eliminar todo"
+        onConfirm={handlePurge}
         variant="destructive"
-        confirmDisabled={!deleteConfirmed || deleteMutation.isPending}
+        confirmDisabled={!password.trim() || purgeMutation.isPending}
       />
     </div>
   );

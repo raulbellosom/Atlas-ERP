@@ -1,25 +1,43 @@
-import { IsEmail, IsOptional, IsString, IsUrl, Matches, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsHexColor,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class UpdateOrganizationDto {
-  // ─── Identity ──────────────────────────────────────────────────────────────
+export class InitializeSetupDto {
+  // ─── Owner ─────────────────────────────────────────────────────────────────
 
-  @IsOptional()
+  @IsEmail()
+  ownerEmail!: string;
+
   @IsString()
-  @MaxLength(160)
-  name?: string;
-
-  @IsOptional()
-  @IsString()
+  @MinLength(1)
   @MaxLength(80)
-  @Matches(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, {
-    message: 'slug solo puede contener letras minúsculas, números y guiones',
-  })
-  slug?: string;
+  ownerFirstName!: string;
 
-  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(80)
+  ownerLastName!: string;
+
+  @IsString()
+  @MinLength(8)
+  ownerPassword!: string;
+
+  // ─── Company Identity ──────────────────────────────────────────────────────
+
   @IsString()
   @MaxLength(160)
-  legalName?: string;
+  businessLegalName!: string;
+
+  @IsString()
+  @MaxLength(160)
+  businessName!: string;
 
   @IsOptional()
   @IsString()
@@ -95,11 +113,19 @@ export class UpdateOrganizationDto {
   // ─── Branding ──────────────────────────────────────────────────────────────
 
   @IsOptional()
-  @IsString()
-  @MaxLength(32)
+  @IsHexColor()
   primaryColor?: string;
 
   @IsOptional()
   @IsString()
-  logoAttachmentId?: string | null;
+  logoAttachmentId?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUploadToken?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  logoFileName?: string;
 }

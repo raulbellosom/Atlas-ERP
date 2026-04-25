@@ -64,16 +64,18 @@ function genPassword() {
 function validateStep(step, form) {
   const errors = {};
   if (step === 1) {
-    if (!form.ownerDisplayName.trim() || form.ownerDisplayName.trim().length < 2)
-      errors.ownerDisplayName = 'Ingresa tu nombre completo (mín. 2 caracteres).';
+    if (!form.ownerFirstName.trim() || form.ownerFirstName.trim().length < 2)
+      errors.ownerFirstName = 'Ingresa tu nombre (mín. 2 caracteres).';
+    if (!form.ownerLastName.trim() || form.ownerLastName.trim().length < 2)
+      errors.ownerLastName = 'Ingresa tus apellidos (mín. 2 caracteres).';
     if (!EMAIL_RE.test(form.ownerEmail.trim()))
       errors.ownerEmail = 'Ingresa un correo electrónico válido.';
   }
   if (step === 2) {
     if (!form.businessLegalName.trim() || form.businessLegalName.trim().length < 2)
       errors.businessLegalName = 'La razón social es requerida (mín. 2 caracteres).';
-    if (!form.businessCommercialName.trim() || form.businessCommercialName.trim().length < 2)
-      errors.businessCommercialName = 'El nombre comercial es requerido (mín. 2 caracteres).';
+    if (!form.businessName.trim() || form.businessName.trim().length < 2)
+      errors.businessName = 'El nombre comercial es requerido (mín. 2 caracteres).';
   }
   if (step === 3) {
     const { score } = calcStrength(form.ownerPassword);
@@ -391,21 +393,33 @@ function StrengthMeter({ password }) {
 
 function StepAccount({ form, onChange, errors }) {
   const emailOk = EMAIL_RE.test(form.ownerEmail.trim());
-  const nameOk = form.ownerDisplayName.trim().length >= 2;
+  const firstNameOk = form.ownerFirstName.trim().length >= 2;
+  const lastNameOk = form.ownerLastName.trim().length >= 2;
 
   return (
     <div className="space-y-4">
-      <FloatingInput
-        id="ownerDisplayName"
-        label="Nombre completo"
-        value={form.ownerDisplayName}
-        onChange={onChange}
-        error={errors.ownerDisplayName}
-        success={nameOk && !errors.ownerDisplayName}
-        required
-        autoComplete="name"
-        helper="Tu nombre aparecerá en documentos y notificaciones del sistema"
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FloatingInput
+          id="ownerFirstName"
+          label="Nombre"
+          value={form.ownerFirstName}
+          onChange={onChange}
+          error={errors.ownerFirstName}
+          success={firstNameOk && !errors.ownerFirstName}
+          required
+          autoComplete="given-name"
+        />
+        <FloatingInput
+          id="ownerLastName"
+          label="Apellidos"
+          value={form.ownerLastName}
+          onChange={onChange}
+          error={errors.ownerLastName}
+          success={lastNameOk && !errors.ownerLastName}
+          required
+          autoComplete="family-name"
+        />
+      </div>
       <FloatingInput
         id="ownerEmail"
         label="Correo electrónico"
@@ -486,8 +500,27 @@ function extractTopColors(imageData, n = 5) {
   return distinct;
 }
 
+const LEGAL_ENTITY_TYPES = [
+  'Persona Física',
+  'S.A. de C.V.',
+  'S.R.L. de C.V.',
+  'S.A.S.',
+  'S.A.P.I. de C.V.',
+  'A.C.',
+  'Otro',
+];
+
+const FISCAL_REGIMES = [
+  { value: '601', label: '601 - General de Ley Personas Morales' },
+  { value: '612', label: '612 - Personas Físicas con Act. Empresariales' },
+  { value: '626', label: '626 - Régimen Simplificado de Confianza (RESICO)' },
+  { value: '616', label: '616 - Sin obligaciones fiscales' },
+  { value: '621', label: '621 - Incorporación Fiscal' },
+  { value: '625', label: '625 - Plataformas Tecnológicas' },
+];
+
 function StepCompany({ form, onChange, errors, onClearError }) {
-  const [logoPreview, setLogoPreview] = useState(form.logoDataUrl || null);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [palette, setPalette] = useState([]);
   const [selectedSwatch, setSelectedSwatch] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -496,13 +529,9 @@ function StepCompany({ form, onChange, errors, onClearError }) {
   const fileInputRef = useRef(null);
 
   const legalOk = form.businessLegalName.trim().length >= 2;
-  const comrcOk = form.businessCommercialName.trim().length >= 2;
+  const comrcOk = form.businessName.trim().length >= 2;
 
-  useEffect(() => {
-    if (form.logoDataUrl) {
-      setLogoPreview(form.logoDataUrl);
-    }
-  }, [form.logoDataUrl]);
+  // logo preview is managed locally via upload token; no base64 fallback needed
 
   const handleLogoFile = async (file) => {
     if (!file) return;
@@ -548,7 +577,6 @@ function StepCompany({ form, onChange, errors, onClearError }) {
 
       onChange({ target: { name: 'logoUploadToken', value: token } });
       onChange({ target: { name: 'logoFileName', value: file.name } });
-      onChange({ target: { name: 'logoDataUrl', value: '' } });
       onChange({ target: { name: 'logoAttachmentId', value: '' } });
     } catch (err) {
       setUploadError(err?.response?.data?.message ?? err?.message ?? 'No se pudo subir el logo.');
@@ -570,7 +598,6 @@ function StepCompany({ form, onChange, errors, onClearError }) {
     setSelectedSwatch(null);
     setUploadError(null);
     onChange({ target: { name: 'logoUploadToken', value: '' } });
-    onChange({ target: { name: 'logoDataUrl', value: '' } });
     onChange({ target: { name: 'logoFileName', value: '' } });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -699,16 +726,16 @@ function StepCompany({ form, onChange, errors, onClearError }) {
       </div>
 
       <FloatingInput
-        id="businessCommercialName"
+        id="businessName"
         label="Nombre comercial"
-        value={form.businessCommercialName}
+        value={form.businessName}
         onChange={onChange}
-        onFocus={() => onClearError?.('businessCommercialName')}
-        error={errors.businessCommercialName}
-        success={comrcOk && !errors.businessCommercialName}
+        onFocus={() => onClearError?.('businessName')}
+        error={errors.businessName}
+        success={comrcOk && !errors.businessName}
         required
         autoComplete="off"
-        helper="Nombre que aparecera en la interfaz y reportes"
+        helper="Nombre que aparecerá en la interfaz y reportes"
       />
 
       <FloatingInput
@@ -722,6 +749,34 @@ function StepCompany({ form, onChange, errors, onClearError }) {
         required
         autoComplete="organization"
         helper="Nombre legal registrado"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Select
+          id="legalEntityType"
+          label="Tipo de persona"
+          placeholder="Selecciona tipo"
+          options={LEGAL_ENTITY_TYPES.map((t) => ({ value: t, label: t }))}
+          value={form.legalEntityType}
+          onValueChange={(value) => onChange({ target: { name: 'legalEntityType', value } })}
+        />
+
+        <FloatingInput
+          id="rfc"
+          label="RFC"
+          value={form.rfc}
+          onChange={onChange}
+          autoComplete="off"
+        />
+      </div>
+
+      <Select
+        id="fiscalRegime"
+        label="Régimen fiscal"
+        placeholder="Selecciona régimen"
+        options={FISCAL_REGIMES}
+        value={form.fiscalRegime}
+        onValueChange={(value) => onChange({ target: { name: 'fiscalRegime', value } })}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -758,14 +813,63 @@ function StepCompany({ form, onChange, errors, onClearError }) {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FloatingInput
+          id="phone"
+          label="Teléfono"
+          value={form.phone}
+          onChange={onChange}
+          autoComplete="tel"
+        />
+        <FloatingInput
+          id="email"
+          label="Correo de contacto"
+          type="email"
+          value={form.email}
+          onChange={onChange}
+          autoComplete="email"
+        />
+      </div>
+
       <FloatingInput
-        id="address"
-        label="Direccion"
-        value={form.address}
+        id="website"
+        label="Sitio web"
+        value={form.website}
         onChange={onChange}
-        onFocus={() => onClearError?.('address')}
+        autoComplete="url"
+      />
+
+      <FloatingInput
+        id="street"
+        label="Calle y número"
+        value={form.street}
+        onChange={onChange}
         autoComplete="street-address"
-        helper="Opcional"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FloatingInput
+          id="city"
+          label="Ciudad / Municipio"
+          value={form.city}
+          onChange={onChange}
+          autoComplete="address-level2"
+        />
+        <FloatingInput
+          id="state"
+          label="Estado"
+          value={form.state}
+          onChange={onChange}
+          autoComplete="address-level1"
+        />
+      </div>
+
+      <FloatingInput
+        id="postalCode"
+        label="Código postal"
+        value={form.postalCode}
+        onChange={onChange}
+        autoComplete="postal-code"
       />
 
       <div>
@@ -1018,7 +1122,8 @@ function StepReview({ form, onEdit }) {
       icon: 'users',
       label: 'Cuenta de acceso',
       fields: [
-        { label: 'Nombre completo', value: form.ownerDisplayName },
+        { label: 'Nombre', value: form.ownerFirstName },
+        { label: 'Apellidos', value: form.ownerLastName },
         { label: 'Correo electrónico', value: form.ownerEmail },
       ],
     },
@@ -1028,7 +1133,9 @@ function StepReview({ form, onEdit }) {
       label: 'Perfil de empresa',
       fields: [
         { label: 'Razón social', value: form.businessLegalName },
-        { label: 'Nombre comercial', value: form.businessCommercialName },
+        { label: 'Nombre comercial', value: form.businessName },
+        { label: 'Tipo de persona', value: form.legalEntityType || '—' },
+        { label: 'RFC', value: form.rfc || '—', mono: true },
         { label: 'Sector', value: form.industry || '—' },
         {
           label: 'Tamaño',
@@ -1036,11 +1143,10 @@ function StepReview({ form, onEdit }) {
             ? SIZES.find((s) => s.v === form.companySize)?.l || form.companySize
             : '—',
         },
-        { label: 'Dirección', value: form.address || '—' },
+        { label: 'Ciudad', value: form.city || '—' },
+        { label: 'Estado', value: form.state || '—' },
         { label: 'Color principal', value: form.primaryColor || '—', mono: true },
-        { label: 'Logo (archivo)', value: form.logoFileName || '—' },
-        { label: 'Logo (upload token)', value: form.logoUploadToken ? 'Generado' : '—' },
-        { label: 'Logo (attachmentId)', value: form.logoAttachmentId || '—', mono: true },
+        { label: 'Logo', value: form.logoFileName || '—' },
       ],
     },
     {
@@ -1367,18 +1473,27 @@ function LeftPanel() {
 
 function buildForm() {
   return {
-    ownerDisplayName: '',
+    ownerFirstName: '',
+    ownerLastName: '',
     ownerEmail: '',
     ownerPassword: '',
     ownerPasswordConfirm: '',
     businessLegalName: '',
-    businessCommercialName: '',
+    businessName: '',
+    legalEntityType: '',
+    rfc: '',
+    fiscalRegime: '',
     industry: '',
     companySize: '',
-    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    street: '',
+    city: '',
+    state: '',
+    postalCode: '',
     primaryColor: '#1d4ed8',
     logoUploadToken: '',
-    logoDataUrl: '',
     logoFileName: '',
     logoAttachmentId: '',
   };
@@ -1480,15 +1595,25 @@ export default function SetupPage() {
 
     try {
       await apiClient.post('/v1/setup/initialize', {
-        ownerDisplayName: form.ownerDisplayName.trim(),
+        ownerFirstName: form.ownerFirstName.trim(),
+        ownerLastName: form.ownerLastName.trim(),
         ownerEmail: form.ownerEmail.trim(),
         ownerPassword: form.ownerPassword,
         businessLegalName: form.businessLegalName.trim(),
-        businessCommercialName: form.businessCommercialName.trim(),
+        businessName: form.businessName.trim(),
+        ...(form.legalEntityType ? { legalEntityType: form.legalEntityType } : {}),
+        ...(form.rfc ? { rfc: form.rfc.trim() } : {}),
+        ...(form.fiscalRegime ? { fiscalRegime: form.fiscalRegime } : {}),
         ...(form.industry ? { industry: form.industry } : {}),
         ...(form.companySize ? { companySize: form.companySize } : {}),
+        ...(form.phone ? { phone: form.phone.trim() } : {}),
+        ...(form.email ? { email: form.email.trim() } : {}),
+        ...(form.website ? { website: form.website.trim() } : {}),
+        ...(form.street ? { street: form.street.trim() } : {}),
+        ...(form.city ? { city: form.city.trim() } : {}),
+        ...(form.state ? { state: form.state.trim() } : {}),
+        ...(form.postalCode ? { postalCode: form.postalCode.trim() } : {}),
         primaryColor: form.primaryColor,
-        ...(form.address ? { address: form.address.trim() } : {}),
         ...(form.logoUploadToken ? { logoUploadToken: form.logoUploadToken } : {}),
         ...(form.logoFileName ? { logoFileName: form.logoFileName } : {}),
         ...(form.logoAttachmentId ? { logoAttachmentId: form.logoAttachmentId.trim() } : {}),

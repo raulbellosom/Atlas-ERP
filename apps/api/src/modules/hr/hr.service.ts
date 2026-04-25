@@ -321,18 +321,4 @@ export class HrService {
       where: { employeeId, year },
     });
   }
-
-  // ─── EmployeeDocument ──────────────────────────────────────────────────────
-
-  async listDocuments(employeeId: string) {
-    const emp = await this.prisma.employee.findFirst({
-      where: { id: employeeId, deletedAt: null },
-    });
-    if (!emp) throw new NotFoundException('Empleado no encontrado.');
-
-    return this.prisma.employeeDocument.findMany({
-      where: { employeeId, deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
 }

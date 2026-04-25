@@ -43,7 +43,6 @@ export interface SetupStatus {
     organizationName: string | null;
     primaryColor: string | null;
     logoUrl: string | null;
-    logoDataUrlLegacy: string | null;
   } | null;
 }
 
@@ -58,46 +57,26 @@ export class SetupService {
   async getStatus(): Promise<SetupStatus> {
     await this.cleanupExpiredSetupUploads();
 
-    const [setupState, activeOrganizations, activeUsers] = await Promise.all([
-      this.prisma.setupState.findUnique({ where: { key: SETUP_STATE_KEY } }),
+    const [activeOrganizations, activeUsers] = await Promise.all([
       this.prisma.organization.count({ where: { deletedAt: null, isActive: true } }),
       this.prisma.user.count({ where: { deletedAt: null, isActive: true } }),
     ]);
 
     const hasExistingData = activeOrganizations > 0 || activeUsers > 0;
-    const isLocked = Boolean(setupState?.isCompleted) || hasExistingData;
+    const isLocked = hasExistingData;
     let branding: SetupStatus['branding'] = null;
 
     if (isLocked) {
       const organization = await this.prisma.organization.findFirst({
         where: { deletedAt: null, isActive: true },
         select: {
-          commercialName: true,
           name: true,
           primaryColor: true,
           logoAttachment: {
-            select: {
-              storagePath: true,
-            },
-          },
-          settings: {
-            where: {
-              key: {
-                in: ['organization.ui.logo_data_url'],
-              },
-            },
-            select: {
-              key: true,
-              value: true,
-            },
+            select: { storagePath: true },
           },
         },
       });
-
-      const settingsMap = new Map(
-        (organization?.settings ?? []).map((setting) => [setting.key, setting.value]),
-      );
-      const organizationName = organization?.commercialName ?? organization?.name ?? null;
 
       let logoUrl: string | null = null;
       if (organization?.logoAttachment?.storagePath) {
@@ -111,15 +90,10 @@ export class SetupService {
         }
       }
 
-      const legacyLogoDataUrl = logoUrl
-        ? null
-        : (settingsMap.get('organization.ui.logo_data_url') ?? null);
-
       branding = {
-        organizationName,
+        organizationName: organization?.name ?? null,
         primaryColor: organization?.primaryColor ?? null,
         logoUrl,
-        logoDataUrlLegacy: legacyLogoDataUrl,
       };
     }
 
@@ -255,17 +229,28 @@ export class SetupService {
         }
       }
 
-      const slugBase = this.toSlug(dto.businessCommercialName || dto.businessLegalName);
+      const slugBase = this.toSlug(dto.businessName || dto.businessLegalName);
       const slug = await this.generateUniqueSlug(tx, slugBase);
 
       const organization = await tx.organization.create({
         data: {
-          name: dto.businessCommercialName,
+          name: dto.businessName,
           slug,
           legalName: dto.businessLegalName,
-          commercialName: dto.businessCommercialName,
+          legalEntityType: dto.legalEntityType ?? null,
+          rfc: dto.rfc ?? null,
+          fiscalRegime: dto.fiscalRegime ?? null,
           primaryColor: dto.primaryColor ?? null,
-          address: dto.address ?? null,
+          phone: dto.phone ?? null,
+          email: dto.email ?? null,
+          website: dto.website ?? null,
+          street: dto.street ?? null,
+          city: dto.city ?? null,
+          state: dto.state ?? null,
+          postalCode: dto.postalCode ?? null,
+          country: dto.country ?? 'MX',
+          industry: dto.industry ?? null,
+          companySize: dto.companySize ?? null,
           isActive: true,
         } satisfies Prisma.OrganizationUncheckedCreateInput,
         select: { id: true },
@@ -295,7 +280,9 @@ export class SetupService {
         data: {
           organizationId: organization.id,
           email: dto.ownerEmail.toLowerCase().trim(),
-          displayName: dto.ownerDisplayName,
+          firstName: dto.ownerFirstName.trim(),
+          lastName: dto.ownerLastName.trim(),
+          displayName: `${dto.ownerFirstName.trim()} ${dto.ownerLastName.trim()}`,
           passwordHash,
           isActive: true,
           isLocked: false,
@@ -349,13 +336,7 @@ export class SetupService {
         });
       }
 
-      await this.upsertOrganizationSettings(tx, organization.id, {
-        brandName: dto.businessCommercialName,
-        primaryColor: dto.primaryColor ?? null,
-        industry: dto.industry ?? null,
-        companySize: dto.companySize ?? null,
-        logoDataUrl: dto.logoDataUrl ?? null,
-      });
+      await this.upsertOrganizationSettings(tx, organization.id);
 
       await this.autoInstallCoreModules(tx, organization.id);
 
@@ -504,41 +485,8 @@ export class SetupService {
   private async upsertOrganizationSettings(
     tx: Prisma.TransactionClient,
     organizationId: string,
-    branding: {
-      brandName: string;
-      primaryColor: string | null;
-      industry: string | null;
-      companySize: string | null;
-      logoDataUrl: string | null;
-    },
   ): Promise<void> {
     const settings = [
-      {
-        key: 'organization.ui.brand_name',
-        value: branding.brandName,
-        description: 'Nombre comercial mostrado en la UI para la organizacion activa.',
-      },
-      {
-        key: 'organization.ui.primary_color',
-        value: branding.primaryColor ?? '',
-        description: 'Color principal para el branding base de la organizacion.',
-      },
-      {
-        key: 'organization.profile.industry',
-        value: branding.industry ?? '',
-        description: 'Sector industrial capturado durante el setup inicial.',
-      },
-      {
-        key: 'organization.profile.company_size',
-        value: branding.companySize ?? '',
-        description: 'Tamano de empresa capturado durante el setup inicial.',
-      },
-      {
-        key: 'organization.ui.logo_data_url',
-        value: branding.logoDataUrl ?? '',
-        description:
-          'Compat legacy temporal para logo en base64. No usar como persistencia principal.',
-      },
       {
         key: 'organization.sync.enabled',
         value: 'true',
@@ -553,17 +501,8 @@ export class SetupService {
 
     for (const setting of settings) {
       await tx.setting.upsert({
-        where: {
-          organizationId_key: {
-            organizationId,
-            key: setting.key,
-          },
-        },
-        update: {
-          value: setting.value,
-          description: setting.description,
-          isActive: true,
-        },
+        where: { organizationId_key: { organizationId, key: setting.key } },
+        update: { value: setting.value, description: setting.description, isActive: true },
         create: {
           organizationId,
           key: setting.key,

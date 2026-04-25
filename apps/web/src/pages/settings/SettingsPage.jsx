@@ -23,21 +23,6 @@ function useOrg(organizationId) {
   });
 }
 
-function useOrgSettings(organizationId) {
-  return useQuery({
-    queryKey: ['settings', organizationId],
-    queryFn: async () => {
-      const res = await apiClient.get('/v1/settings', {
-        params: { organizationId, includeGlobal: false },
-      });
-      const items = res.data?.data ?? res.data;
-      const list = Array.isArray(items) ? items : (items?.items ?? []);
-      return Object.fromEntries(list.map((s) => [s.key, s.value]));
-    },
-    enabled: Boolean(organizationId),
-  });
-}
-
 const TABS = [
   { id: 'profile', label: 'Mi perfil' },
   { id: 'org', label: 'Organización' },
@@ -50,7 +35,6 @@ export default function SettingsPage() {
 
   const { data: me } = useMe();
   const { data: org } = useOrg(storeUser?.organizationId);
-  const { data: settings = {} } = useOrgSettings(storeUser?.organizationId);
 
   const user = me ?? storeUser;
 
@@ -100,12 +84,9 @@ export default function SettingsPage() {
           <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
             <Field label="Nombre legal" value={org?.name ?? '—'} />
             <Field label="Slug" value={org?.slug ?? '—'} mono />
-            <Field label="Industria" value={settings['organization.profile.industry'] ?? '—'} />
-            <Field label="Tamaño" value={settings['organization.profile.company_size'] ?? '—'} />
-            <Field
-              label="Color principal"
-              value={settings['organization.ui.primary_color'] ?? '—'}
-            />
+            <Field label="Industria" value={org?.industry ?? '—'} />
+            <Field label="Tamaño" value={org?.companySize ?? '—'} />
+            <Field label="Color principal" value={org?.primaryColor ?? '—'} />
           </div>
           <Button variant="secondary" size="sm" onClick={() => navigate('/empresa')}>
             Gestionar en Empresa →

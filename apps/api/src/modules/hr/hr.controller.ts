@@ -133,12 +133,4 @@ export class HrController {
   getLeaveBalances(@Param('id') employeeId: string, @Query('year') year: string) {
     return this.hrService.getLeaveBalances(employeeId, parseInt(year, 10));
   }
-
-  // ─── Documents ─────────────────────────────────────────────────────────────
-
-  @Get('employees/:id/documents')
-  @RequireAllPermissions('hr:read')
-  listDocuments(@Param('id') employeeId: string) {
-    return this.hrService.listDocuments(employeeId);
-  }
 }
