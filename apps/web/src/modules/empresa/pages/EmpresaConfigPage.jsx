@@ -1,11 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth.store';
 import { useApiError } from '@/hooks/useApiError';
 import { useToast } from '@/components/ui/Toast';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { useSettings, useUpdateSetting } from '../hooks/useEmpresa';
+import AlertDialog from '@/components/ui/AlertDialog';
+import {
+  useOrganization,
+  useSettings,
+  useUpdateSetting,
+  useDeleteOrganization,
+} from '../hooks/useEmpresa';
 
 function SettingRow({ setting }) {
   const [value, setValue] = useState(setting.value ?? '');
@@ -56,8 +63,31 @@ function SettingRow({ setting }) {
 export default function EmpresaConfigPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+  const { handleError } = useApiError();
+  const { toast } = useToast();
 
+  const { data: org } = useOrganization(organizationId);
   const { data: settings = [], isLoading } = useSettings(organizationId);
+  const deleteMutation = useDeleteOrganization();
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmName, setConfirmName] = useState('');
+
+  const orgName = org?.name ?? '';
+  const deleteConfirmed = confirmName === orgName;
+
+  async function handleDelete() {
+    try {
+      await deleteMutation.mutateAsync(organizationId);
+      toast.success('Organización eliminada');
+      logout();
+      navigate('/login');
+    } catch (err) {
+      handleError(err);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -86,6 +116,85 @@ export default function EmpresaConfigPage() {
           ))}
         </div>
       </div>
+
+      {/* Danger zone */}
+      <div className="rounded-xl border border-red-200 dark:border-red-900 bg-surface-card">
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 rounded-t-xl">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-red-500 shrink-0"
+          >
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span className="label-caps text-[10px] text-red-600 dark:text-red-400">
+            Zona de peligro
+          </span>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-text-primary">Eliminar organización</p>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Elimina permanentemente la organización y todos sus datos. Esta acción no se puede
+                deshacer.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+              className="shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open);
+          if (!open) setConfirmName('');
+        }}
+        title="¿Eliminar organización?"
+        description={
+          <div className="space-y-3">
+            <p className="text-sm text-text-secondary">
+              Se eliminarán permanentemente todos los datos de{' '}
+              <span className="font-semibold text-text-primary">{orgName}</span>: usuarios, roles,
+              empleados, movimientos financieros y configuraciones. Esta acción es irreversible.
+            </p>
+            <div>
+              <p className="text-xs text-text-secondary mb-1.5">
+                Escribe <span className="font-mono font-semibold text-text-primary">{orgName}</span>{' '}
+                para confirmar:
+              </p>
+              <Input
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={orgName}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        }
+        cancelLabel="Cancelar"
+        confirmLabel="Eliminar organización"
+        onConfirm={handleDelete}
+        variant="destructive"
+        confirmDisabled={!deleteConfirmed || deleteMutation.isPending}
+      />
     </div>
   );
 }

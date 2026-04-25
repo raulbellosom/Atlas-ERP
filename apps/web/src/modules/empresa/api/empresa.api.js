@@ -10,6 +10,10 @@ export async function updateOrganization(id, data) {
   return res.data?.data ?? res.data;
 }
 
+export async function deleteOrganization(id) {
+  await apiClient.delete(`/v1/organizations/${id}`);
+}
+
 export async function fetchSettings(organizationId) {
   const res = await apiClient.get('/v1/settings', {
     params: { organizationId, includeGlobal: false },
@@ -21,4 +25,23 @@ export async function fetchSettings(organizationId) {
 export async function updateSetting(id, value) {
   const res = await apiClient.patch(`/v1/settings/${id}`, { value });
   return res.data?.data ?? res.data;
+}
+
+export async function uploadLogo({ organizationId, userId, file }) {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('organizationId', organizationId);
+  form.append('entityType', 'organization');
+  form.append('entityId', organizationId);
+  if (userId) form.append('uploadedById', userId);
+  const res = await apiClient.post('/v1/attachments/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data?.data ?? res.data;
+}
+
+export async function fetchAttachmentDownloadUrl(attachmentId) {
+  const res = await apiClient.get(`/v1/attachments/${attachmentId}/download`);
+  const payload = res.data?.data ?? res.data;
+  return payload?.downloadUrl ?? null;
 }

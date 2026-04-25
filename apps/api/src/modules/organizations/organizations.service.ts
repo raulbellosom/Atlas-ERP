@@ -13,6 +13,11 @@ const ORGANIZATION_SELECT = {
   id: true,
   name: true,
   slug: true,
+  legalName: true,
+  commercialName: true,
+  address: true,
+  primaryColor: true,
+  logoAttachmentId: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
@@ -59,6 +64,13 @@ export class OrganizationsService {
       where: { id },
       data: dto,
       select: ORGANIZATION_SELECT,
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.organization.update({
+      where: { id },
+      data: { deletedAt: new Date(), isActive: false },
     });
   }
 }

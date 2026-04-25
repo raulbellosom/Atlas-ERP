@@ -25,4 +25,8 @@ export class UpdateOrganizationDto {
   @IsString()
   @MaxLength(32)
   primaryColor?: string;
+
+  @IsOptional()
+  @IsString()
+  logoAttachmentId?: string | null;
 }

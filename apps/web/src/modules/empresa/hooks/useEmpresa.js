@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  deleteOrganization,
+  fetchAttachmentDownloadUrl,
   fetchOrganization,
   fetchSettings,
   updateOrganization,
   updateSetting,
+  uploadLogo,
 } from '../api/empresa.api';
 
 export const EMPRESA_KEYS = {
   organization: (id) => ['organization', id],
   settings: (orgId) => ['empresa-settings', orgId],
+  logoUrl: (attachmentId) => ['attachment-url', attachmentId],
 };
 
 export function useOrganization(organizationId) {
@@ -29,6 +33,12 @@ export function useUpdateOrganization() {
   });
 }
 
+export function useDeleteOrganization() {
+  return useMutation({
+    mutationFn: (id) => deleteOrganization(id),
+  });
+}
+
 export function useSettings(organizationId) {
   return useQuery({
     queryKey: EMPRESA_KEYS.settings(organizationId),
@@ -43,6 +53,26 @@ export function useUpdateSetting() {
     mutationFn: ({ id, value }) => updateSetting(id, value),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['empresa-settings'] });
+    },
+  });
+}
+
+export function useLogoUrl(attachmentId) {
+  return useQuery({
+    queryKey: EMPRESA_KEYS.logoUrl(attachmentId),
+    queryFn: () => fetchAttachmentDownloadUrl(attachmentId),
+    enabled: Boolean(attachmentId),
+    staleTime: 4 * 60 * 1000,
+  });
+}
+
+export function useUploadLogo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: uploadLogo,
+    onSuccess: (attachment, vars) => {
+      qc.invalidateQueries({ queryKey: ['organization', vars.organizationId] });
+      qc.invalidateQueries({ queryKey: ['attachment-url', attachment.id] });
     },
   });
 }

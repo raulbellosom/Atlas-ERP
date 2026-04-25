@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
 import { BranchesService } from '../branches/branches.service';
 import { ListBranchesQueryDto } from '../branches/dto/list-branches.query.dto';
@@ -32,6 +42,13 @@ export class OrganizationsController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateOrganizationDto) {
     return this.organizationsService.update(id, dto);
+  }
+
+  @RequireAllPermissions('core:organization:update')
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id') id: string) {
+    await this.organizationsService.delete(id);
   }
 
   @Get(':id/branches')
