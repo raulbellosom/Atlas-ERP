@@ -20,6 +20,7 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { FinOpsLoadingState } from '@/modules/financial-operations/components/StateIndicators';
 import { Tabs, TabContent } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/Toast';
+import Spinner from '@/components/ui/Spinner';
 
 /**
  * MovementDetailPage — Detalle de movimiento financiero.
