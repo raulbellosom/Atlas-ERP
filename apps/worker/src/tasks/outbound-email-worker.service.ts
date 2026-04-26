@@ -35,12 +35,21 @@ export class OutboundEmailWorkerService implements OnModuleInit, OnModuleDestroy
   ) {}
 
   async onModuleInit(): Promise<void> {
+    logger.info(
+      { event: WorkerEvents.JOB_STARTED, module: 'outbound-email' },
+      'OutboundEmailWorker onModuleInit iniciando...',
+    );
+
     await this.tryConnectRedisSubscriber();
 
     this.pollTimer = setInterval(() => {
       void this.processQueue();
     }, 10_000);
 
+    logger.info(
+      { event: WorkerEvents.JOB_STARTED, module: 'outbound-email' },
+      'Poll timer configurado (10s), ejecutando primer processQueue...',
+    );
     void this.processQueue();
   }
 
@@ -86,12 +95,27 @@ export class OutboundEmailWorkerService implements OnModuleInit, OnModuleDestroy
   }
 
   private async processQueue(): Promise<void> {
-    if (this.isProcessing) return;
+    if (this.isProcessing) {
+      logger.debug(
+        { event: WorkerEvents.JOB_STARTED, module: 'outbound-email' },
+        'processQueue omitido: ya esta procesando',
+      );
+      return;
+    }
     this.isProcessing = true;
 
     try {
       const config = await this.getEmailConfig();
       if (!config || !config.isActive) {
+        logger.debug(
+          {
+            event: WorkerEvents.JOB_STARTED,
+            module: 'outbound-email',
+            configNull: !config,
+            isActive: config?.isActive,
+          },
+          'processQueue omitido: config nula o inactiva',
+        );
         return;
       }
 
@@ -103,6 +127,11 @@ export class OutboundEmailWorkerService implements OnModuleInit, OnModuleDestroy
         orderBy: [{ nextAttemptAt: 'asc' }, { createdAt: 'asc' }],
         take: 10,
       });
+
+      logger.info(
+        { event: WorkerEvents.JOB_STARTED, module: 'outbound-email', jobCount: jobs.length },
+        `processQueue: ${jobs.length} job(s) pendientes encontrados`,
+      );
 
       for (const job of jobs) {
         await this.processSingleJob(job.id, config);

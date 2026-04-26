@@ -4,7 +4,7 @@
   "private": true,
   "description": "Worker de jobs y sincronizaciÃ³n â€” NestJS + BullMQ",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "npx nodemon --watch src -e ts,js --exec \"ts-node src/main.ts\"",
     "start": "node dist/main.js",
     "build": "tsc -p tsconfig.json",
     "test": "jest --passWithNoTests",
