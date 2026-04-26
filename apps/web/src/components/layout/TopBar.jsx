@@ -9,6 +9,7 @@ import ConnectionIndicator from './ConnectionIndicator';
 import { fetchInstalledModules } from '@/modules/module-store/api/module-store.api';
 import { getModuleMeta } from '@/modules/module-store/constants/module-manifest';
 import { INSTALLED_MODULES_QUERY_KEY } from '@/hooks/useInstalledModules';
+import { fetchProfile, fetchAvatarUrl } from '@/pages/profile/profile.api';
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function getInitial(user) {
@@ -16,21 +17,29 @@ function getInitial(user) {
 }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
-function Avatar({ initial, size = 8, dot = false }) {
+function Avatar({ initial, imageUrl, size = 8, dot = false }) {
   return (
     <div className="relative shrink-0" style={{ width: `${size * 4}px`, height: `${size * 4}px` }}>
-      <div
-        className="w-full h-full rounded-full flex items-center justify-center ring-1 ring-white/10"
-        style={{ background: 'var(--gradient-primary)' }}
-        aria-hidden="true"
-      >
-        <span
-          className="font-bold text-white select-none"
-          style={{ fontFamily: 'var(--font-display)', fontSize: `${size * 1.75}px` }}
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={initial}
+          className="w-full h-full rounded-full object-cover ring-1 ring-white/10"
+        />
+      ) : (
+        <div
+          className="w-full h-full rounded-full flex items-center justify-center ring-1 ring-white/10"
+          style={{ background: 'var(--gradient-primary)' }}
+          aria-hidden="true"
         >
-          {initial}
-        </span>
-      </div>
+          <span
+            className="font-bold text-white select-none"
+            style={{ fontFamily: 'var(--font-display)', fontSize: `${size * 1.75}px` }}
+          >
+            {initial}
+          </span>
+        </div>
+      )}
       {dot && (
         <span
           className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-surface"
@@ -292,6 +301,20 @@ export default function TopBar({ onMenuToggle }) {
     staleTime: 4 * 60 * 1000,
   });
 
+  const { data: profileData } = useQuery({
+    queryKey: ['profile-me'],
+    queryFn: fetchProfile,
+    enabled: Boolean(user),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: avatarUrl = null } = useQuery({
+    queryKey: ['avatar-url', profileData?.avatarAttachmentId],
+    queryFn: () => fetchAvatarUrl(profileData.avatarAttachmentId),
+    enabled: Boolean(profileData?.avatarAttachmentId),
+    staleTime: 4 * 60 * 1000,
+  });
+
   const companyName = orgData?.commercialName || orgData?.name || null;
   const companyColor = orgData?.primaryColor || null;
   const companyLogoUrl = logoUrl;
@@ -381,7 +404,7 @@ export default function TopBar({ onMenuToggle }) {
                 ].join(' ')}
                 aria-label={`Menú de ${displayName}`}
               >
-                <Avatar initial={initial} size={7} dot />
+                <Avatar initial={initial} imageUrl={avatarUrl} size={7} dot />
                 <span
                   className="hidden sm:block text-sm font-medium text-text-primary max-w-24 truncate"
                   style={{ fontFamily: 'var(--font-display)' }}
@@ -408,7 +431,7 @@ export default function TopBar({ onMenuToggle }) {
                 {/* ── Profile header — non-interactive ── */}
                 <div className="px-3 pt-3 pb-2.5 mb-1">
                   <div className="flex items-start gap-3">
-                    <Avatar initial={initial} size={10} />
+                    <Avatar initial={initial} imageUrl={avatarUrl} size={10} />
                     <div className="min-w-0 flex-1 pt-0.5">
                       <p
                         className="text-sm font-semibold text-text-primary truncate leading-tight"

@@ -71,6 +71,7 @@ export default function EmpresaPerfilPage() {
     country: 'MX',
   });
   const [slugManual, setSlugManual] = useState(false);
+  const [formReady, setFormReady] = useState(false);
 
   useEffect(() => {
     if (org) {
@@ -91,6 +92,7 @@ export default function EmpresaPerfilPage() {
         country: org.country ?? 'MX',
       });
       setSlugManual(false);
+      setFormReady(true);
     }
   }, [org]);
 
@@ -126,7 +128,7 @@ export default function EmpresaPerfilPage() {
     return (value) => setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  if (isLoading) return null;
+  if (isLoading || !formReady) return null;
 
   return (
     <div className="space-y-6">
