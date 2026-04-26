@@ -1,6 +1,6 @@
 /**
- * @atlasrep/config — Prettier config compartida
- * Todos los apps y packages extienden esta configuración base.
+ * @atlaserp/config â€” Prettier config compartida
+ * Todos los apps y packages extienden esta configuraciÃ³n base.
  */
 
 /** @type {import("prettier").Config} */
@@ -19,7 +19,7 @@ const config = {
   bracketSameLine: false,
   arrowParens: "always",
 
-  // Finales de línea (LF en todos los entornos, incluyendo Windows)
+  // Finales de lÃ­nea (LF en todos los entornos, incluyendo Windows)
   endOfLine: "lf",
 
   // Overrides por tipo de archivo
@@ -40,3 +40,4 @@ const config = {
 };
 
 export default config;
+

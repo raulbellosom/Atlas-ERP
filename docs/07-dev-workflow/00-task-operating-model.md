@@ -1,4 +1,4 @@
-﻿# Modelo Operativo de Tasks
+# Modelo Operativo de Tasks
 
 ## Objetivo
 Definir cómo AtlasERP crea, ejecuta y cierra tasks de forma trazable, incremental y consistente con el backlog maestro.

@@ -1,4 +1,4 @@
-﻿# Modelos Foundation RBAC, Auditoría y Configuración
+# Modelos Foundation RBAC, Auditoría y Configuración
 
 ## Task de origen
 - `T-0515` a `T-0519`

@@ -1,4 +1,4 @@
-﻿import base from "../config/eslint/base.mjs";
+import base from "../config/eslint/base.mjs";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [

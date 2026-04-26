@@ -1,5 +1,5 @@
 {
-  "name": "@atlasrep/sdk",
+  "name": "@atlaserp/sdk",
   "version": "0.0.0",
   "private": true,
   "description": "SDK interno para consumir la API desde apps cliente",
@@ -10,3 +10,4 @@
     "clean": "rm -rf dist"
   }
 }
+

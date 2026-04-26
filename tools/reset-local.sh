@@ -46,9 +46,9 @@ sleep 5
 docker compose -f infra/docker/docker-compose.dev.yml exec postgres \
   pg_isready -U atlaserp -d atlaserp_dev -t 30
 
-echo -e "${YELLOW}[4/4] Ejecutando migraciones y seeds...${NC}"
+echo -e "${YELLOW}[4/4] Ejecutando migraciones y seed bootstrap de setup...${NC}"
 export DATABASE_URL="${DATABASE_URL:-$DEFAULT_DATABASE_URL}"
 run_pnpm db:migrate
-run_pnpm db:seed
+run_pnpm db:seed:setup
 
 echo -e "\n${GREEN}Reset local completado.${NC}"

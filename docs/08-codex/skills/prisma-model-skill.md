@@ -1,4 +1,4 @@
-﻿# Prisma Model Skill
+# Prisma Model Skill
 
 ## ID de task origen
 

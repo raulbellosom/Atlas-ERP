@@ -1,4 +1,4 @@
-﻿# AtlasERP — Docker Compose para desarrollo local
+# AtlasERP — Docker Compose para desarrollo local
 # Uso: pnpm infra:up
 # Servicios: PostgreSQL 16, Redis 7, MinIO (S3-compatible)
 

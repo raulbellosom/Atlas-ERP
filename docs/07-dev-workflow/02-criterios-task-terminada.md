@@ -1,4 +1,4 @@
-﻿# Criterios de “Task Terminada”
+# Criterios de “Task Terminada”
 
 ## ID de criterio
 - Task origen: `T-0035`

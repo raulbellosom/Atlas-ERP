@@ -1,4 +1,4 @@
-﻿# Convenciones Prisma de Timestamps
+# Convenciones Prisma de Timestamps
 
 ## Task de origen
 - `T-0505`

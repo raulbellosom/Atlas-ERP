@@ -33,11 +33,19 @@ describe('ModuleStoreService', () => {
   let service: ModuleStoreService;
   const originalProvider = process.env.MODULE_STORE_PROVIDER;
   const originalRolloutStage = process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE;
+  const originalRemoteCatalogUrl = process.env.MODULE_STORE_REMOTE_CATALOG_URL;
+  const originalTrustedSigners = process.env.MODULE_STORE_REMOTE_TRUSTED_SIGNERS;
+  const originalCanaryOrgs = process.env.MODULE_STORE_REMOTE_CANARY_ORGS;
+  const originalPartialPercent = process.env.MODULE_STORE_REMOTE_PARTIAL_PERCENT;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     delete process.env.MODULE_STORE_PROVIDER;
     delete process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE;
+    delete process.env.MODULE_STORE_REMOTE_CATALOG_URL;
+    delete process.env.MODULE_STORE_REMOTE_TRUSTED_SIGNERS;
+    delete process.env.MODULE_STORE_REMOTE_CANARY_ORGS;
+    delete process.env.MODULE_STORE_REMOTE_PARTIAL_PERCENT;
     const module = await Test.createTestingModule({
       providers: [ModuleStoreService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
@@ -47,6 +55,10 @@ describe('ModuleStoreService', () => {
   afterAll(() => {
     process.env.MODULE_STORE_PROVIDER = originalProvider;
     process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = originalRolloutStage;
+    process.env.MODULE_STORE_REMOTE_CATALOG_URL = originalRemoteCatalogUrl;
+    process.env.MODULE_STORE_REMOTE_TRUSTED_SIGNERS = originalTrustedSigners;
+    process.env.MODULE_STORE_REMOTE_CANARY_ORGS = originalCanaryOrgs;
+    process.env.MODULE_STORE_REMOTE_PARTIAL_PERCENT = originalPartialPercent;
   });
 
   describe('getCatalog', () => {
@@ -75,6 +87,58 @@ describe('ModuleStoreService', () => {
           }),
         }),
       );
+    });
+
+    it('falls back to curated provider when remote provider has no configured URL', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+
+      mockPrisma.moduleDefinition.findMany.mockResolvedValue([
+        {
+          moduleKey: 'core-platform',
+          name: 'Core Platform',
+          lifecycleState: 'ACTIVE',
+          isCore: true,
+          versions: [],
+        },
+      ]);
+
+      const result = await service.getCatalog({});
+      expect(result).toHaveLength(1);
+      expect(mockPrisma.moduleDefinition.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('loads catalog from remote provider and validates package metadata', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_CATALOG_URL = 'https://catalog.atlaserp.local/modules';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+
+      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          items: [
+            {
+              moduleKey: 'core-platform',
+              name: 'Core Platform Remote',
+              isCore: true,
+              lifecycleState: 'ACTIVE',
+              versions: [
+                {
+                  version: '1.0.0',
+                  compatibilityRange: '^1.0.0',
+                  manifestChecksum: 'curated-v1',
+                },
+              ],
+            },
+          ],
+        }),
+      } as unknown as Response);
+
+      const result = await service.getCatalog({});
+      expect(result).toHaveLength(1);
+      expect(result[0].moduleKey).toBe('core-platform');
+      expect(result[0].versions).toHaveLength(1);
+      fetchSpy.mockRestore();
     });
   });
 
@@ -140,6 +204,80 @@ describe('ModuleStoreService', () => {
           { organizationId: 'org-1', moduleKey: 'custom-module', version: '1.0.0' },
           'user-1',
         ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('accepts canary package for organization enabled through dynamic allowlist', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+      process.env.MODULE_STORE_REMOTE_CANARY_ORGS = 'org-dynamic-canary';
+
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'accounting',
+        version: '1.0.0',
+        manifestChecksum: 'curated-v1',
+      });
+      mockPrisma.moduleInstallJob.create.mockResolvedValue({
+        id: 'job-canary-allow',
+        status: 'RUNNING',
+      });
+      mockPrisma.moduleInstallJob.update.mockResolvedValue({
+        id: 'job-canary-allow',
+        status: 'COMPLETED',
+      });
+      mockPrisma.tenantModuleInstallation.create.mockResolvedValue({});
+      mockPrisma.moduleLifecycleAuditEvent.create.mockResolvedValue({});
+
+      const result = await service.install(
+        { organizationId: 'org-dynamic-canary', moduleKey: 'accounting', version: '1.0.0' },
+        'user-1',
+      );
+
+      expect(result.status).toBe('COMPLETED');
+    });
+
+    it('blocks partial rollout package when deterministic segment is disabled', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+      process.env.MODULE_STORE_REMOTE_PARTIAL_PERCENT = '0';
+
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'financial-operations',
+        version: '1.0.0',
+        manifestChecksum: 'curated-v1',
+      });
+
+      await expect(
+        service.install(
+          {
+            organizationId: 'org-partial-disabled',
+            moduleKey: 'financial-operations',
+            version: '1.0.0',
+          },
+          'user-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('rejects package when signer is not part of trusted signer list', async () => {
+      process.env.MODULE_STORE_PROVIDER = 'remote';
+      process.env.MODULE_STORE_REMOTE_ROLLOUT_STAGE = 'total';
+      process.env.MODULE_STORE_REMOTE_TRUSTED_SIGNERS = 'external-sign-v2';
+
+      mockPrisma.tenantModuleInstallation.findFirst.mockResolvedValue(null);
+      mockPrisma.moduleDependency.findMany.mockResolvedValue([]);
+      mockPrisma.moduleVersion.findFirst.mockResolvedValue({
+        moduleKey: 'accounting',
+        version: '1.0.0',
+        manifestChecksum: 'curated-v1',
+      });
+
+      await expect(
+        service.install({ organizationId: 'org-1', moduleKey: 'accounting', version: '1.0.0' }, 'user-1'),
       ).rejects.toThrow(ConflictException);
     });
 

@@ -1,125 +1,154 @@
-# AtlasERP — Monorepo Maestro
+# AtlasERP Monorepo
 
-Plataforma modular de negocio construida sobre un monorepo con arquitectura modular monolítica.
-Nombre interno de código: **AtlasERP** | Nombre visible temporal: **Atlas ERP**
+Plataforma modular de negocio con arquitectura monorepo y soporte offline-first controlado.
 
----
+## Stack oficial
 
-## Stack tecnológico oficial
-
-| Capa | Tecnología |
-|------|-----------|
+| Capa | Tecnologia |
+|------|------------|
 | Backend | NestJS + TypeScript + Prisma + PostgreSQL |
-| Frontend web | React + Vite + JavaScript + TailwindCSS 4.1 |
-| Desktop | Tauri + SQLite (caché local y cola de sync) |
-| Worker/Jobs | NestJS worker process + Redis |
-| Almacenamiento | MinIO / S3 compatible |
-| Infraestructura | Docker + Docker Compose |
+| Web | React + Vite + TailwindCSS 4.1 |
+| Desktop | Tauri + React + SQLite local (cache/cola) |
+| Worker | NestJS worker process + Redis |
+| Archivos | MinIO / S3 compatible |
+| Infra | Docker Compose |
 
----
+## Estructura
 
-## Estructura del monorepo
-
-```
+```text
 /
-├─ apps/
-│  ├─ api/          # Backend central (NestJS + Prisma)
-│  ├─ web/          # App web (React + Vite)
-│  ├─ desktop/      # Shell desktop (Tauri)
-│  └─ worker/       # Jobs y sincronización async
-│
-├─ packages/
-│  ├─ ui/           # Componentes reutilizables (TailwindCSS 4.1)
-│  ├─ shared/       # Constantes, enums, helpers cross-app
-│  ├─ validation/   # Esquemas compartidos (Zod u equivalente)
-│  ├─ sync-contracts/ # Tipos y contratos del protocolo de sync
-│  ├─ sdk/          # SDK interno para consumir la API
-│  └─ config/       # Configuración compartida (lint, prettier, tsconfig)
-│
-├─ prisma/
-│  ├─ schema.prisma
-│  ├─ migrations/
-│  └─ seeds/
-│
-├─ infra/
-│  ├─ docker/       # docker-compose por ambiente
-│  ├─ nginx/
-│  ├─ scripts/      # Bootstrap, reset, deploy
-│  └─ backup/
-│
-├─ docs/            # Documentación del proyecto (ver abajo)
-├─ tools/           # Generadores, codemods, prompts de IA
-└─ .github/
-   └─ workflows/    # CI/CD
+â”œâ”€ apps/
+â”‚  â”œâ”€ api/
+â”‚  â”œâ”€ web/
+â”‚  â”œâ”€ desktop/
+â”‚  â””â”€ worker/
+â”œâ”€ packages/
+â”œâ”€ prisma/
+â”œâ”€ infra/
+â”œâ”€ docs/
+â””â”€ tools/
 ```
 
----
+## Prerrequisitos
 
-## Documentación del proyecto
+- Node.js `>= 20`
+- pnpm `>= 9`
+- Docker Desktop
+- Para `apps/desktop`: Rust + Cargo + toolchain Tauri
 
-| Sección | Contenido |
-|---------|-----------|
-| `docs/00-canon/` | Principios no negociables del proyecto |
-| `docs/01-product/` | Propósito, alcance y visión del producto |
-| `docs/02-architecture/` | Decisiones de arquitectura y stack oficial |
-| `docs/03-domain-blueprints/` | Blueprints de dominio de cada módulo |
-| `docs/04-modules/` | Ownership, crecimiento y naming de módulos |
-| `docs/05-sync/` | Políticas de offline y resolución de conflictos |
-| `docs/06-security/` | Seguridad, feature flags y soft delete |
-| `docs/07-dev-workflow/` | Modelo operativo de tasks y estado del backlog |
-| `docs/08-codex/` | Instrucciones, prompts y skills para IA |
-| `docs/09-roadmap/` | Roadmap de evolución del proyecto |
+Si usas PowerShell y tienes restriccion de scripts, ejecuta comandos como `pnpm.cmd ...`.
 
-**Punto de entrada recomendado:** `CODEX_START_HERE.md`
-
----
-
-## Levantamiento local (cuando el monorepo esté inicializado)
+## Setup inicial (una sola vez)
 
 ```bash
-# Instalar dependencias
 pnpm install
-
-# Levantar infraestructura (PostgreSQL, Redis, MinIO)
 pnpm infra:up
-
-# Ejecutar migraciones
 pnpm db:migrate
+pnpm db:seed:setup
+```
 
-# Ejecutar seeds iniciales
-pnpm db:seed
+## Desarrollo
 
-# Levantar todas las apps en modo desarrollo
+### Modo recomendado
+
+```bash
 pnpm dev
 ```
 
-> Ver `docs/07-dev-workflow/` para el flujo de trabajo, convenciones de commits y política de branches.
+`pnpm dev` levanta solo:
 
----
+- `@atlaserp/api`
+- `@atlaserp/worker`
+- `@atlaserp/web`
 
-## Primer módulo de negocio
+### Modo full stack (incluye desktop)
 
-**Financial Operations Core / Tesorería y Movimientos**
+```bash
+pnpm dev:all
+```
 
-Cubre: cuentas bancarias, movimientos manuales, transferencias, saldos, conciliación, cuentas por cobrar y pagar simples, adjuntos y sync.
+`pnpm dev:all` tambien arranca `@atlaserp/desktop`, y requiere Rust/Cargo instalados.
 
----
+## Infra local
+
+```bash
+pnpm infra:status
+pnpm infra:logs
+pnpm infra:down
+```
+
+## Reset local (volver al Setup Page)
+
+### Reset completo (borra volumenes Docker + datos)
+
+```bash
+pnpm infra:reset
+pnpm infra:up
+pnpm db:migrate
+pnpm db:seed:setup
+```
+
+Despues inicia web/api:
+
+```bash
+pnpm dev
+```
+
+Luego abre la app web y completa `"/setup"`.
+
+### Reset de BD sin borrar volumenes
+
+```bash
+pnpm db:reset
+pnpm db:seed:setup
+```
+
+Esto regresa al flujo de setup sin crear organización/usuarios demo.
+
+## Produccion local / smoke
+
+> `infra/docker/docker-compose.prod.yml` usa imagenes ya construidas/publicadas.
+
+1. Configura variables de entorno productivas (`DATABASE_URL`, `JWT_SECRET`, credenciales Redis y S3).
+2. Construye/publica imagenes `atlaserp/api`, `atlaserp/worker`, `atlaserp/web`.
+3. Levanta compose productivo:
+
+```bash
+pnpm infra:up:prod
+pnpm infra:logs:prod
+```
+
+4. Apaga stack:
+
+```bash
+pnpm infra:down:prod
+```
+
+## Task Catalog unificado
+
+AtlasERP incluye catalogo global de tareas con:
+
+- CRUD y asignacion (`/v1/tasks/*`)
+- Dependencias con validacion de ciclos
+- Historial de estados
+- Ingesta automatica de docs/codigo cada 15 min
+- SSE realtime (`/v1/tasks/stream`)
+- Eventos Redis en `atlaserp.tasks.events`
+
+Documentacion operativa:
+
+- `docs/07-dev-workflow/task-catalog-operations.md`
 
 ## Reglas maestras
 
-1. El servidor es la fuente oficial de verdad.
-2. SQLite local es caché transitoria — nunca reemplaza PostgreSQL.
-3. Ningún módulo nuevo sin blueprint aprobado.
-4. Ninguna entidad nueva sin ownership definido.
-5. Toda acción crítica se audita.
-6. No usar Bootstrap. Usar TailwindCSS 4.1.
-7. Los conflictos de sync se resuelven manualmente, nunca de forma automática.
+1. El servidor es la fuente de verdad.
+2. SQLite local nunca reemplaza PostgreSQL.
+3. No crear modulos/entidades sin ownership definido.
+4. Toda accion critica debe auditarse.
+5. No usar Bootstrap; usar TailwindCSS 4.1.
 
-> Ver `docs/00-canon/` para el conjunto completo de principios.
+## Idioma y codificacion
 
----
+- Idioma principal: espanol (MX)
+- Archivos de texto: UTF-8
 
-## Idioma y codificación
-
-- Idioma principal del proyecto: **español de México**
-- Codificación obligatoria de todos los archivos de texto: **UTF-8**

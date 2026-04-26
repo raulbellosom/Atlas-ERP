@@ -19,7 +19,7 @@ import { PayablesLiteController } from '../payables-lite/payables-lite.controlle
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function getHandlerPermissions(
   controllerClass: new (...args: any[]) => any,
   handlerName: string,
@@ -34,7 +34,7 @@ function getHandlerPermissions(
     | undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function getPrototypeMethods(cls: new (...args: any[]) => any): string[] {
   return Object.getOwnPropertyNames(cls.prototype).filter(
     (m) => m !== 'constructor' && typeof cls.prototype[m] === 'function',
@@ -65,7 +65,7 @@ const FINOPS_PERMISSIONS = [
 
 type ControllerPermissionSpec = {
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   controller: new (...args: any[]) => any;
   handlers: Record<string, string[]>;
 };

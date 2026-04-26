@@ -1,4 +1,4 @@
-﻿# Modelos Foundation Iniciales de Core Platform
+# Modelos Foundation Iniciales de Core Platform
 
 ## Task de origen
 - `T-0510` a `T-0514`

@@ -1,9 +1,11 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { getRuntimeLabel } from "./bridge/tauri.js";
 import { LocalSyncStatusPanel } from "./components/sync/LocalSyncStatusPanel.jsx";
 import { SyncCenterTabs } from "./components/sync/SyncCenterTabs.jsx";
 import { env } from "./config/env.js";
 import { useDesktopBootstrap } from "./hooks/useDesktopBootstrap.js";
+import { ModuleStoreDesktopPanel } from "./modules/module-store/ModuleStoreDesktopPanel.jsx";
+import { TaskCatalogDashboard } from "./modules/tasks/TaskCatalogDashboard.jsx";
 
 function BootBadge({ mode }) {
   const toneByMode = {
@@ -62,6 +64,12 @@ function buildDemoSyncItemDraft() {
 function App() {
   const { state, actions } = useDesktopBootstrap();
   const [enqueueResult, setEnqueueResult] = useState(null);
+  const [moduleStorePendingCount, setModuleStorePendingCount] = useState(0);
+  const sessionOrganizationId =
+    state.session?.user?.organizationId ??
+    state.session?.organizationId ??
+    state.cachedProfile?.organizationId ??
+    "";
 
   return (
     <div className="min-h-screen p-6 md:p-10">
@@ -99,6 +107,10 @@ function App() {
           <div>
             <dt className="font-medium text-slate-500">Migraciones SQLite</dt>
             <dd className="mt-1 text-slate-900">{formatMigrationInfo(state.migrations, state.appliedMigrations)}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-slate-500">Module Store queue</dt>
+            <dd className="mt-1 text-slate-900">{moduleStorePendingCount} pendientes</dd>
           </div>
           <div>
             <dt className="font-medium text-slate-500">Updater</dt>
@@ -166,6 +178,14 @@ function App() {
         />
 
         <SyncCenterTabs session={state.session} />
+
+        <TaskCatalogDashboard session={state.session} />
+
+        <ModuleStoreDesktopPanel
+          isOnline={Boolean(state.network?.online)}
+          defaultOrganizationId={sessionOrganizationId}
+          onQueueCountChange={setModuleStorePendingCount}
+        />
 
         <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">Logs locales desktop (últimos)</h3>

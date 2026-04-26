@@ -20,8 +20,8 @@ export default function AccountingHomePage() {
       <div className="max-w-sm">
         <h1 className="text-xl font-semibold text-text-primary mb-2">Contabilidad</h1>
         <p className="text-sm text-text-secondary">
-          El módulo de Contabilidad está instalado. El plan de cuentas, asientos contables y
-          períodos fiscales estarán disponibles próximamente.
+          El módulo de Contabilidad está activo. Usa el menú lateral para consultar plan de
+          cuentas, asientos, períodos fiscales e informes contables.
         </p>
       </div>
     </div>

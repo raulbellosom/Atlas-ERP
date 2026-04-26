@@ -1,4 +1,4 @@
-﻿# Decisión Oficial: Monorepo
+# Decisión Oficial: Monorepo
 
 ## ID de decisión
 - Task origen: `T-0011`

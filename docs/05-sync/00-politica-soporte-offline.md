@@ -1,4 +1,4 @@
-﻿# Política de Soporte Offline
+# Política de Soporte Offline
 
 ## ID de política
 - Task origen: `T-0014`

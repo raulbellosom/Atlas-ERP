@@ -1,4 +1,4 @@
-﻿# Convención de Naming para Prompts, Skills y Agents
+# Convención de Naming para Prompts, Skills y Agents
 
 ## ID de convención
 - Task origen: `T-0024`

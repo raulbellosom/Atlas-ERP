@@ -1,4 +1,4 @@
-﻿# Versionado de Payloads de Sync
+# Versionado de Payloads de Sync
 
 ## ID de definición
 - Task origen: `T-1004`

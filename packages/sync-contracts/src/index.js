@@ -1,4 +1,4 @@
-﻿const { SYNC_ENTITY_TYPES, isSyncEntityType } = require("./entities");
+const { SYNC_ENTITY_TYPES, isSyncEntityType } = require("./entities");
 const { SYNC_OPERATION_TYPES, isSyncOperationType } = require("./operations");
 const {
   SYNC_PAYLOAD_VERSION_CURRENT,

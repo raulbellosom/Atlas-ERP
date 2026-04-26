@@ -1,4 +1,4 @@
-﻿# Sync Master Prompt
+# Sync Master Prompt
 
 ## ID de task origen
 

@@ -1,14 +1,39 @@
 {
-  "name": "@atlasrep/worker",
+  "name": "@atlaserp/worker",
   "version": "0.0.0",
   "private": true,
-  "description": "Worker de jobs y sincronización — NestJS + BullMQ",
+  "description": "Worker de jobs y sincronizaciÃ³n â€” NestJS + BullMQ",
   "scripts": {
-    "dev": "nest start --watch",
-    "build": "nest build",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.json",
     "test": "jest --passWithNoTests",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.8",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.8",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "ioredis": "^5.6.1",
+    "nestjs-pino": "^4.4.0",
+    "pino": "^9.6.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@atlaserp/config": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.18.1",
+    "jest": "^30.3.0",
+    "pino-pretty": "^13.0.0",
+    "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
   }
 }
+

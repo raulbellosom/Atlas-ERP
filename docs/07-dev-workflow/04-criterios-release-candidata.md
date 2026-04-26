@@ -1,4 +1,4 @@
-﻿# Criterios de "Release Candidata"
+# Criterios de "Release Candidata"
 
 ## ID de criterio
 - Task origen: `T-0037`

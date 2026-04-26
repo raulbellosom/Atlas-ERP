@@ -1,4 +1,4 @@
-﻿# Convenciones del Schema Prisma
+# Convenciones del Schema Prisma
 
 ## Task de origen
 - `T-0502`

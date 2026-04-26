@@ -1,5 +1,5 @@
 /**
- * @atlasrep/config — ESLint TypeScript config
+ * @atlaserp/config â€” ESLint TypeScript config
  * Requiere: @typescript-eslint/eslint-plugin @typescript-eslint/parser
  */
 import tsPlugin from "@typescript-eslint/eslint-plugin";
@@ -38,3 +38,4 @@ export default [
     },
   },
 ];
+

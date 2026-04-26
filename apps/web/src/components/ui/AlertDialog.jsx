@@ -56,8 +56,10 @@ export default function AlertDialog({
           <AlertDialogPrimitive.Title className="text-base font-semibold text-text-primary">
             {title}
           </AlertDialogPrimitive.Title>
-          <AlertDialogPrimitive.Description className="mt-2 text-sm text-text-secondary leading-relaxed">
-            {description}
+          <AlertDialogPrimitive.Description asChild>
+            <div className="mt-2 text-sm text-text-secondary leading-relaxed">
+              {description}
+            </div>
           </AlertDialogPrimitive.Description>
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">

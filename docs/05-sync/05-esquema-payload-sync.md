@@ -1,4 +1,4 @@
-﻿# Esquema de Payload de Sync
+# Esquema de Payload de Sync
 
 ## ID de definición
 - Task origen: `T-1003`

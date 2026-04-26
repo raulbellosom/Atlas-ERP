@@ -1,4 +1,4 @@
-﻿# Module Scaffold Skill
+# Module Scaffold Skill
 
 ## ID de task origen
 

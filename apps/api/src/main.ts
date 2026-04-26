@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe, type LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AppModule } from './modules/app/app.module';
@@ -9,7 +10,7 @@ import { AppModule } from './modules/app/app.module';
  * Niveles de log segun el ambiente.
  * Principio canon: debug solo en development — no inundar logs de prod.
  */
-function getLogLevels(): LogLevel[] {
+export function getLogLevels(): LogLevel[] {
   const nodeEnv = process.env['NODE_ENV'] ?? 'development';
   if (nodeEnv === 'test') {
     return ['warn', 'error'];
@@ -22,9 +23,8 @@ function getLogLevels(): LogLevel[] {
 }
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    logger: getLogLevels(),
-  });
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(PinoLogger));
 
   const configService = app.get(ConfigService);
 
@@ -43,9 +43,9 @@ async function bootstrap(): Promise<void> {
   // Validation pipe global — fail fast en DTOs invalidos
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,            // strip propiedades sin decoradores
+      whitelist: true, // strip propiedades sin decoradores
       forbidNonWhitelisted: true, // error si llegan propiedades extra
-      transform: true,            // convierte payloads al tipo del DTO
+      transform: true, // convierte payloads al tipo del DTO
       transformOptions: {
         enableImplicitConversion: true,
       },
@@ -58,10 +58,7 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('app.port', 3000);
   await app.listen(port);
 
-  Logger.log(
-    `API corriendo en http://localhost:${port}/${apiPrefix}`,
-    'Bootstrap',
-  );
+  Logger.log(`API corriendo en http://localhost:${port}/${apiPrefix}`, 'Bootstrap');
 }
 
 void bootstrap();

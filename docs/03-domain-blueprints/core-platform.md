@@ -1,4 +1,4 @@
-﻿# Core Platform Blueprint
+# Core Platform Blueprint
 
 ## Propósito
 Dar la base transversal para todos los módulos del sistema.

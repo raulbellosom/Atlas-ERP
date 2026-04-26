@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, SourceType } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -55,6 +55,8 @@ type OrganizationBalanceSummary = {
 
 @Injectable()
 export class BankAccountsService {
+  private readonly logger = new Logger(BankAccountsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
@@ -94,6 +96,10 @@ export class BankAccountsService {
         isActive: created.isActive,
       },
     });
+
+    this.logger.log(
+      JSON.stringify({ event: 'BANK_ACCOUNT_CREATED', accountId: created.id }),
+    );
 
     return created;
   }
@@ -219,6 +225,9 @@ export class BankAccountsService {
         origin: SourceType.API,
         result: 'SUCCESS',
       });
+      this.logger.log(
+        JSON.stringify({ event: 'BANK_ACCOUNT_DELETED', accountId: existing.id }),
+      );
     }
 
     return result.count > 0;

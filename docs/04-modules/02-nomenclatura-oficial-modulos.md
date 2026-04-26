@@ -1,4 +1,4 @@
-﻿# Nomenclatura Oficial de Módulos
+# Nomenclatura Oficial de Módulos
 
 ## ID de convención
 - Task origen: `T-0018`

@@ -1,4 +1,4 @@
-﻿# Propósito de Negocio v1
+# Propósito de Negocio v1
 
 ## Objetivo
 Definir para qué existe AtlasERP en su versión inicial y qué valor de negocio entrega desde el primer release operativo.

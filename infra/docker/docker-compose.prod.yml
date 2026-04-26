@@ -1,4 +1,4 @@
-﻿# AtlasERP — Docker Compose para produccion
+# AtlasERP — Docker Compose para produccion
 # Extiende staging con configuraciones de seguridad y estabilidad adicionales.
 # Uso: docker compose -f infra/docker/docker-compose.prod.yml up -d
 #

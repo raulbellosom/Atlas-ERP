@@ -1,4 +1,4 @@
-﻿# Visión de Producto en 3 Horizontes
+# Visión de Producto en 3 Horizontes
 
 ## Horizonte 1 - Corto plazo (v1)
 - Consolidar la plataforma base y gobierno técnico.

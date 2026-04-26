@@ -1,4 +1,4 @@
-﻿# Política de Branches y PRs
+# Política de Branches y PRs
 
 ## ID de política
 - Task origen: `T-0038`

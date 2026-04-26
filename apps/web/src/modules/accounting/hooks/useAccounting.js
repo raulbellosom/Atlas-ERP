@@ -8,6 +8,9 @@ import {
   closeFiscalPeriod,
   fetchJournalEntries,
   fetchJournalEntry,
+  fetchTrialBalanceReport,
+  fetchIncomeStatementReport,
+  fetchBalanceSheetReport,
 } from '../api/accounting.api';
 
 export const ACCOUNTING_KEYS = {
@@ -15,6 +18,9 @@ export const ACCOUNTING_KEYS = {
   fiscalPeriods: (orgId) => ['accounting-fiscal-periods', orgId],
   journalEntries: (orgId, filters) => ['accounting-journal-entries', orgId, filters],
   journalEntry: (id) => ['accounting-journal-entry', id],
+  trialBalanceReport: (orgId, filters) => ['accounting-trial-balance-report', orgId, filters],
+  incomeStatementReport: (orgId, filters) => ['accounting-income-statement-report', orgId, filters],
+  balanceSheetReport: (orgId, filters) => ['accounting-balance-sheet-report', orgId, filters],
 };
 
 // ─── Chart of Accounts ────────────────────────────────────────────────────────
@@ -92,5 +98,31 @@ export function useJournalEntry(id) {
     queryKey: ACCOUNTING_KEYS.journalEntry(id),
     queryFn: () => fetchJournalEntry(id),
     enabled: Boolean(id),
+  });
+}
+
+// ─── Reports ───────────────────────────────────────────────────────────────────
+
+export function useTrialBalanceReport(organizationId, filters = {}) {
+  return useQuery({
+    queryKey: ACCOUNTING_KEYS.trialBalanceReport(organizationId, filters),
+    queryFn: () => fetchTrialBalanceReport({ organizationId, ...filters }),
+    enabled: Boolean(organizationId),
+  });
+}
+
+export function useIncomeStatementReport(organizationId, filters = {}) {
+  return useQuery({
+    queryKey: ACCOUNTING_KEYS.incomeStatementReport(organizationId, filters),
+    queryFn: () => fetchIncomeStatementReport({ organizationId, ...filters }),
+    enabled: Boolean(organizationId),
+  });
+}
+
+export function useBalanceSheetReport(organizationId, filters = {}) {
+  return useQuery({
+    queryKey: ACCOUNTING_KEYS.balanceSheetReport(organizationId, filters),
+    queryFn: () => fetchBalanceSheetReport({ organizationId, ...filters }),
+    enabled: Boolean(organizationId),
   });
 }

@@ -1,4 +1,4 @@
-﻿# Convenciones Prisma para Nombres de Migraciones
+# Convenciones Prisma para Nombres de Migraciones
 
 ## Task de origen
 - `T-0508`

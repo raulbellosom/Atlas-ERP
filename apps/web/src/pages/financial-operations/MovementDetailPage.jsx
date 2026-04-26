@@ -28,8 +28,18 @@ import { useToast } from "@/components/ui/Toast";
 
 const typeLabels = { INCOME: "Ingreso", EXPENSE: "Egreso", ADJUSTMENT: "Ajuste" };
 const typeVariants = { INCOME: "green", EXPENSE: "red", ADJUSTMENT: "blue" };
-const statusLabels = { PENDING: "Pendiente", CONFIRMED: "Confirmado", VOIDED: "Anulado" };
-const statusVariants = { PENDING: "yellow", CONFIRMED: "green", VOIDED: "gray" };
+const statusLabels = {
+  DRAFT: "Borrador",
+  POSTED: "Contabilizado",
+  CANCELED: "Cancelado",
+  REVERSED: "Revertido",
+};
+const statusVariants = {
+  DRAFT: "warning",
+  POSTED: "primary",
+  CANCELED: "neutral",
+  REVERSED: "neutral",
+};
 
 function formatMoney(amount, currency = "MXN") {
   const val = parseFloat(amount ?? "0");

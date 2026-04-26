@@ -15,6 +15,7 @@ import { lazy } from "react";
  *   /financial-operations/movements             → listado
  *   /financial-operations/movements/new         → crear movimiento manual
  *   /financial-operations/movements/:id         → detalle
+ *   /financial-operations/movements/:id/edit    → editar movimiento
  *   /financial-operations/transfers/new         → crear transferencia
  *   /financial-operations/reconciliation        → listado sesiones
  *   /financial-operations/reconciliation/:id    → flujo visual
@@ -100,6 +101,7 @@ export const financialOperationsRoutes = [
   { path: "movements", element: MovementsPage },
   { path: "movements/new", element: MovementFormPage },
   { path: "movements/:id", element: MovementDetailPage },
+  { path: "movements/:id/edit", element: MovementFormPage },
 
   // ── Transferencias ──
   { path: "transfers/new", element: TransferFormPage },
@@ -139,8 +141,8 @@ export const FINOPS_PERMISSIONS = {
   RECONCILIATION_WRITE: "finops:reconciliation:write",
   BALANCE_READ: "finops:balance_snapshot:read",
   ATTACHMENT_WRITE: "finops:attachment:write",
-  RECEIVABLE_READ: "finops:receivable_lite:read",
-  RECEIVABLE_WRITE: "finops:receivable_lite:write",
-  PAYABLE_READ: "finops:payable_lite:read",
-  PAYABLE_WRITE: "finops:payable_lite:write",
+  RECEIVABLE_READ: "finops:receivable:read",
+  RECEIVABLE_WRITE: "finops:receivable:write",
+  PAYABLE_READ: "finops:payable:read",
+  PAYABLE_WRITE: "finops:payable:write",
 };

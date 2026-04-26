@@ -1,4 +1,4 @@
-﻿# Nomenclatura de Endpoints Backend
+# Nomenclatura de Endpoints Backend
 
 ## ID de convención
 - Task origen: `T-0021`

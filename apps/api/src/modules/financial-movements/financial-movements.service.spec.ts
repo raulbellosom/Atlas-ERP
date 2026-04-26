@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FinancialMovementsService } from './financial-movements.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';

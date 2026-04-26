@@ -282,12 +282,12 @@
 
 /* Modal content */
 @keyframes atlas-content-in {
-  from { opacity: 0; transform: translate(-50%, -46%) scale(0.95); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
+  from { opacity: 0; scale: 0.95; }
+  to   { opacity: 1; scale: 1;    }
 }
 @keyframes atlas-content-out {
-  from { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
-  to   { opacity: 0; transform: translate(-50%, -46%) scale(0.95); }
+  from { opacity: 1; scale: 1;    }
+  to   { opacity: 0; scale: 0.95; }
 }
 
 /* Side panels */

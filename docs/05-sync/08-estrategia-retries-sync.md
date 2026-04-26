@@ -1,4 +1,4 @@
-﻿# Estrategia de Retries de Sync
+# Estrategia de Retries de Sync
 
 ## ID de definición
 - Task origen: `T-1006`

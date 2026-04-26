@@ -1,4 +1,4 @@
-﻿# Project Vision
+# Project Vision
 
 ## Qué es
 AtlasERP es una plataforma modular para operaciones empresariales con backend central, cliente web y cliente desktop, diseñada para crecer por módulos.

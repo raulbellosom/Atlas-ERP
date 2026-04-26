@@ -1,4 +1,4 @@
-﻿# Reglas Offline por Entidad
+# Reglas Offline por Entidad
 
 ## ID de definición
 - Task origen: `T-1011`

@@ -1,5 +1,5 @@
-﻿{
-  "extends": "@atlasrep/config/tsconfig/base",
+{
+  "extends": "@atlaserp/config/tsconfig/base",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
@@ -9,3 +9,4 @@
   },
   "include": ["src/**/*.js"]
 }
+

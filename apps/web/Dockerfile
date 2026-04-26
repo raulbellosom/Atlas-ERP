@@ -7,9 +7,9 @@
 #     --build-arg VITE_API_URL=/api \
 #     --build-arg VITE_APP_NAME=AtlasERP \
 #     --build-arg VITE_ENVIRONMENT=production \
-#     -t atlasrep/web:latest .
+#     -t atlaserp/web:latest .
 
-# ── Stage 1: build del bundle estatico ────────────────────────────────────────
+# â”€â”€ Stage 1: build del bundle estatico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM node:20-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -22,7 +22,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/config/package.json ./packages/config/
 
 # Instalar solo las dependencias de web
-RUN pnpm install --frozen-lockfile --filter=@atlasrep/web...
+RUN pnpm install --frozen-lockfile --filter=@atlaserp/web...
 
 # Copiar codigo fuente
 COPY packages/config/ ./packages/config/
@@ -38,9 +38,9 @@ ENV VITE_APP_NAME=$VITE_APP_NAME
 ENV VITE_ENVIRONMENT=$VITE_ENVIRONMENT
 
 # Build de produccion
-RUN pnpm --filter=@atlasrep/web build
+RUN pnpm --filter=@atlaserp/web build
 
-# ── Stage 2: imagen de produccion con nginx ───────────────────────────────────
+# â”€â”€ Stage 2: imagen de produccion con nginx â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM nginx:alpine AS runner
 
 # Eliminar config default de nginx
@@ -77,3 +77,4 @@ COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+

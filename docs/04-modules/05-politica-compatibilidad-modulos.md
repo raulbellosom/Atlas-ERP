@@ -1,4 +1,4 @@
-﻿# Política de Compatibilidad entre Módulos
+# Política de Compatibilidad entre Módulos
 
 ## ID de política
 - Task origen: `T-0034`

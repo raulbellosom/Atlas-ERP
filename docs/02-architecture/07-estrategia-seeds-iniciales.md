@@ -1,4 +1,4 @@
-﻿# Estrategia de Seeds Iniciales
+# Estrategia de Seeds Iniciales
 
 ## ID de estrategia
 - Task origen: `T-0028`

@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ErrorCode } from '../../common/errors';
+import { AuthorizationService } from '../../common/security/authorization.service';
 import { JwtTokenService, type JwtPayload } from '../../common/security/jwt-token.service';
 import { PasswordService } from '../../common/security/password.service';
 import { AuditService } from '../audit/audit.service';
@@ -25,19 +27,24 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  user: {
-    id: string;
-    email: string;
-    displayName: string;
-    organizationId: string;
-    branchId: string | null;
-  };
+  user: AuthUserProfile;
 }
 
 export interface RefreshResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+}
+
+export interface AuthUserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  organizationId: string;
+  branchId: string | null;
+  role: string | null;
+  roleIds: string[];
+  permissions: string[];
 }
 
 @Injectable()
@@ -48,6 +55,7 @@ export class AuthService {
     private readonly jwtTokenService: JwtTokenService,
     private readonly passwordService: PasswordService,
     private readonly auditService: AuditService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   getStatus(): AuthStatusResponse {
@@ -65,6 +73,18 @@ export class AuthService {
     const user = await this.usersService.findForAuth(dto.organizationId, dto.email);
 
     if (!user) {
+      if (!dto.organizationId) {
+        const candidates = await this.usersService.countActiveAuthCandidatesByEmail(dto.email);
+        if (candidates > 1) {
+          throw new BadRequestException({
+            statusCode: 400,
+            code: ErrorCode.SETUP_MULTI_TENANT_LOGIN_REQUIRED,
+            message: 'Se requiere organizationId para este usuario en entorno multi-organización.',
+            error: 'Bad Request',
+          });
+        }
+      }
+
       throw new UnauthorizedException({
         statusCode: 401,
         code: ErrorCode.UNAUTHORIZED,
@@ -157,13 +177,13 @@ export class AuthService {
       accessToken,
       refreshToken: rawRefreshToken,
       expiresIn,
-      user: {
+      user: await this.buildAuthUserProfile({
         id: user.id,
         email: user.email,
         displayName: user.displayName,
         organizationId: user.organizationId,
         branchId: user.branchId,
-      },
+      }),
     };
   }
 
@@ -262,13 +282,7 @@ export class AuthService {
     };
   }
 
-  async getProfile(requestUser?: JwtPayload): Promise<{
-    id: string;
-    email: string;
-    displayName: string;
-    organizationId: string;
-    branchId: string | null;
-  }> {
+  async getProfile(requestUser?: JwtPayload): Promise<AuthUserProfile> {
     if (!requestUser) {
       throw new UnauthorizedException({
         statusCode: 401,
@@ -290,11 +304,30 @@ export class AuthService {
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      organizationId: user.organizationId,
-      branchId: user.branchId,
+      ...(await this.buildAuthUserProfile({
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        organizationId: user.organizationId,
+        branchId: user.branchId,
+      })),
+    };
+  }
+
+  private async buildAuthUserProfile(base: {
+    id: string;
+    email: string;
+    displayName: string;
+    organizationId: string;
+    branchId: string | null;
+  }): Promise<AuthUserProfile> {
+    const accessContext = await this.authorizationService.resolveAccessContext(base.id);
+
+    return {
+      ...base,
+      role: accessContext.role,
+      roleIds: accessContext.roleIds,
+      permissions: accessContext.permissions,
     };
   }
 }

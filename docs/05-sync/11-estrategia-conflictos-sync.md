@@ -1,4 +1,4 @@
-﻿# Estrategia de Conflictos de Sync
+# Estrategia de Conflictos de Sync
 
 ## ID de definición
 - Task origen: `T-1009`

@@ -1,4 +1,4 @@
-﻿# CODEX MASTER PROMPT
+# CODEX MASTER PROMPT
 
 Usa este prompt como instrucción maestra para Codex al comenzar trabajo en este repositorio.
 

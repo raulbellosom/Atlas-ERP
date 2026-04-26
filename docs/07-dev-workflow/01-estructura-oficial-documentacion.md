@@ -1,4 +1,4 @@
-﻿# Estructura Oficial de Documentación
+# Estructura Oficial de Documentación
 
 ## ID de decisión
 - Task origen: `T-0026`

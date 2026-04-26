@@ -1,4 +1,4 @@
-﻿# Modular Strategy
+# Modular Strategy
 
 ## Núcleo inicial
 - Auth

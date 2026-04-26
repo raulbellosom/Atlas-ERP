@@ -1,4 +1,4 @@
-﻿# Architecture Master Prompt
+# Architecture Master Prompt
 
 ## ID de task origen
 

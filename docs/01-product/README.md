@@ -1,4 +1,4 @@
-﻿# Product Docs (v1)
+# Product Docs (v1)
 
 ## Objetivo
 Centralizar definiciones de producto para v1 derivadas de governance (Fase 0).

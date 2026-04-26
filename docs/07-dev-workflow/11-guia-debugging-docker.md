@@ -1,4 +1,4 @@
-﻿# Guia de Debugging de Servicios Docker (Windows)
+# Guia de Debugging de Servicios Docker (Windows)
 
 ## Objetivo
 Resolver fallas frecuentes de infraestructura Docker en AtlasERP con un checklist corto y repetible.

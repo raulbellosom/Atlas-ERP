@@ -1,0 +1,143 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: 'Docker image tag to deploy to production (e.g. sha-abc1234 or v1.2.3)'
+        required: true
+      confirm:
+        description: 'Type "deploy-to-prod" to confirm this is intentional'
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  validate-input:
+    name: Validate Deploy Confirmation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Check confirmation phrase
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "deploy-to-prod" ]; then
+            echo "ERROR: ConfirmaciÃ³n invÃ¡lida. Escribe 'deploy-to-prod' en el campo confirm."
+            exit 1
+          fi
+          echo "ConfirmaciÃ³n vÃ¡lida. Procediendo con el deploy a producciÃ³n."
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [validate-input]
+    if: always() && (needs.validate-input.result == 'success' || github.event_name == 'push')
+    environment: production
+    steps:
+      - name: Resolve image tag
+        id: resolve-tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Tag push: usar el tag del release
+            TAG="${GITHUB_REF#refs/tags/}"
+            echo "image-tag=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            # workflow_dispatch: usar el tag proporcionado
+            echo "image-tag=${{ github.event.inputs.image-tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node (for Prisma CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
+      - name: Install dependencies (for Prisma)
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Prisma migrations on production database
+        run: pnpm --filter @atlaserp/api exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+      - name: Verify migrations applied successfully
+        run: |
+          STATUS=$(pnpm --filter @atlaserp/api exec prisma migrate status 2>&1)
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q "Following migrations have not yet been applied"; then
+            echo "ERROR: Hay migraciones pendientes. Deploy abortado."
+            exit 1
+          fi
+          echo "Migraciones de producciÃ³n aplicadas correctamente"
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+      - name: Capture previous image tag (for rollback)
+        id: capture-previous
+        run: |
+          PREV_TAG=$(docker inspect atlaserp-api-prod --format='{{.Config.Image}}' 2>/dev/null | awk -F: '{print $2}' || echo "none")
+          echo "previous-tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "Previous production API image tag: $PREV_TAG"
+
+      - name: Deploy API container to production
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-api:${{ steps.resolve-tag.outputs.image-tag }}"
+          echo "Deploying API image: $IMAGE"
+          # ssh -i ${{ secrets.PROD_SSH_KEY }} ${{ secrets.PROD_DEPLOY_USER }}@${{ secrets.PROD_DEPLOY_HOST }} \
+          #   "cd /opt/atlaserp && \
+          #    export ATLASERP_API_IMAGE=$IMAGE && \
+          #    docker-compose pull api && docker-compose up -d api"
+          echo "Deploy API a producciÃ³n: OK (simulado)"
+
+      - name: Deploy Worker container to production
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-worker:${{ steps.resolve-tag.outputs.image-tag }}"
+          echo "Deploying Worker image: $IMAGE"
+          # ssh -i ${{ secrets.PROD_SSH_KEY }} ${{ secrets.PROD_DEPLOY_USER }}@${{ secrets.PROD_DEPLOY_HOST }} \
+          #   "cd /opt/atlaserp && \
+          #    export ATLASERP_WORKER_IMAGE=$IMAGE && \
+          #    docker-compose pull worker && docker-compose up -d worker"
+          echo "Deploy Worker a producciÃ³n: OK (simulado)"
+
+      - name: Deploy frontend to production
+        run: |
+          echo "Desplegando frontend a producciÃ³n..."
+          echo "Deploy Web a producciÃ³n: OK (simulado)"
+
+      - name: Health check post-deploy
+        id: health-check
+        run: |
+          API_URL="https://api.atlaserp.com"
+          for i in {1..12}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "ProducciÃ³n health check PASSED"
+              exit 0
+            fi
+            echo "Attempt $i: status $STATUS â€” retrying in 10s"
+            sleep 10
+          done
+          echo "ERROR: ProducciÃ³n no responde correctamente despuÃ©s del deploy"
+          exit 1
+
+      - name: Rollback on healthcheck failure
+        if: failure() && steps.health-check.outcome == 'failure' && steps.capture-previous.outputs.previous-tag != 'none'
+        run: |
+          PREV="${{ steps.capture-previous.outputs.previous-tag }}"
+          echo "ROLLBACK PRODUCCIÃ“N: Restaurando a imagen anterior: $PREV"
+          # docker stop atlaserp-api-prod && docker run -d --name atlaserp-api-prod ... ghcr.io/{org}/atlaserp-api:$PREV
+          echo "Rollback a $PREV completado (simulado)"
+          echo "::error::PRODUCCIÃ“N â€” El healthcheck fallÃ³ tras el deploy. Se restaurÃ³ la versiÃ³n: $PREV"
+          echo "::warning::Revisar logs de la nueva imagen para diagnosticar el fallo antes del siguiente intento."
+          exit 1
+

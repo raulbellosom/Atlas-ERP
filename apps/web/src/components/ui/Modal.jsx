@@ -72,11 +72,15 @@ export default function Modal({
               <Dialog.Title className="text-base font-semibold text-text-primary truncate">
                 {title}
               </Dialog.Title>
-              {description && (
-                <Dialog.Description className="text-xs text-text-secondary mt-0.5 truncate">
-                  {description}
-                </Dialog.Description>
-              )}
+              <Dialog.Description
+                className={
+                  description
+                    ? "text-xs text-text-secondary mt-0.5 truncate"
+                    : "sr-only"
+                }
+              >
+                {description ?? "Contenido del diálogo"}
+              </Dialog.Description>
             </div>
             <Dialog.Close
               aria-label="Cerrar"

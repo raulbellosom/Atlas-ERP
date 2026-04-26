@@ -7,7 +7,7 @@
  * Task origen: T-1602 (Fase 16 Bloque 1)
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
@@ -304,7 +304,9 @@ export default function MovementsByAccountReportPage() {
     isLoading: loadingBalances,
   } = useAccountBalances(hasFiltered ? selectedAccountIds : []);
 
-  if (movementsError) handleError(movementsError);
+  useEffect(() => {
+    if (movementsError) handleError(movementsError);
+  }, [movementsError, handleError]);
 
   const isLoading = loadingMovements || loadingBalances;
 

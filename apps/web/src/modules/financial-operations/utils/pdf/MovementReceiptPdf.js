@@ -25,9 +25,10 @@ const TYPE_LABELS = {
 };
 
 const STATUS_LABELS = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmado",
-  VOIDED: "Anulado",
+  DRAFT: "Borrador",
+  POSTED: "Contabilizado",
+  CANCELED: "Cancelado",
+  REVERSED: "Revertido",
 };
 
 function fmtMoney(amount, currency = "MXN") {

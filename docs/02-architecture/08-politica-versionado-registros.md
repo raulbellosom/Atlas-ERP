@@ -1,4 +1,4 @@
-﻿# Política de Versionado de Registros
+# Política de Versionado de Registros
 
 ## ID de política
 - Task origen: `T-0032`

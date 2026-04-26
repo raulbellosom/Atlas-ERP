@@ -1,4 +1,4 @@
-﻿# Security Docs
+# Security Docs
 
 ## Índice
 - `00-politica-feature-flags.md`

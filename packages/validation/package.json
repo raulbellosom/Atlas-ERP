@@ -1,5 +1,5 @@
 {
-  "name": "@atlasrep/validation",
+  "name": "@atlaserp/validation",
   "version": "0.0.0",
   "private": true,
   "description": "Esquemas de validacion compartidos entre apps",
@@ -10,3 +10,4 @@
     "clean": "rm -rf dist"
   }
 }
+

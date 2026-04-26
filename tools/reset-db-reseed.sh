@@ -47,15 +47,16 @@ docker compose -f "$COMPOSE_FILE" exec -T postgres \
 
 echo -e "${YELLOW}[3/5] Reseteando schema y reaplicando migraciones...${NC}"
 export DATABASE_URL="${DATABASE_URL:-$DEFAULT_DATABASE_URL}"
-run_pnpm --filter @atlasrep/api exec prisma migrate reset \
+run_pnpm --filter @atlaserp/api exec prisma migrate reset \
   --force \
   --skip-seed \
   --schema ../../prisma/schema.prisma
 
-echo -e "${YELLOW}[4/5] Ejecutando seeds foundation...${NC}"
-run_pnpm db:seed
+echo -e "${YELLOW}[4/5] Ejecutando seed bootstrap de setup...${NC}"
+run_pnpm db:seed:setup
 
 echo -e "${YELLOW}[5/5] Verificando estado de migraciones...${NC}"
 run_pnpm db:migrate:status
 
 echo -e "\n${GREEN}Reset con reseed completado.${NC}"
+

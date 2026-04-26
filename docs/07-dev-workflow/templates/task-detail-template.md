@@ -1,4 +1,4 @@
-﻿# T-XXXX - Título de la Task
+# T-XXXX - Título de la Task
 
 ## Metadatos
 - ID: `T-XXXX`

@@ -1,4 +1,4 @@
-# ADR 001 — Estructura del monorepo
+# ADR 001 â€” Estructura del monorepo
 
 ## Metadatos
 - **ID**: `ADR-001`
@@ -21,19 +21,19 @@ AtlasERP es una plataforma con multiples apps (API backend, frontend web, deskto
 
 Estructura:
 ```
-atlasrep/
+atlaserp/
   apps/
-    api/       — NestJS backend
-    web/       — React + Vite frontend
-    desktop/   — Tauri desktop
-    worker/    — NestJS worker BullMQ
+    api/       â€” NestJS backend
+    web/       â€” React + Vite frontend
+    desktop/   â€” Tauri desktop
+    worker/    â€” NestJS worker BullMQ
   packages/
-    ui/        — Componentes React compartidos
-    shared/    — Constantes, enums, helpers
-    validation/ — Esquemas Zod
-    sync-contracts/ — Tipos de sync
-    sdk/       — SDK cliente para la API
-    config/    — ESLint, Prettier, tsconfig base
+    ui/        â€” Componentes React compartidos
+    shared/    â€” Constantes, enums, helpers
+    validation/ â€” Esquemas Zod
+    sync-contracts/ â€” Tipos de sync
+    sdk/       â€” SDK cliente para la API
+    config/    â€” ESLint, Prettier, tsconfig base
 ```
 
 ## Opciones consideradas
@@ -47,6 +47,7 @@ atlasrep/
 ## Consecuencias
 
 - **Positivas**: Un solo `pnpm install`, CI unificado, cambios transversales en un PR.
-- **Negativas**: El repo crece con el tiempo — requiere disciplina en dependencias.
+- **Negativas**: El repo crece con el tiempo â€” requiere disciplina en dependencias.
 - **Restriccion**: Las apps no pueden tener dependencias circulares entre ellas.
 - **Restriccion**: Los packages solo pueden depender de otros packages, nunca de apps.
+

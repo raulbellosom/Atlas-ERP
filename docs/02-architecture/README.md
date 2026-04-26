@@ -1,4 +1,4 @@
-﻿# Architecture Docs
+# Architecture Docs
 
 ## Índice
 - `00-stack-tecnologico-oficial.md`

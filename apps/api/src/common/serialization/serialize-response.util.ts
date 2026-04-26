@@ -6,6 +6,18 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+type JsonSerializable = {
+  toJSON: () => unknown;
+};
+
+function isJsonSerializable(value: unknown): value is JsonSerializable {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+
+  return 'toJSON' in value && typeof value.toJSON === 'function';
+}
+
 export function serializeResponseValue(value: unknown): JsonValue {
   if (value === null || value === undefined) {
     return null;
@@ -32,8 +44,8 @@ export function serializeResponseValue(value: unknown): JsonValue {
   }
 
   if (value !== null && typeof value === 'object') {
-    if (typeof (value as any).toJSON === 'function') {
-      return (value as any).toJSON();
+    if (isJsonSerializable(value)) {
+      return serializeResponseValue(value.toJSON());
     }
     const serialized: { [key: string]: JsonValue } = {};
     for (const [key, nestedValue] of Object.entries(

@@ -1,4 +1,4 @@
-﻿# Nomenclatura de Entidades y Tablas
+# Nomenclatura de Entidades y Tablas
 
 ## ID de convención
 - Task origen: `T-0019`

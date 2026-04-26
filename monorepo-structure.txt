@@ -1,4 +1,4 @@
-﻿/business-platform/
+/business-platform/
 ├─ apps/
 │  ├─ api/                    # Backend central NestJS + Prisma
 │  ├─ web/                    # React web app / PWA

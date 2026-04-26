@@ -1,4 +1,4 @@
-﻿# Política de Archivos y Adjuntos
+# Política de Archivos y Adjuntos
 
 ## ID de política
 - Task origen: `T-0031`

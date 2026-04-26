@@ -1,5 +1,5 @@
 /**
- * @atlasrep/config — ESLint base config (todos los proyectos)
+ * @atlaserp/config â€” ESLint base config (todos los proyectos)
  * Requiere: globals
  */
 import globals from "globals";
@@ -31,3 +31,4 @@ export default [
     },
   },
 ];
+

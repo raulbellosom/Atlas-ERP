@@ -1,4 +1,4 @@
-﻿const crypto = require("node:crypto");
+const crypto = require("node:crypto");
 
 const SYNC_DUPLICATE_POLICY = Object.freeze({
   strategy: "fingerprint_and_idempotency_key",

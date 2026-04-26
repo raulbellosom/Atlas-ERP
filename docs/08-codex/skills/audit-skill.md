@@ -1,4 +1,4 @@
-﻿# Audit Skill
+# Audit Skill
 
 ## ID de task origen
 

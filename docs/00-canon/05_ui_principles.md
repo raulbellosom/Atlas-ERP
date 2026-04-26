@@ -1,4 +1,4 @@
-﻿# UI Principles
+# UI Principles
 
 ## Carácter no negociable
 Estos principios son obligatorios para toda interfaz de AtlasERP.

@@ -1,4 +1,4 @@
-﻿# Sync Principles
+# Sync Principles
 
 ## Carácter no negociable
 La sincronización de AtlasERP debe ser segura, auditable y con control explícito de conflictos.

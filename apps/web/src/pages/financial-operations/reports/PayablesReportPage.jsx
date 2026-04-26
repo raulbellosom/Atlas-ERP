@@ -7,7 +7,7 @@
  * Task origen: T-1606 (Fase 16 Bloque 2)
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
 import { usePayables } from "@/modules/financial-operations/hooks/useCxcCxp";
@@ -191,7 +191,10 @@ export default function PayablesReportPage() {
   const [activeFilters, setActiveFilters] = useState(null);
 
   const { data: allPayables = [], isLoading, error } = usePayables(organizationId);
-  if (error) handleError(error);
+
+  useEffect(() => {
+    if (error) handleError(error);
+  }, [error, handleError]);
 
   const kpis = useMemo(() => computeKpis(allPayables), [allPayables]);
   const agingRows = useMemo(() => computeAging(allPayables), [allPayables]);

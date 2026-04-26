@@ -1,0 +1,118 @@
+name: Deploy to Staging
+
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        required: true
+        type: string
+        description: 'Docker image tag to deploy'
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: 'Docker image tag to deploy (e.g. sha-abc1234)'
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node (for Prisma CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
+      - name: Install dependencies (for Prisma)
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Prisma migrations on staging database
+        run: pnpm --filter @atlaserp/api exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Verify migrations applied successfully
+        run: |
+          STATUS=$(pnpm --filter @atlaserp/api exec prisma migrate status 2>&1)
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q "Following migrations have not yet been applied"; then
+            echo "ERROR: Hay migraciones pendientes que no se pudieron aplicar"
+            exit 1
+          fi
+          echo "Todas las migraciones aplicadas correctamente"
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Capture previous image tag (for rollback)
+        id: capture-previous
+        run: |
+          PREV_TAG=$(docker inspect atlaserp-api --format='{{.Config.Image}}' 2>/dev/null | awk -F: '{print $2}' || echo "none")
+          echo "previous-tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "Previous API image tag: $PREV_TAG"
+
+      - name: Deploy API container to staging
+        run: |
+          echo "Deploying API image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-api:${{ inputs.image-tag }}"
+          # En staging real, conectar vÃ­a SSH al servidor y hacer docker-compose pull + up:
+          # ssh -i ${{ secrets.STAGING_SSH_KEY }} ${{ secrets.STAGING_DEPLOY_USER }}@${{ secrets.STAGING_DEPLOY_HOST }} \
+          #   "cd /opt/atlaserp && \
+          #    export ATLASERP_API_IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-api:${{ inputs.image-tag }} && \
+          #    docker-compose pull api && docker-compose up -d api"
+          echo "Deploy API: OK (simulado)"
+
+      - name: Deploy Worker container to staging
+        run: |
+          echo "Deploying Worker image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-worker:${{ inputs.image-tag }}"
+          # ssh -i ${{ secrets.STAGING_SSH_KEY }} ${{ secrets.STAGING_DEPLOY_USER }}@${{ secrets.STAGING_DEPLOY_HOST }} \
+          #   "cd /opt/atlaserp && \
+          #    export ATLASERP_WORKER_IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/atlaserp-worker:${{ inputs.image-tag }} && \
+          #    docker-compose pull worker && docker-compose up -d worker"
+          echo "Deploy Worker: OK (simulado)"
+
+      - name: Deploy frontend to staging
+        run: |
+          echo "Frontend deployment to staging (nginx or static hosting)"
+          # Descargar artefacto del frontend y sincronizar con el servidor o bucket S3
+          echo "Deploy Web: OK (simulado)"
+
+      - name: Health check post-deploy
+        id: health-check
+        run: |
+          API_URL="${{ vars.STAGING_API_URL }}"
+          if [ -z "$API_URL" ]; then
+            API_URL="https://api.staging.atlaserp.com"
+          fi
+          for i in {1..12}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging health check PASSED"
+              exit 0
+            fi
+            echo "Attempt $i: status $STATUS â€” retrying in 10s"
+            sleep 10
+          done
+          echo "ERROR: Staging no responde correctamente despuÃ©s del deploy"
+          exit 1
+
+      - name: Rollback on healthcheck failure
+        if: failure() && steps.health-check.outcome == 'failure' && steps.capture-previous.outputs.previous-tag != 'none'
+        run: |
+          PREV="${{ steps.capture-previous.outputs.previous-tag }}"
+          echo "ROLLBACK: Restaurando API a imagen anterior: $PREV"
+          # docker stop atlaserp-api && docker run -d --name atlaserp-api ... ghcr.io/{org}/atlaserp-api:$PREV
+          echo "Rollback a $PREV completado (simulado)"
+          echo "::error::El healthcheck fallÃ³ tras el deploy. Se restaurÃ³ la versiÃ³n anterior: $PREV"
+          exit 1
+

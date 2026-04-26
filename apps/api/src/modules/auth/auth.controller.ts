@@ -34,7 +34,8 @@ export class AuthController {
   @Post('register')
   register(@Body() _dto: RegisterDto) {
     return {
-      message: 'Registro de usuario se implementa en el flujo de administración. Usa el seed para crear el usuario root.',
+      message:
+        'Registro publico deshabilitado. Usa /v1/setup/initialize para primera instalacion o el flujo administrativo autenticado.',
     };
   }
 

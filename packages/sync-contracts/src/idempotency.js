@@ -1,4 +1,4 @@
-﻿const crypto = require("node:crypto");
+const crypto = require("node:crypto");
 
 const SYNC_IDEMPOTENCY_POLICY = Object.freeze({
   algorithm: "sha256",

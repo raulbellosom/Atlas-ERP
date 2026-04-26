@@ -25,7 +25,7 @@ import { PayablesLiteController } from '../payables-lite/payables-lite.controlle
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function getPrototypeMethods(cls: new (...args: any[]) => any): string[] {
   return Object.getOwnPropertyNames(cls.prototype).filter(
     (m) => m !== 'constructor' && typeof cls.prototype[m] === 'function',

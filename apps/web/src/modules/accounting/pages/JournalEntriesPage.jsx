@@ -22,8 +22,11 @@ const STATUS_VARIANTS = {
   REVERSED: 'gray',
 };
 
+const ALL_MONTHS_VALUE = 'ALL_MONTHS';
+const ALL_YEARS_VALUE = 'ALL_YEARS';
+
 const MONTH_OPTIONS = [
-  { value: '', label: 'Todos los meses' },
+  { value: ALL_MONTHS_VALUE, label: 'Todos los meses' },
   { value: '1', label: 'Enero' },
   { value: '2', label: 'Febrero' },
   { value: '3', label: 'Marzo' },
@@ -40,7 +43,7 @@ const MONTH_OPTIONS = [
 
 const currentYear = new Date().getFullYear();
 const YEAR_OPTIONS = [
-  { value: '', label: 'Todos los años' },
+  { value: ALL_YEARS_VALUE, label: 'Todos los años' },
   ...Array.from({ length: 5 }, (_, i) => {
     const y = currentYear - i;
     return { value: String(y), label: String(y) };
@@ -57,16 +60,18 @@ export default function JournalEntriesPage() {
   const organizationId = user?.organizationId;
   const { handleError } = useApiError();
 
-  const [yearFilter, setYearFilter] = useState('');
-  const [monthFilter, setMonthFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState(ALL_YEARS_VALUE);
+  const [monthFilter, setMonthFilter] = useState(ALL_MONTHS_VALUE);
 
   const filters = {
-    ...(yearFilter ? { year: Number(yearFilter) } : {}),
-    ...(monthFilter ? { month: Number(monthFilter) } : {}),
+    ...(yearFilter !== ALL_YEARS_VALUE ? { year: Number(yearFilter) } : {}),
+    ...(monthFilter !== ALL_MONTHS_VALUE ? { month: Number(monthFilter) } : {}),
   };
 
   const { data: entries = [], isLoading, error } = useJournalEntries(organizationId, filters);
   const { query, setQuery, results } = useGlobalSearch(entries, entryMatcher);
+  const hasActiveFilters =
+    Boolean(query) || yearFilter !== ALL_YEARS_VALUE || monthFilter !== ALL_MONTHS_VALUE;
 
   if (error) handleError(error);
 
@@ -168,7 +173,7 @@ export default function JournalEntriesPage() {
         sortable
         emptyTitle="Sin asientos"
         emptyDescription={
-          query || yearFilter || monthFilter
+          hasActiveFilters
             ? 'No se encontraron asientos con los filtros aplicados'
             : 'Los asientos se generan automáticamente al registrar operaciones financieras'
         }

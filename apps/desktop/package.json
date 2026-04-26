@@ -1,5 +1,5 @@
 {
-  "name": "@atlasrep/desktop",
+  "name": "@atlaserp/desktop",
   "version": "0.0.0",
   "private": true,
   "description": "App desktop - Tauri + React + SQLite local",
@@ -12,6 +12,7 @@
     "preview": "vite preview --port 4174 --strictPort",
     "test:shell-smoke": "node ./scripts/shell-smoke-check.mjs",
     "test:sync-core": "node --test src/modules/sync/*.test.js",
+    "test:e2e-ui": "vitest run --config vitest.config.js src/modules/module-store/ModuleStoreDesktopPanel.e2e.test.jsx",
     "lint": "eslint .",
     "clean": "rm -rf dist src-tauri/target"
   },
@@ -21,15 +22,21 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@atlasrep/config": "workspace:*",
+    "@atlaserp/config": "workspace:*",
     "@tailwindcss/vite": "^4.1.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@tauri-apps/cli": "^2.0.0",
     "@vitejs/plugin-react": "^4.3.2",
     "eslint": "^9.0.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.0.0",
+    "jsdom": "^29.0.2",
     "tailwindcss": "^4.1.3",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
   }
 }
+

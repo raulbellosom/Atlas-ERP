@@ -1,4 +1,4 @@
-﻿# Convenciones de Enums en Prisma
+# Convenciones de Enums en Prisma
 
 ## Task de origen
 - `T-0503` y `T-0529`

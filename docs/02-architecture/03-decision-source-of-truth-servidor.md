@@ -1,4 +1,4 @@
-﻿# Decisión Oficial: Servidor como Source of Truth
+# Decisión Oficial: Servidor como Source of Truth
 
 ## ID de decisión
 - Task origen: `T-0013`

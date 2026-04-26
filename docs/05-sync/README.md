@@ -1,4 +1,4 @@
-﻿# Sync Docs
+# Sync Docs
 
 ## Índice
 - `00-politica-soporte-offline.md`

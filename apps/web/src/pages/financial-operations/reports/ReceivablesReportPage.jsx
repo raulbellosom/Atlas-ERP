@@ -9,7 +9,7 @@
  * Decisión: KPIs sobre TODOS los registros; filtros afectan solo la tabla de detalle.
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
 import { useReceivables } from "@/modules/financial-operations/hooks/useCxcCxp";
@@ -205,7 +205,10 @@ export default function ReceivablesReportPage() {
   const [activeFilters, setActiveFilters] = useState(null);
 
   const { data: allReceivables = [], isLoading, error } = useReceivables(organizationId);
-  if (error) handleError(error);
+
+  useEffect(() => {
+    if (error) handleError(error);
+  }, [error, handleError]);
 
   const kpis = useMemo(() => computeKpis(allReceivables), [allReceivables]);
   const agingRows = useMemo(() => computeAging(allReceivables), [allReceivables]);

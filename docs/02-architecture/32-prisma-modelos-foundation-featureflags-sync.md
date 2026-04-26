@@ -1,4 +1,4 @@
-﻿# Modelos Foundation de Feature Flags y Sync
+# Modelos Foundation de Feature Flags y Sync
 
 ## Task de origen
 - `T-0520` a `T-0524`

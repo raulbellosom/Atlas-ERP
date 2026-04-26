@@ -1,0 +1,60 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Calentamiento"
+    - duration: 60
+      arrivalRate: 20
+      name: "Carga sostenida"
+    - duration: 30
+      arrivalRate: 0
+      name: "Enfriamiento"
+  environments:
+    staging:
+      target: "http://staging.atlaserp.local:3000"
+
+scenarios:
+  - name: "Flujo de consulta de movimientos"
+    flow:
+      - post:
+          url: "/v1/auth/login"
+          json:
+            email: "operator@test.atlaserp.local"
+            password: "{{ $env.TEST_PASSWORD }}"
+          capture:
+            json: "$.accessToken"
+            as: "token"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/v1/bank-accounts"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/v1/financial-movements?limit=25&page=1"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Flujo de reportes"
+    weight: 10
+    flow:
+      - post:
+          url: "/v1/auth/login"
+          json:
+            email: "operator@test.atlaserp.local"
+            password: "{{ $env.TEST_PASSWORD }}"
+          capture:
+            json: "$.accessToken"
+            as: "token"
+      - get:
+          url: "/v1/financial-movements?from=2026-01-01&to=2026-01-31&limit=100"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+

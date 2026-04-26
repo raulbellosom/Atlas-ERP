@@ -1,4 +1,4 @@
-﻿# Frontend Screen Skill
+# Frontend Screen Skill
 
 ## ID de task origen
 

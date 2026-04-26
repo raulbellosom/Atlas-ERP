@@ -8,7 +8,7 @@
  * Decisión: totales calculados solo sobre transferencias APPROVED.
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
 import { useTransfersByFilters } from "@/modules/financial-operations/hooks/useTransfers";
@@ -171,7 +171,9 @@ export default function TransfersReportPage() {
     Boolean(activeFilters),
   );
 
-  if (error) handleError(error);
+  useEffect(() => {
+    if (error) handleError(error);
+  }, [error, handleError]);
 
   function handleFilter(filters) {
     setActiveFilters(filters);

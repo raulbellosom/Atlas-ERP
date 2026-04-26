@@ -1,4 +1,4 @@
-﻿# Architecture Principles
+# Architecture Principles
 
 ## Carácter no negociable
 Estos principios son obligatorios para cualquier decisión técnica de AtlasERP durante v1.

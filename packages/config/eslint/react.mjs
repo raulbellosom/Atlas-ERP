@@ -1,5 +1,5 @@
 /**
- * @atlasrep/config — ESLint React config (apps/web — JS + JSX)
+ * @atlaserp/config â€” ESLint React config (apps/web â€” JS + JSX)
  * Requiere: eslint-plugin-react eslint-plugin-react-hooks globals
  */
 import react from "eslint-plugin-react";
@@ -42,3 +42,4 @@ export default [
     },
   },
 ];
+

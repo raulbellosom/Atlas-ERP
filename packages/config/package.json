@@ -1,8 +1,8 @@
 {
-  "name": "@atlasrep/config",
+  "name": "@atlaserp/config",
   "version": "0.0.0",
   "private": true,
-  "description": "Configuracion compartida — ESLint, Prettier, tsconfig",
+  "description": "Configuracion compartida â€” ESLint, Prettier, tsconfig",
   "type": "module",
   "exports": {
     "./eslint/base": "./eslint/base.mjs",
@@ -32,3 +32,4 @@
     "eslint-plugin-react-hooks": { "optional": true }
   }
 }
+

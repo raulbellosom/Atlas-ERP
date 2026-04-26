@@ -1,4 +1,4 @@
-﻿# Contrato Global de Sincronización
+# Contrato Global de Sincronización
 
 ## ID de definición
 - Task origen: `T-1000`

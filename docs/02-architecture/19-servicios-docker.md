@@ -1,4 +1,4 @@
-﻿# Servicios Docker de AtlasERP
+# Servicios Docker de AtlasERP
 
 ## ID de documento
 - Task origen: `T-0400` / `T-0401`

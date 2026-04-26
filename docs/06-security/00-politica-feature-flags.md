@@ -1,4 +1,4 @@
-﻿# Política de Feature Flags
+# Política de Feature Flags
 
 ## ID de política
 - Task origen: `T-0029`

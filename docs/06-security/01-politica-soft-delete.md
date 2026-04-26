@@ -1,4 +1,4 @@
-﻿# Política de Soft Delete
+# Política de Soft Delete
 
 ## ID de política
 - Task origen: `T-0030`

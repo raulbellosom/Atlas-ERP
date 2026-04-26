@@ -1,4 +1,4 @@
-﻿# Security and Audit
+# Security and Audit
 
 ## Carácter no negociable
 Toda operación sensible de AtlasERP debe estar protegida por permisos y dejar evidencia auditable.

@@ -1,4 +1,4 @@
-﻿# AtlasERP — Docker Compose para staging
+# AtlasERP — Docker Compose para staging
 # Incluye infraestructura + todas las apps de servidor.
 # Uso: docker compose -f infra/docker/docker-compose.staging.yml up -d
 #

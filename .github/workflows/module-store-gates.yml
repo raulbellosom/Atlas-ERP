@@ -1,0 +1,261 @@
+name: Module Store Gates
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/api/src/modules/module-store/**"
+      - "apps/web/src/modules/module-store/**"
+      - "apps/desktop/src/modules/module-store/**"
+      - "apps/desktop/src/modules/sync/**"
+      - "prisma/seeds/module-store.seed.ts"
+      - "prisma/seeds/permissions.seed.ts"
+      - ".github/workflows/module-store-gates.yml"
+      - ".github/workflows/build-desktop.yml"
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  m1-api-web:
+    name: M1 Gate (API + Web)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: atlaserp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/atlaserp_test
+      NODE_ENV: test
+      JWT_SECRET: test-secret-module-store-ci
+      LOG_LEVEL: error
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run M1 checks
+        run: |
+          pnpm --filter @atlaserp/api run lint
+          pnpm --filter @atlaserp/api run typecheck
+          pnpm --filter @atlaserp/api run build
+          pnpm --filter @atlaserp/api run test:e2e -- module-store-flow.e2e-spec.ts
+          pnpm --filter @atlaserp/web run lint
+          pnpm --filter @atlaserp/web run test:e2e-ui
+          pnpm --filter @atlaserp/web run build
+
+      - name: Build M1 go/no-go report
+        if: always()
+        run: |
+          cat > module-store-m1-go-no-go.md <<EOF
+          # Module Store M1 Gate
+          - Fecha: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Resultado job: ${{ job.status }}
+          - Scope: API + Web
+          - Criterio: install/uninstall/upgrade por instancia, contratos API y UI web listos
+          EOF
+
+      - name: Upload M1 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-store-m1-go-no-go-${{ github.run_id }}
+          path: module-store-m1-go-no-go.md
+          retention-days: 30
+
+  m2-desktop:
+    name: M2 Gate (Desktop)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run M2 checks
+        shell: pwsh
+        run: |
+          pnpm --filter @atlaserp/desktop run lint
+          pnpm --filter @atlaserp/desktop run test:sync-core
+          pnpm --filter @atlaserp/desktop run test:e2e-ui
+          pnpm --filter @atlaserp/desktop run build
+
+      - name: Build M2 go/no-go report
+        if: always()
+        shell: pwsh
+        run: |
+          @"
+          # Module Store M2 Gate
+          - Fecha: $(Get-Date -AsUTC -Format "yyyy-MM-ddTHH:mm:ssZ")
+          - Resultado job: ${{ job.status }}
+          - Scope: Desktop (UI + offline/sync + build)
+          - Criterio: paridad funcional desktop + resiliencia offline y build reproducible
+          "@ | Set-Content -Path module-store-m2-go-no-go.md
+
+      - name: Upload M2 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-store-m2-go-no-go-${{ github.run_id }}
+          path: module-store-m2-go-no-go.md
+          retention-days: 30
+
+      - name: Upload desktop artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-store-desktop-build-${{ github.run_id }}
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: warn
+          retention-days: 30
+
+  m3-hybrid:
+    name: M3 Gate (Hybrid remote)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: atlaserp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/atlaserp_test
+      NODE_ENV: test
+      JWT_SECRET: test-secret-module-store-ci
+      LOG_LEVEL: error
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run M3 checks
+        run: |
+          pnpm --filter @atlaserp/api run typecheck
+          pnpm --filter @atlaserp/api run test:unit -- module-store.service.spec.ts
+          pnpm --filter @atlaserp/api run test:unit -- remote-security.registry.spec.ts
+          pnpm --filter @atlaserp/api run test:e2e -- module-store-flow.e2e-spec.ts
+
+      - name: Build M3 go/no-go report
+        if: always()
+        run: |
+          cat > module-store-m3-go-no-go.md <<EOF
+          # Module Store M3 Gate
+          - Fecha: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Resultado job: ${{ job.status }}
+          - Scope: Hybrid remoto (integridad, firma y rollout)
+          - Criterio: seguridad de paquetes remotos y rollout gradual verificados
+          EOF
+
+      - name: Upload M3 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-store-m3-go-no-go-${{ github.run_id }}
+          path: module-store-m3-go-no-go.md
+          retention-days: 30
+
+  publish-go-no-go:
+    name: Publish Go/No-Go Summary
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [m1-api-web, m2-desktop, m3-hybrid]
+    steps:
+      - name: Build consolidated summary
+        env:
+          M1_RESULT: ${{ needs.m1-api-web.result }}
+          M2_RESULT: ${{ needs.m2-desktop.result }}
+          M3_RESULT: ${{ needs.m3-hybrid.result }}
+        run: |
+          M1_DECISION="NO-GO"
+          M2_DECISION="NO-GO"
+          M3_DECISION="NO-GO"
+          if [ "$M1_RESULT" = "success" ]; then M1_DECISION="GO"; fi
+          if [ "$M2_RESULT" = "success" ]; then M2_DECISION="GO"; fi
+          if [ "$M3_RESULT" = "success" ]; then M3_DECISION="GO"; fi
+
+          cat > module-store-go-no-go-summary.md <<EOF
+          # Module Store Go/No-Go Summary
+          - Fecha: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Run: ${{ github.run_id }}
+
+          | Milestone | Job Result | Decision |
+          | --- | --- | --- |
+          | M1 (API + Web) | $M1_RESULT | $M1_DECISION |
+          | M2 (Desktop) | $M2_RESULT | $M2_DECISION |
+          | M3 (Hybrid) | $M3_RESULT | $M3_DECISION |
+          EOF
+
+      - name: Upload consolidated summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-store-go-no-go-summary-${{ github.run_id }}
+          path: module-store-go-no-go-summary.md
+          retention-days: 30

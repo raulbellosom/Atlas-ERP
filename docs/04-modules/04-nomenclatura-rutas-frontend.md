@@ -1,4 +1,4 @@
-﻿# Nomenclatura de Rutas Frontend
+# Nomenclatura de Rutas Frontend
 
 ## ID de convención
 - Task origen: `T-0020`

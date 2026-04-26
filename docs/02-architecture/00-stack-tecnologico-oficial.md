@@ -1,4 +1,4 @@
-﻿# Stack Tecnológico Oficial
+# Stack Tecnológico Oficial
 
 ## Objetivo
 Declarar la decisión oficial de stack para AtlasERP v1.

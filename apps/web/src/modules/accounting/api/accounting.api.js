@@ -54,3 +54,26 @@ export async function fetchJournalEntry(id) {
   const res = await apiClient.get(`/v1/accounting/journal-entries/${id}`);
   return res.data?.data ?? res.data;
 }
+
+// ─── Reports ───────────────────────────────────────────────────────────────────
+
+export async function fetchTrialBalanceReport({ organizationId, year, month } = {}) {
+  const res = await apiClient.get('/v1/accounting/reports/trial-balance', {
+    params: { organizationId, year, month },
+  });
+  return res.data?.data ?? res.data;
+}
+
+export async function fetchIncomeStatementReport({ organizationId, year, month } = {}) {
+  const res = await apiClient.get('/v1/accounting/reports/income-statement', {
+    params: { organizationId, year, month },
+  });
+  return res.data?.data ?? res.data;
+}
+
+export async function fetchBalanceSheetReport({ organizationId, year, month } = {}) {
+  const res = await apiClient.get('/v1/accounting/reports/balance-sheet', {
+    params: { organizationId, year, month },
+  });
+  return res.data?.data ?? res.data;
+}

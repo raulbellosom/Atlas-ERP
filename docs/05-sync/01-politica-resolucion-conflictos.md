@@ -1,4 +1,4 @@
-﻿# Política de Resolución de Conflictos
+# Política de Resolución de Conflictos
 
 ## ID de política
 - Task origen: `T-0015`

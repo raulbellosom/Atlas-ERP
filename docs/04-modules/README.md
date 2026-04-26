@@ -1,4 +1,4 @@
-﻿# Modules Docs
+# Modules Docs
 
 ## Índice
 - `00-politica-ownership-datos.md`

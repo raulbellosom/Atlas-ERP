@@ -1,4 +1,4 @@
-﻿# Conexión Prisma con PostgreSQL
+# Conexión Prisma con PostgreSQL
 
 ## Task de origen
 - `T-0501`

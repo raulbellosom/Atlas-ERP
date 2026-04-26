@@ -13,8 +13,25 @@ function signatureForChecksum(checksum: string): string {
   return `atlas-sign-v1:${checksum}`;
 }
 
-export function verifySignature(checksum: string, signature: string): boolean {
-  return signatureForChecksum(checksum) === signature;
+export function verifySignature(
+  checksum: string,
+  signature: string,
+  trustedSignerIds: ReadonlyArray<string> = ['atlas-sign-v1'],
+): boolean {
+  if (typeof signature !== 'string' || !signature.includes(':')) {
+    return false;
+  }
+
+  const [signerId, ...digestParts] = signature.split(':');
+  if (!signerId || digestParts.length === 0) {
+    return false;
+  }
+
+  if (!trustedSignerIds.includes(signerId)) {
+    return false;
+  }
+
+  return digestParts.join(':') === checksum;
 }
 
 export const REMOTE_PACKAGE_SECURITY_REGISTRY: ReadonlyArray<RemotePackageSecurityRecord> =

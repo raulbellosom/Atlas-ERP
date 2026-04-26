@@ -38,10 +38,10 @@ const MOVEMENT_TYPES = [
 
 const MOVEMENT_STATUSES = [
   { value: "all", label: "Todos los estados" },
-  { value: "PENDING", label: "Pendiente" },
-  { value: "CONFIRMED", label: "Confirmado" },
+  { value: "DRAFT", label: "Borrador" },
   { value: "POSTED", label: "Contabilizado" },
-  { value: "VOIDED", label: "Anulado" },
+  { value: "CANCELED", label: "Cancelado" },
+  { value: "REVERSED", label: "Revertido" },
 ];
 
 // Variantes de Badge correctas — Meridian Design System
@@ -62,17 +62,17 @@ const typeLabels = {
 };
 
 const statusVariants = {
-  PENDING:   "warning",
-  CONFIRMED: "success",
+  DRAFT:     "warning",
   POSTED:    "primary",
-  VOIDED:    "neutral",
+  CANCELED:  "neutral",
+  REVERSED:  "neutral",
 };
 
 const statusLabels = {
-  PENDING:   "Pendiente",
-  CONFIRMED: "Confirmado",
+  DRAFT:     "Borrador",
   POSTED:    "Contabilizado",
-  VOIDED:    "Anulado",
+  CANCELED:  "Cancelado",
+  REVERSED:  "Revertido",
 };
 
 function formatMoney(amount, currency = "MXN") {
@@ -247,6 +247,13 @@ export default function MovementsPage() {
                   }
                 >
                   Ver detalle
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigate(`/financial-operations/movements/${row.id}/edit`)
+                  }
+                >
+                  Editar
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

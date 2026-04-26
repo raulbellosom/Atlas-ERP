@@ -1,4 +1,4 @@
-﻿# Idioma Principal y Estándares de i18n
+# Idioma Principal y Estándares de i18n
 
 ## ID de política
 - Task origen: `T-0025`

@@ -1,4 +1,4 @@
-﻿# Estructura Oficial de Blueprints
+# Estructura Oficial de Blueprints
 
 ## ID de decisión
 - Task origen: `T-0027`

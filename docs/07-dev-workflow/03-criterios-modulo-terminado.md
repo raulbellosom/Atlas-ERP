@@ -1,4 +1,4 @@
-﻿# Criterios de "Módulo Terminado"
+# Criterios de "Módulo Terminado"
 
 ## ID de criterio
 - Task origen: `T-0036`

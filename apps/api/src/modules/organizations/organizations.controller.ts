@@ -8,11 +8,14 @@ import {
   Param,
   Patch,
   Query,
+  Req,
 } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
+import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { BranchesService } from '../branches/branches.service';
 import { ListBranchesQueryDto } from '../branches/dto/list-branches.query.dto';
 import { ListOrganizationsQueryDto } from './dto/list-organizations.query.dto';
+import { PurgeOrganizationDto } from './dto/purge-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationsService } from './organizations.service';
 
@@ -45,10 +48,14 @@ export class OrganizationsController {
   }
 
   @RequireAllPermissions('core:organization:update')
-  @Delete(':id')
+  @Delete(':id/purge')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
-    await this.organizationsService.delete(id);
+  async purge(
+    @Param('id') id: string,
+    @Body() dto: PurgeOrganizationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.organizationsService.purge(id, req.user!.sub, dto.password);
   }
 
   @Get(':id/branches')

@@ -1,4 +1,4 @@
-﻿# Convenciones Prisma de Índices
+# Convenciones Prisma de Índices
 
 ## Task de origen
 - `T-0507`

@@ -1,4 +1,4 @@
-﻿# Estrategia Prisma de Seeds
+# Estrategia Prisma de Seeds
 
 ## Task de origen
 - `T-0509`

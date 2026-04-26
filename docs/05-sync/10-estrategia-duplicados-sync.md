@@ -1,4 +1,4 @@
-﻿# Estrategia de Detección de Duplicados de Sync
+# Estrategia de Detección de Duplicados de Sync
 
 ## ID de definición
 - Task origen: `T-1008`

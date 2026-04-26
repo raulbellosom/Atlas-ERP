@@ -1,4 +1,4 @@
-﻿function Badge({ tone = "neutral", children }) {
+function Badge({ tone = "neutral", children }) {
   const classes = {
     neutral: "bg-slate-100 text-slate-700",
     success: "bg-emerald-100 text-emerald-700",

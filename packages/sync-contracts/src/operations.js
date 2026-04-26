@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Operaciones permitidas en la cola de sincronización.
  */
 const SYNC_OPERATION_TYPES = Object.freeze([

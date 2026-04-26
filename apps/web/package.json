@@ -1,14 +1,17 @@
 {
-  "name": "@atlasrep/web",
+  "name": "@atlaserp/web",
   "version": "0.0.0",
   "private": true,
-  "description": "Frontend web — React + Vite + TailwindCSS 4.1",
+  "description": "Frontend web â€” React + Vite + TailwindCSS 4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:e2e-ui": "vitest run src/modules/module-store/pages/ModuleStorePage.e2e.test.jsx",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write src/",
     "clean": "rm -rf dist"
@@ -38,16 +41,21 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
-    "@atlasrep/config": "workspace:*",
+    "@atlaserp/config": "workspace:*",
     "@tailwindcss/vite": "^4.1.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.3.2",
     "eslint": "^9.0.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.0.0",
+    "jsdom": "^29.0.2",
     "prettier": "^3.0.0",
     "tailwindcss": "^4.1.3",
     "vite": "^6.0.5",
     "vitest": "^2.1.8"
   }
 }
+

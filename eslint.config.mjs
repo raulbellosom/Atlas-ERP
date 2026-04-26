@@ -1,9 +1,9 @@
 /**
- * ESLint config raíz del monorepo AtlasERP
- * Solo aplica a archivos de tooling en la raíz (scripts, configs, etc.)
- * Cada app/package define su propio eslint.config.mjs extendiendo @atlasrep/config.
+ * ESLint config raÃ­z del monorepo AtlasERP
+ * Solo aplica a archivos de tooling en la raÃ­z (scripts, configs, etc.)
+ * Cada app/package define su propio eslint.config.mjs extendiendo @atlaserp/config.
  */
-import base from "@atlasrep/config/eslint/base";
+import base from "@atlaserp/config/eslint/base";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
@@ -19,3 +19,4 @@ export default [
   },
   ...base,
 ];
+

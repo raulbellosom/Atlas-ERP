@@ -1,6 +1,6 @@
 /**
- * @atlasrep/config — ESLint NestJS config (apps/api, apps/worker)
- * Extiende typescript.mjs con reglas específicas de NestJS.
+ * @atlaserp/config â€” ESLint NestJS config (apps/api, apps/worker)
+ * Extiende typescript.mjs con reglas especÃ­ficas de NestJS.
  * Requiere: @typescript-eslint/eslint-plugin @typescript-eslint/parser
  */
 import typescript from "./typescript.mjs";
@@ -19,11 +19,11 @@ export default [
           args: "after-used",
           argsIgnorePattern: "^_",
           ignoreRestSiblings: true,
-          // Los parámetros de constructores inyectados son usados por el DI container
+          // Los parÃ¡metros de constructores inyectados son usados por el DI container
           caughtErrors: "all",
         },
       ],
-      // En NestJS los métodos async en controladores devuelven Promise implícitamente
+      // En NestJS los mÃ©todos async en controladores devuelven Promise implÃ­citamente
       "@typescript-eslint/no-floating-promises": [
         "error",
         { ignoreVoid: true },
@@ -31,3 +31,4 @@ export default [
     },
   },
 ];
+

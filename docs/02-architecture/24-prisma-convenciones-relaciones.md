@@ -1,4 +1,4 @@
-﻿# Convenciones de Relaciones en Prisma
+# Convenciones de Relaciones en Prisma
 
 ## Task de origen
 - `T-0504`

@@ -1,8 +1,8 @@
 {
-  "name": "@atlasrep/ui",
+  "name": "@atlaserp/ui",
   "version": "0.0.0",
   "private": true,
-  "description": "Componentes reutilizables de UI — React + TailwindCSS 4.1",
+  "description": "Componentes reutilizables de UI â€” React + TailwindCSS 4.1",
   "main": "./src/index.js",
   "scripts": {
     "lint": "eslint .",
@@ -10,3 +10,4 @@
     "clean": "rm -rf dist"
   }
 }
+

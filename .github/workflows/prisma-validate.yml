@@ -1,0 +1,78 @@
+name: Prisma Schema Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/api/prisma/**'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/prisma/**'
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  prisma-validate:
+    name: Validate Prisma Schema & Migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: atlaserp_prisma_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/atlaserp_prisma_check
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema syntax
+        run: pnpm --filter @atlaserp/api exec prisma validate
+
+      - name: Apply all migrations (deploy mode)
+        run: pnpm --filter @atlaserp/api exec prisma migrate deploy
+
+      - name: Check for schema drift
+        run: |
+          STATUS=$(pnpm --filter @atlaserp/api exec prisma migrate status 2>&1)
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q "Database schema is not up to date"; then
+            echo ""
+            echo "ERROR: La base de datos tiene cambios no migrados."
+            echo "Crear una nueva migraciÃ³n con: prisma migrate dev --name <descripcion>"
+            exit 1
+          fi
+
+      - name: Generate Prisma client
+        run: pnpm --filter @atlaserp/api exec prisma generate
+
+      - name: Verify TypeScript types compile with generated client
+        run: pnpm --filter @atlaserp/api run typecheck
+

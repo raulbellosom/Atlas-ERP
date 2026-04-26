@@ -1,4 +1,4 @@
-﻿# Sync Core Blueprint
+# Sync Core Blueprint
 
 ## Propósito
 Permitir trabajo offline parcial en web y desktop, con sincronización validada por servidor.

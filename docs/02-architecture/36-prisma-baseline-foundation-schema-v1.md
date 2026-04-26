@@ -1,4 +1,4 @@
-﻿# Baseline y Aprobación de Foundation Schema v1
+# Baseline y Aprobación de Foundation Schema v1
 
 ## Task de origen
 - `T-0538`, `T-0539`, `T-0540`

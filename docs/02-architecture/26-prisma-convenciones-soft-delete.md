@@ -1,4 +1,4 @@
-﻿# Convenciones Prisma de Soft Delete
+# Convenciones Prisma de Soft Delete
 
 ## Task de origen
 - `T-0506`

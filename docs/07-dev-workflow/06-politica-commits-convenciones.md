@@ -1,4 +1,4 @@
-﻿# Política de Commits y Convenciones
+# Política de Commits y Convenciones
 
 ## ID de política
 - Task origen: `T-0039`

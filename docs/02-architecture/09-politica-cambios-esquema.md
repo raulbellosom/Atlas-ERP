@@ -1,4 +1,4 @@
-﻿# Política de Cambios de Esquema
+# Política de Cambios de Esquema
 
 ## ID de política
 - Task origen: `T-0033`

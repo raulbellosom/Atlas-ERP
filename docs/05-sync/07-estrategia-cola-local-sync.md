@@ -1,4 +1,4 @@
-﻿# Estrategia de Cola Local de Sync
+# Estrategia de Cola Local de Sync
 
 ## ID de definición
 - Task origen: `T-1005`

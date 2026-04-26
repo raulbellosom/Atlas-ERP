@@ -1,4 +1,4 @@
-﻿# Convención de Naming para Componentes UI
+# Convención de Naming para Componentes UI
 
 ## ID de convención
 - Task origen: `T-0022`

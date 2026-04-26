@@ -1,4 +1,4 @@
-﻿# CODEX START HERE
+# CODEX START HERE
 
 Este archivo es el punto de entrada principal para Codex dentro del repositorio.
 

@@ -1,4 +1,4 @@
-﻿# Migración Foundation Inicial y Seeds Core
+# Migración Foundation Inicial y Seeds Core
 
 ## Task de origen
 - `T-0530` a `T-0534`

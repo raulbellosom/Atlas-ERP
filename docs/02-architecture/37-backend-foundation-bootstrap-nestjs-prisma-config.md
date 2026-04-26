@@ -1,4 +1,4 @@
-﻿# Backend Foundation: Bootstrap NestJS, App, Prisma y Config
+# Backend Foundation: Bootstrap NestJS, App, Prisma y Config
 
 ## Task de origen
 - `T-0600` a `T-0604`
@@ -59,12 +59,12 @@ apps/api/src/
 - `build` de API vía `tsc -p tsconfig.build.json`.
 - `tsconfig.build.json` con `incremental: false` para emisión reproducible de `dist/**`.
 - `nest-cli.json` agregado para toolchain NestJS.
-- `@atlasrep/config` enlazado en `apps/api` para resolver ESLint compartido.
+- `@atlaserp/config` enlazado en `apps/api` para resolver ESLint compartido.
 
 ## Validación técnica ejecutada
-- `pnpm --filter @atlasrep/api run lint` ✅
-- `pnpm --filter @atlasrep/api run typecheck` ✅
-- `pnpm --filter @atlasrep/api run build` ✅
+- `pnpm --filter @atlaserp/api run lint` ✅
+- `pnpm --filter @atlaserp/api run typecheck` ✅
+- `pnpm --filter @atlaserp/api run build` ✅
 - Smoke test runtime (`node dist/main.js`) con respuestas:
   - `GET /api/health` → `{"status":"ok", ...}`
   - `GET /api` → `{"name":"Atlas ERP API", ...}`
@@ -136,3 +136,4 @@ apps/api/src/
   - Infraestructura MinIO/S3 en `infrastructure/storage` con bucket bootstrap al arranque
   - Subida segura de adjuntos con validación de tamaño/tipo/extensión y sanitización de nombre/path
   - Descarga segura con URLs firmadas temporales y validación de scope organizacional
+

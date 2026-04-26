@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { prismaMock } from '../../test-utils/mocks/prisma.mock';
-import { FinancialPostingPayload } from './events/financial-posting.payload';
+import type { FinancialPostingPayload } from './events/financial-posting.payload';
 import { PostingEngineService } from './posting-engine.service';
 
 const mockFiscalPeriod = {

@@ -1,4 +1,4 @@
-﻿import { invokeDesktop } from "./desktopBridge.js";
+import { invokeDesktop } from "./desktopBridge.js";
 
 let fallbackSequence = 1;
 const fallbackItems = [];

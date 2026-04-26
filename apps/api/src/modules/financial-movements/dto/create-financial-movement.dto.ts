@@ -53,6 +53,11 @@ export class CreateFinancialMovementDto {
   reference?: string;
 
   @IsOptional()
+  @IsString()
+  @Length(1, 80)
+  categoryCode?: string;
+
+  @IsOptional()
   @IsBoolean()
   isReconciled?: boolean;
 }

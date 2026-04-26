@@ -1,4 +1,4 @@
-﻿# Data Ownership
+# Data Ownership
 
 ## Regla
 Cada entidad debe declarar:

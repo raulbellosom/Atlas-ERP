@@ -1,4 +1,4 @@
-﻿const SYNC_CONFLICT_TYPES = Object.freeze([
+const SYNC_CONFLICT_TYPES = Object.freeze([
   "version_mismatch",
   "simultaneous_update",
   "delete_vs_update",

@@ -14,6 +14,9 @@ describe('remote-security.registry', () => {
   it('validates expected signature format', () => {
     expect(verifySignature('curated-v1', 'atlas-sign-v1:curated-v1')).toBe(true);
     expect(verifySignature('curated-v1', 'invalid-signature')).toBe(false);
+    expect(
+      verifySignature('curated-v1', 'atlas-sign-v1:curated-v1', ['external-sign-v2']),
+    ).toBe(false);
   });
 
   it('enforces rollout order canary -> partial -> total', () => {

@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "identifier": "com.racoondevs.atlaserp.desktop",
   "build": {
-    "beforeDevCommand": "pnpm --filter=@atlasrep/desktop dev:web",
+    "beforeDevCommand": "pnpm --filter=@atlaserp/desktop dev:web",
     "devUrl": "http://localhost:5174",
-    "beforeBuildCommand": "pnpm --filter=@atlasrep/desktop build:web",
+    "beforeBuildCommand": "pnpm --filter=@atlaserp/desktop build:web",
     "frontendDist": "../dist"
   },
   "app": {
@@ -38,3 +38,4 @@
     ]
   }
 }
+

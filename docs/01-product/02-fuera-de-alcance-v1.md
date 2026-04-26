@@ -1,4 +1,4 @@
-﻿# Fuera de Alcance v1
+# Fuera de Alcance v1
 
 ## No incluido en v1
 - ERP completo con todos los módulos de negocio en producción.

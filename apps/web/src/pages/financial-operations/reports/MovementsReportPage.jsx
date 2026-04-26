@@ -8,7 +8,7 @@
  * Arquitectura: 16-catalogo-reportes-finops-v1.md
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
 import { useMovementsByFilters } from "@/modules/financial-operations/hooks/useMovements";
@@ -42,17 +42,17 @@ const TYPE_VARIANTS = {
 };
 
 const STATUS_LABELS = {
-  PENDING:   "Pendiente",
-  CONFIRMED: "Confirmado",
+  DRAFT:     "Borrador",
   POSTED:    "Contabilizado",
-  VOIDED:    "Anulado",
+  CANCELED:  "Cancelado",
+  REVERSED:  "Revertido",
 };
 
 const STATUS_VARIANTS = {
-  PENDING:   "warning",
-  CONFIRMED: "success",
+  DRAFT:     "warning",
   POSTED:    "primary",
-  VOIDED:    "neutral",
+  CANCELED:  "neutral",
+  REVERSED:  "neutral",
 };
 
 const INCOME_TYPES = new Set(["INCOME", "TRANSFER_IN"]);
@@ -238,7 +238,9 @@ export default function MovementsReportPage() {
     error,
   } = useMovementsByFilters(organizationId, activeFilters ?? {}, Boolean(activeFilters));
 
-  if (error) handleError(error);
+  useEffect(() => {
+    if (error) handleError(error);
+  }, [error, handleError]);
 
   const overLimit = movements.length > ROW_LIMIT;
   const displayRows = overLimit ? movements.slice(0, ROW_LIMIT) : movements;

@@ -1,16 +1,21 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
+import { AccountingReportsService } from './accounting-reports.service';
 import { AccountingService } from './accounting.service';
 import { CreateChartOfAccountDto } from './dto/create-chart-of-account.dto';
 import { CreateFiscalPeriodDto } from './dto/create-fiscal-period.dto';
 import { CreatePostingRuleDto } from './dto/create-posting-rule.dto';
+import { ListAccountingReportQueryDto } from './dto/list-accounting-report.query.dto';
 import { ListChartOfAccountsQueryDto } from './dto/list-chart-of-accounts.query.dto';
 import { ListJournalEntriesQueryDto } from './dto/list-journal-entries.query.dto';
 import { UpdateChartOfAccountDto } from './dto/update-chart-of-account.dto';
 
 @Controller('v1/accounting')
 export class AccountingController {
-  constructor(private readonly accountingService: AccountingService) {}
+  constructor(
+    private readonly accountingService: AccountingService,
+    private readonly accountingReportsService: AccountingReportsService,
+  ) {}
 
   // ─── ChartOfAccount ────────────────────────────────────────────────────────
 
@@ -84,5 +89,25 @@ export class AccountingController {
   @Get('journal-entries/:id')
   getJournalEntry(@Param('id') id: string) {
     return this.accountingService.getJournalEntry(id);
+  }
+
+  // ─── Informes ────────────────────────────────────────────────────────────────
+
+  @RequireAllPermissions('accounting:read')
+  @Get('reports/trial-balance')
+  getTrialBalance(@Query() query: ListAccountingReportQueryDto) {
+    return this.accountingReportsService.getTrialBalance(query);
+  }
+
+  @RequireAllPermissions('accounting:read')
+  @Get('reports/income-statement')
+  getIncomeStatement(@Query() query: ListAccountingReportQueryDto) {
+    return this.accountingReportsService.getIncomeStatement(query);
+  }
+
+  @RequireAllPermissions('accounting:read')
+  @Get('reports/balance-sheet')
+  getBalanceSheet(@Query() query: ListAccountingReportQueryDto) {
+    return this.accountingReportsService.getBalanceSheet(query);
   }
 }

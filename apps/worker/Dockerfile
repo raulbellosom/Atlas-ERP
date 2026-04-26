@@ -3,9 +3,9 @@
 # Resultado: imagen minima con Node 20 Alpine + dist/ compilado.
 #
 # Build desde la raiz del monorepo:
-#   docker build -f apps/worker/Dockerfile -t atlasrep/worker:latest .
+#   docker build -f apps/worker/Dockerfile -t atlaserp/worker:latest .
 
-# ── Stage 1: dependencias + build ─────────────────────────────────────────────
+# â”€â”€ Stage 1: dependencias + build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM node:20-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -18,7 +18,7 @@ COPY apps/worker/package.json ./apps/worker/
 COPY packages/config/package.json ./packages/config/
 
 # Instalar solo las dependencias necesarias para el build
-RUN pnpm install --frozen-lockfile --filter=@atlasrep/worker...
+RUN pnpm install --frozen-lockfile --filter=@atlaserp/worker...
 
 # Copiar el codigo fuente
 COPY packages/config/ ./packages/config/
@@ -26,12 +26,12 @@ COPY apps/worker/ ./apps/worker/
 
 # Generar cliente Prisma si el worker tiene acceso a la BD
 COPY prisma/ ./prisma/
-RUN pnpm --filter=@atlasrep/worker exec prisma generate 2>/dev/null || true
+RUN pnpm --filter=@atlaserp/worker exec prisma generate 2>/dev/null || true
 
 # Build de produccion
-RUN pnpm --filter=@atlasrep/worker build
+RUN pnpm --filter=@atlaserp/worker build
 
-# ── Stage 2: imagen de produccion ─────────────────────────────────────────────
+# â”€â”€ Stage 2: imagen de produccion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM node:20-alpine AS runner
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -43,7 +43,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/worker/package.json ./apps/worker/
 COPY packages/config/package.json ./packages/config/
 
-RUN pnpm install --frozen-lockfile --filter=@atlasrep/worker... --prod
+RUN pnpm install --frozen-lockfile --filter=@atlaserp/worker... --prod
 
 # Copiar artefactos del build
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
@@ -60,3 +60,4 @@ ENV NODE_ENV=production
 
 # El worker no expone puertos HTTP
 CMD ["node", "dist/main.js"]
+

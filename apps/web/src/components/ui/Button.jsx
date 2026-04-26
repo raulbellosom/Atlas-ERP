@@ -16,6 +16,8 @@
  */
 export default function Button({
   children,
+  as: Component = "button",
+  type,
   variant = "primary",
   size = "md",
   loading = false,
@@ -105,11 +107,34 @@ export default function Button({
   /* Para variant link, ignorar height del size */
   const sizeClass = variant === "link" ? "" : (sizes[size] ?? sizes.md);
 
+  const isNativeButton = Component === "button";
+  const isDisabled = Boolean(disabled || loading);
+
+  const componentProps = isNativeButton
+    ? {
+        type: type ?? "button",
+        disabled: isDisabled,
+      }
+    : {
+        "aria-disabled": isDisabled || undefined,
+        tabIndex: isDisabled ? -1 : rest.tabIndex,
+      };
+
+  const nonButtonDisabledClass = !isNativeButton && isDisabled
+    ? "opacity-40 pointer-events-none cursor-not-allowed"
+    : "";
+
   return (
-    <button
-      disabled={disabled || loading}
-      className={[base, variants[variant] ?? variants.primary, sizeClass, className].join(" ")}
+    <Component
+      className={[
+        base,
+        variants[variant] ?? variants.primary,
+        sizeClass,
+        nonButtonDisabledClass,
+        className,
+      ].join(" ")}
       {...rest}
+      {...componentProps}
     >
       {loading ? (
         /* Spinner inline */
@@ -142,6 +167,6 @@ export default function Button({
           {iconRight}
         </span>
       )}
-    </button>
+    </Component>
   );
 }

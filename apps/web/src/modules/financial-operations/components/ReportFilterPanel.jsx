@@ -16,21 +16,21 @@
  *   bankAccounts — multi-select de cuentas bancarias
  *   movementType — multi-select (INCOME, EXPENSE, TRANSFER_IN, TRANSFER_OUT)
  *   status       — multi-select (PENDING, APPROVED, REJECTED)
- *   movementStatus — multi-select (COMPLETED, PENDING, CANCELLED)
+ *   movementStatus — multi-select (DRAFT, POSTED, CANCELED, REVERSED)
  *   currency     — select (MXN, USD, EUR)
  *   counterparty — text input libre
  *
  * Task origen: T-1612 (Fase 16 Bloque 3)
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const DEFAULT_MOVEMENT_TYPES = ["INCOME", "EXPENSE", "TRANSFER_IN", "TRANSFER_OUT"];
 const DEFAULT_TRANSFER_STATUSES = ["PENDING", "APPROVED", "REJECTED"];
-const DEFAULT_MOVEMENT_STATUSES = ["COMPLETED", "PENDING", "CANCELLED"];
+const DEFAULT_MOVEMENT_STATUSES = ["DRAFT", "POSTED", "CANCELED", "REVERSED"];
 
 const TYPE_LABELS = {
   INCOME: "Ingreso",
@@ -44,8 +44,10 @@ const STATUS_LABELS_MAP = {
   PENDING: "Pendiente",
   APPROVED: "Aprobado",
   REJECTED: "Rechazado",
-  COMPLETED: "Completado",
-  CANCELLED: "Cancelado",
+  DRAFT: "Borrador",
+  POSTED: "Contabilizado",
+  CANCELED: "Cancelado",
+  REVERSED: "Revertido",
 };
 
 // ─── Helpers de fecha (sin date-fns) ─────────────────────────────────────────
@@ -182,9 +184,7 @@ function ActiveFilterBadge({ label, onRemove }) {
 // ─── Hook para URL params (opt-in) ───────────────────────────────────────────
 
 function useFilterUrlParams(enabled) {
-  const [searchParams, setSearchParams] = enabled
-    ? useSearchParams() // eslint-disable-line react-hooks/rules-of-hooks
-    : [new URLSearchParams(), () => {}];
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const readParam = (key, fallback = "") => searchParams.get(key) ?? fallback;
   const readArrayParam = (key) => {
@@ -207,7 +207,12 @@ function useFilterUrlParams(enabled) {
     }, { replace: true });
   }, [enabled, setSearchParams]);
 
-  return { readParam, readArrayParam, writeParams };
+  return {
+    readParam,
+    readArrayParam,
+    writeParams,
+    paramsSnapshot: searchParams.toString(),
+  };
 }
 
 // ─── Panel principal ──────────────────────────────────────────────────────────
@@ -230,7 +235,7 @@ export function ReportFilterPanel({
   loading = false,
   persistToUrl = false,
 }) {
-  const { readParam, readArrayParam, writeParams } = useFilterUrlParams(persistToUrl);
+  const { readParam, readArrayParam, writeParams, paramsSnapshot } = useFilterUrlParams(persistToUrl);
 
   const today = new Date().toISOString().slice(0, 10);
   const firstOfMonth = today.slice(0, 8) + "01";
@@ -248,6 +253,29 @@ export function ReportFilterPanel({
   const [currency, setCurrencyState] = useState(readParam("currency", ""));
   const [counterparty, setCounterpartyState] = useState(readParam("counterparty", ""));
   const [activeShortcut, setActiveShortcut] = useState(null);
+
+  useEffect(() => {
+    if (!persistToUrl) return;
+    const params = new URLSearchParams(paramsSnapshot);
+    const getParam = (key, fallback = "") => params.get(key) ?? fallback;
+    const getArrayParam = (key) => {
+      const value = params.get(key);
+      return value ? value.split(",") : [];
+    };
+
+    setFromState(getParam("from", firstOfMonth));
+    setToState(getParam("to", today));
+    setBankAccountIdState(getParam("bankAccountId", ""));
+    setBankAccountIdsState(getArrayParam("bankAccountIds"));
+    setMovementTypesState(() => {
+      const fromUrl = getArrayParam("types");
+      return fromUrl.length > 0 ? fromUrl : DEFAULT_MOVEMENT_TYPES;
+    });
+    setStatusesState(getArrayParam("statuses"));
+    setCurrencyState(getParam("currency", ""));
+    setCounterpartyState(getParam("counterparty", ""));
+    setActiveShortcut(null);
+  }, [persistToUrl, paramsSnapshot, firstOfMonth, today]);
 
   // Wrappers que también escriben a URL params
   const setFrom = (v) => { setFromState(v); setActiveShortcut(null); writeParams({ from: v }); };

@@ -1,4 +1,4 @@
-﻿# Alcance de Plataforma v1
+# Alcance de Plataforma v1
 
 ## Alcance incluido
 - Base de plataforma modular monolítica en monorepo.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AtlasERP — Script de bootstrap de infraestructura Docker local
+# AtlasERP â€” Script de bootstrap de infraestructura Docker local
 # Uso: bash tools/infra-up.sh
 #
 # Levanta PostgreSQL, Redis y MinIO en Docker, espera a que esten
@@ -20,10 +20,10 @@ error()   { echo -e "${RED}[ERR]${NC} $1"; exit 1; }
 section() { echo -e "\n${BLUE}=== $1 ===${NC}"; }
 
 COMPOSE_FILE="infra/docker/docker-compose.dev.yml"
-MINIO_BUCKET="${MINIO_BUCKET:-atlasrep-files}"
+MINIO_BUCKET="${MINIO_BUCKET:-atlaserp-files}"
 MAX_WAIT=60   # segundos maximos de espera por servicio
 
-# ── Verificar Docker ──────────────────────────────────────────────────────────
+# â”€â”€ Verificar Docker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Verificando Docker"
 if ! command -v docker &>/dev/null; then
   error "Docker no encontrado. Instalar Docker Desktop: https://www.docker.com/products/docker-desktop"
@@ -33,15 +33,15 @@ if ! docker info &>/dev/null; then
 fi
 info "Docker corriendo"
 
-# ── Levantar servicios ────────────────────────────────────────────────────────
+# â”€â”€ Levantar servicios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Levantando servicios Docker"
 docker compose -f "$COMPOSE_FILE" up -d
 info "Servicios iniciados"
 
-# ── Esperar a PostgreSQL ──────────────────────────────────────────────────────
+# â”€â”€ Esperar a PostgreSQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Esperando PostgreSQL"
 elapsed=0
-until docker compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U atlasrep -d atlasrep_dev &>/dev/null; do
+until docker compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U atlaserp -d atlaserp_dev &>/dev/null; do
   if [ $elapsed -ge $MAX_WAIT ]; then
     error "PostgreSQL no respondio en ${MAX_WAIT}s. Revisar: docker compose -f $COMPOSE_FILE logs postgres"
   fi
@@ -52,7 +52,7 @@ done
 echo ""
 info "PostgreSQL listo (${elapsed}s)"
 
-# ── Esperar a Redis ───────────────────────────────────────────────────────────
+# â”€â”€ Esperar a Redis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Esperando Redis"
 elapsed=0
 until docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do
@@ -66,7 +66,7 @@ done
 echo ""
 info "Redis listo (${elapsed}s)"
 
-# ── Esperar a MinIO ───────────────────────────────────────────────────────────
+# â”€â”€ Esperar a MinIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Esperando MinIO"
 elapsed=0
 until curl -sf http://localhost:9000/minio/health/live &>/dev/null; do
@@ -80,35 +80,36 @@ done
 echo ""
 info "MinIO listo (${elapsed}s)"
 
-# ── Crear bucket de MinIO si no existe ───────────────────────────────────────
+# â”€â”€ Crear bucket de MinIO si no existe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Configurando bucket de MinIO"
 if command -v mc &>/dev/null; then
-  mc alias set atlasrep-local http://localhost:9000 atlasrep atlasrep_dev --quiet 2>/dev/null || true
-  if mc ls atlasrep-local/"$MINIO_BUCKET" &>/dev/null; then
+  mc alias set atlaserp-local http://localhost:9000 atlaserp atlaserp_dev --quiet 2>/dev/null || true
+  if mc ls atlaserp-local/"$MINIO_BUCKET" &>/dev/null; then
     info "Bucket '$MINIO_BUCKET' ya existe"
   else
-    mc mb atlasrep-local/"$MINIO_BUCKET" --quiet
+    mc mb atlaserp-local/"$MINIO_BUCKET" --quiet
     info "Bucket '$MINIO_BUCKET' creado"
   fi
 else
-  warn "mc (MinIO Client) no instalado — crear bucket manualmente en http://localhost:9001"
-  warn "Credenciales: user=atlasrep, password=atlasrep_dev"
+  warn "mc (MinIO Client) no instalado â€” crear bucket manualmente en http://localhost:9001"
+  warn "Credenciales: user=atlaserp, password=atlaserp_dev"
   warn "Bucket a crear: $MINIO_BUCKET"
 fi
 
-# ── Resumen ───────────────────────────────────────────────────────────────────
+# â”€â”€ Resumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
-echo -e "${GREEN}╔═════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║   Infraestructura Docker lista           ║${NC}"
-echo -e "${GREEN}╚═════════════════════════════════════════╝${NC}"
+echo -e "${GREEN}â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—${NC}"
+echo -e "${GREEN}â•‘   Infraestructura Docker lista           â•‘${NC}"
+echo -e "${GREEN}â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•${NC}"
 echo ""
 echo "Servicios disponibles:"
-echo "  PostgreSQL  → localhost:5432  (user: atlasrep, db: atlasrep_dev)"
-echo "  Redis       → localhost:6379"
-echo "  MinIO API   → localhost:9000  (bucket: $MINIO_BUCKET)"
-echo "  MinIO UI    → http://localhost:9001"
+echo "  PostgreSQL  â†’ localhost:5432  (user: atlaserp, db: atlaserp_dev)"
+echo "  Redis       â†’ localhost:6379"
+echo "  MinIO API   â†’ localhost:9000  (bucket: $MINIO_BUCKET)"
+echo "  MinIO UI    â†’ http://localhost:9001"
 echo ""
 echo "Pasos siguientes:"
-echo "  pnpm db:migrate   — Ejecutar migraciones de Prisma"
-echo "  pnpm dev          — Iniciar todas las apps"
+echo "  pnpm db:migrate   â€” Ejecutar migraciones de Prisma"
+echo "  pnpm dev          â€” Iniciar todas las apps"
 echo ""
+

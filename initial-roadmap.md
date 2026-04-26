@@ -1,4 +1,4 @@
-﻿# Initial Roadmap
+# Initial Roadmap
 
 ## Sprint 0 — Foundation of the repository
 - Crear monorepo

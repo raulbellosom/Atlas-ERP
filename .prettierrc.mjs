@@ -1,2 +1,3 @@
-import config from "@atlasrep/config/prettier";
+import config from "@atlaserp/config/prettier";
 export default config;
+

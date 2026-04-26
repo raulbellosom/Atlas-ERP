@@ -25,7 +25,7 @@ const USER_SELECT = {
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
-} as Prisma.UserSelect;
+} satisfies Prisma.UserSelect;
 
 const USER_AUTH_SELECT = {
   id: true,
@@ -316,7 +316,7 @@ export class UsersService {
       data: {
         organizationId: dto.organizationId,
         email: dto.email,
-        displayName: dto.displayName,
+        displayName: dto.displayName ?? dto.email,
         passwordHash,
         isActive: true,
       },

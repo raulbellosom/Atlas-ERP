@@ -1,4 +1,4 @@
-﻿# @atlasrep/sync-contracts
+# @atlaserp/sync-contracts
 
 Contrato base de sincronización para AtlasERP.
 
@@ -54,3 +54,4 @@ Contrato base de sincronización para AtlasERP.
 
 ## Nota
 Este paquete establece baseline contractual de Sync Core. Los bloques siguientes de Fase 10 implementarán ejecución operativa de cola, persistencia SQLite, procesamiento batch y resolución asistida end-to-end.
+

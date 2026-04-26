@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthorizationService } from './authorization.service';
 import { JwtTokenService } from './jwt-token.service';
 import { PasswordService } from './password.service';
 
@@ -14,7 +15,7 @@ import { PasswordService } from './password.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [JwtTokenService, PasswordService],
-  exports: [JwtTokenService, PasswordService],
+  providers: [JwtTokenService, PasswordService, AuthorizationService],
+  exports: [JwtTokenService, PasswordService, AuthorizationService],
 })
 export class SecurityModule {}

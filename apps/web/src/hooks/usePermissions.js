@@ -13,6 +13,7 @@ import useAuthStore from "@/store/auth.store";
 export function usePermissions() {
   const user = useAuthStore((s) => s.user);
   const permissions = user?.permissions ?? [];
+  const normalizedRole = typeof user?.role === "string" ? user.role.toLowerCase() : null;
 
   /**
    * Verdadero si el usuario tiene TODOS los permisos indicados.
@@ -31,7 +32,11 @@ export function usePermissions() {
    * Verdadero si el rol del usuario es "OWNER" o "ADMIN".
    * Util como fallback cuando los permisos granulares no estén disponibles aun.
    */
-  const isAdmin = user?.role === "OWNER" || user?.role === "ADMIN";
+  const isAdmin =
+    normalizedRole === "owner" ||
+    normalizedRole === "admin" ||
+    user?.role === "OWNER" ||
+    user?.role === "ADMIN";
 
   return { hasAll, hasAny, isAdmin, permissions };
 }

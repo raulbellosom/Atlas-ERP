@@ -31,6 +31,7 @@ import { ReceivablesLiteModule } from '../receivables-lite/receivables-lite.modu
 import { RolesModule } from '../roles/roles.module';
 import { SettingsModule } from '../settings/settings.module';
 import { SessionsModule } from '../sessions/sessions.module';
+import { SetupModule } from '../setup/setup.module';
 import { MetricsModule } from '../metrics/metrics.module';
 import { SyncModule } from '../sync/sync.module';
 import { TelemetryModule } from '../telemetry/telemetry.module';
@@ -101,6 +102,7 @@ import { AppService } from './app.service';
     OrganizationsModule,
     SessionsModule,
     SettingsModule,
+    SetupModule,
     SyncModule,
     TelemetryModule,
     MetricsModule,

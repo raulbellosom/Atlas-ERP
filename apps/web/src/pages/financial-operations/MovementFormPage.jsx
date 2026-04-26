@@ -29,8 +29,10 @@ const TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "PENDING", label: "Pendiente" },
-  { value: "CONFIRMED", label: "Confirmado" },
+  { value: "DRAFT", label: "Borrador" },
+  { value: "POSTED", label: "Publicado" },
+  { value: "CANCELED", label: "Cancelado" },
+  { value: "REVERSED", label: "Revertido" },
 ];
 
 const CURRENCY_OPTIONS = [
@@ -47,7 +49,7 @@ const emptyForm = {
   occurredAt: new Date().toISOString().slice(0, 10),
   description: "",
   reference: "",
-  status: "PENDING",
+  status: "DRAFT",
 };
 
 export default function MovementFormPage() {
@@ -82,7 +84,7 @@ export default function MovementFormPage() {
         occurredAt: existing.occurredAt ? existing.occurredAt.slice(0, 10) : "",
         description: existing.description ?? "",
         reference: existing.reference ?? "",
-        status: existing.status ?? "PENDING",
+        status: existing.status ?? "DRAFT",
       };
       setForm(data);
       setInitialForm(data);
@@ -109,6 +111,8 @@ export default function MovementFormPage() {
       const payload = {
         ...form,
         occurredAt: new Date(form.occurredAt).toISOString(),
+        description: form.description?.trim() ? form.description.trim() : undefined,
+        reference: form.reference?.trim() ? form.reference.trim() : undefined,
       };
 
       if (isEdit) {

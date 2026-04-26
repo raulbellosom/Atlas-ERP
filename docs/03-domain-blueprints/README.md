@@ -1,4 +1,4 @@
-﻿# Domain Blueprints Docs
+# Domain Blueprints Docs
 
 ## Índice
 - `00-estructura-oficial-blueprints.md`

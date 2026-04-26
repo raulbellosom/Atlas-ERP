@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  deleteOrganization,
+  purgeOrganization,
   fetchAttachmentDownloadUrl,
   fetchOrganization,
   fetchSettings,
@@ -33,9 +33,9 @@ export function useUpdateOrganization() {
   });
 }
 
-export function useDeleteOrganization() {
+export function usePurgeOrganization() {
   return useMutation({
-    mutationFn: (id) => deleteOrganization(id),
+    mutationFn: ({ id, password }) => purgeOrganization(id, password),
   });
 }
 

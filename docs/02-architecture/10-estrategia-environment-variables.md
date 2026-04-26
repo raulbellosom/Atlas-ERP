@@ -1,4 +1,4 @@
-﻿# Estrategia de Environment Variables
+# Estrategia de Environment Variables
 
 ## ID de estrategia
 - Task origen: `T-0040`

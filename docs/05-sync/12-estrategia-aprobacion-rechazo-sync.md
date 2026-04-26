@@ -1,4 +1,4 @@
-﻿# Estrategia de Aprobación/Rechazo de Sync
+# Estrategia de Aprobación/Rechazo de Sync
 
 ## ID de definición
 - Task origen: `T-1010`

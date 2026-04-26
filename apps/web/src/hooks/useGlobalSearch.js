@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 
 /**
  * Hook de busqueda global local (client-side filter).
@@ -11,8 +11,24 @@ import { useState, useCallback, useRef } from "react";
  */
 export function useGlobalSearch(items, matcher, { debounceMs = 200 } = {}) {
   const [query, setQueryRaw] = useState("");
-  const [results, setResults] = useState(items);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const timerRef = useRef(null);
+
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
+  const results = useMemo(() => {
+    const q = debouncedQuery.trim().toLowerCase();
+    if (!q) {
+      return items;
+    }
+
+    return items.filter((item) => matcher(item, q));
+  }, [items, matcher, debouncedQuery]);
 
   const setQuery = useCallback(
     (value) => {
@@ -21,15 +37,10 @@ export function useGlobalSearch(items, matcher, { debounceMs = 200 } = {}) {
       if (timerRef.current) clearTimeout(timerRef.current);
 
       timerRef.current = setTimeout(() => {
-        const q = value.trim().toLowerCase();
-        if (!q) {
-          setResults(items);
-        } else {
-          setResults(items.filter((item) => matcher(item, q)));
-        }
+        setDebouncedQuery(value);
       }, debounceMs);
     },
-    [items, matcher, debounceMs],
+    [debounceMs],
   );
 
   return {

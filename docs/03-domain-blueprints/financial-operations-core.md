@@ -1,4 +1,4 @@
-﻿# Financial Operations Core Blueprint
+# Financial Operations Core Blueprint
 
 ## Nombre visible del módulo
 Tesorería y Movimientos

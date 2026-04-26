@@ -1,0 +1,49 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Carga de creaciÃ³n de movimientos"
+
+scenarios:
+  - name: "Crear movimiento financiero"
+    flow:
+      - post:
+          url: "/v1/auth/login"
+          json:
+            email: "operator@test.atlaserp.local"
+            password: "{{ $env.TEST_PASSWORD }}"
+          capture:
+            json: "$.accessToken"
+            as: "token"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/v1/bank-accounts"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            json: "$[0].id"
+            as: "bankAccountId"
+          expect:
+            - statusCode: 200
+      - post:
+          url: "/v1/financial-movements"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            bankAccountId: "{{ bankAccountId }}"
+            movementType: "CREDIT"
+            amount: 1000
+            currencyCode: "MXN"
+            description: "Movimiento de prueba de carga Artillery"
+            movementDate: "2026-04-18"
+          expect:
+            - statusCode: 201
+      - get:
+          url: "/v1/financial-movements?limit=1&page=1"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+

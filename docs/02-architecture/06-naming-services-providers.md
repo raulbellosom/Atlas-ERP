@@ -1,4 +1,4 @@
-﻿# Convención de Naming para Services y Providers
+# Convención de Naming para Services y Providers
 
 ## ID de convención
 - Task origen: `T-0023`

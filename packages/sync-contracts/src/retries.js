@@ -1,4 +1,4 @@
-﻿const SYNC_RETRY_POLICY = Object.freeze({
+const SYNC_RETRY_POLICY = Object.freeze({
   strategy: "exponential_backoff_with_jitter",
   maxAttempts: 5,
   baseDelayMs: 1_000,

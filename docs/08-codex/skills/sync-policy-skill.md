@@ -1,4 +1,4 @@
-﻿# Sync Policy Skill
+# Sync Policy Skill
 
 ## ID de task origen
 

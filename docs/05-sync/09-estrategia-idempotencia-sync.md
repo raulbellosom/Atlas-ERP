@@ -1,4 +1,4 @@
-﻿# Estrategia de Idempotencia de Sync
+# Estrategia de Idempotencia de Sync
 
 ## ID de definición
 - Task origen: `T-1007`

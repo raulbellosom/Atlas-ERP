@@ -1,4 +1,4 @@
-﻿import {
+import {
   syncItemEnqueue,
   syncItemFindByIdempotencyKey,
   syncItemList,

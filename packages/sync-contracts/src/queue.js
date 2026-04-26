@@ -1,4 +1,4 @@
-﻿const SYNC_QUEUE_STATES = Object.freeze([
+const SYNC_QUEUE_STATES = Object.freeze([
   "pending",
   "processing",
   "failed",

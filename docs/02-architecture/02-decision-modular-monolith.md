@@ -1,4 +1,4 @@
-﻿# Decisión Oficial: Modular Monolith
+# Decisión Oficial: Modular Monolith
 
 ## ID de decisión
 - Task origen: `T-0012`

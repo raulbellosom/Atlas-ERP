@@ -1,4 +1,4 @@
-﻿# Seeds Foundation de Feature Flags y Settings
+# Seeds Foundation de Feature Flags y Settings
 
 ## Task de origen
 - `T-0535` y `T-0536`

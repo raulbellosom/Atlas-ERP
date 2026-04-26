@@ -1,4 +1,4 @@
-﻿# Política de Ownership de Datos
+# Política de Ownership de Datos
 
 ## ID de política
 - Task origen: `T-0016`

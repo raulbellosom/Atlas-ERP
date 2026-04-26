@@ -1,4 +1,4 @@
-﻿# ROOT PROJECT CONTEXT
+# ROOT PROJECT CONTEXT
 
 ## Contexto general
 

@@ -1,4 +1,4 @@
-﻿# Estrategia de Crecimiento por Módulos
+# Estrategia de Crecimiento por Módulos
 
 ## ID de estrategia
 - Task origen: `T-0017`

@@ -9,7 +9,7 @@
  * Task origen: T-1603 (Fase 16 Bloque 1)
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/auth.store";
 import { useApiError } from "@/hooks/useApiError";
 import { useBankAccounts, useBalanceSummary } from "@/modules/financial-operations/hooks/useBankAccounts";
@@ -162,7 +162,9 @@ function SnapshotsSection({ organizationId, bankAccounts, bankAccountsById }) {
     queryFilters,
   );
 
-  if (error) handleError(error);
+  useEffect(() => {
+    if (error) handleError(error);
+  }, [error, handleError]);
 
   function handleFilter(filters) {
     setSnapFilters(filters);
@@ -287,8 +289,10 @@ export default function BalancesReportPage() {
   const { data: accounts = [], isLoading: loadingAccounts, error: accountsErr } = useBankAccounts(organizationId);
   const { data: summary, isLoading: loadingSummary, error: summaryErr } = useBalanceSummary(organizationId);
 
-  if (accountsErr) handleError(accountsErr);
-  if (summaryErr) handleError(summaryErr);
+  useEffect(() => {
+    if (accountsErr) handleError(accountsErr);
+    if (summaryErr) handleError(summaryErr);
+  }, [accountsErr, summaryErr, handleError]);
 
   const bankAccountsById = useMemo(
     () => Object.fromEntries(accounts.map((a) => [a.id, a])),

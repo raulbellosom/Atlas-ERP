@@ -1,4 +1,4 @@
-﻿# Tipos de Operaciones Sincronizables
+# Tipos de Operaciones Sincronizables
 
 ## ID de definición
 - Task origen: `T-1002`

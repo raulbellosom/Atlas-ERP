@@ -1,4 +1,4 @@
-﻿# Inicialización de Prisma en AtlasERP
+# Inicialización de Prisma en AtlasERP
 
 ## Task de origen
 - `T-0500`

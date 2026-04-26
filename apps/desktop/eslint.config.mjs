@@ -1,10 +1,11 @@
 /**
- * ESLint config — @atlasrep/desktop (Tauri frontend — JS/JSX)
+ * ESLint config â€” @atlaserp/desktop (Tauri frontend â€” JS/JSX)
  */
-import react from "@atlasrep/config/eslint/react";
+import react from "@atlaserp/config/eslint/react";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   { ignores: ["dist/**", "node_modules/**", "src-tauri/**"] },
   ...react,
 ];
+

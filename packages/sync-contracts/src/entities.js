@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Entidades permitidas para sincronización.
  * La lista es extensible en bloques posteriores de Fase 10.
  */

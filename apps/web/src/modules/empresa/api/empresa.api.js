@@ -10,8 +10,8 @@ export async function updateOrganization(id, data) {
   return res.data?.data ?? res.data;
 }
 
-export async function deleteOrganization(id) {
-  await apiClient.delete(`/v1/organizations/${id}`);
+export async function purgeOrganization(id, password) {
+  await apiClient.delete(`/v1/organizations/${id}/purge`, { data: { password } });
 }
 
 export async function fetchSettings(organizationId) {

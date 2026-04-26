@@ -1,4 +1,4 @@
-﻿# Codex Docs
+# Codex Docs
 
 ## Objetivo
 

@@ -1,4 +1,4 @@
-﻿# Tipos de Entidades Sincronizables
+# Tipos de Entidades Sincronizables
 
 ## ID de definición
 - Task origen: `T-1001`
