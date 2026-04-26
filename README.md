@@ -1,32 +1,33 @@
 # AtlasERP Monorepo
 
-Plataforma modular de negocio con arquitectura monorepo y soporte offline-first controlado.
+Plataforma modular de negocio con arquitectura monorepo y soporte offline-first
+controlado.
 
 ## Stack oficial
 
-| Capa | Tecnologia |
-|------|------------|
-| Backend | NestJS + TypeScript + Prisma + PostgreSQL |
-| Web | React + Vite + TailwindCSS 4.1 |
-| Desktop | Tauri + React + SQLite local (cache/cola) |
-| Worker | NestJS worker process + Redis |
-| Archivos | MinIO / S3 compatible |
-| Infra | Docker Compose |
+| Capa     | Tecnología                                |
+| -------- | ----------------------------------------- |
+| Backend  | NestJS + TypeScript + Prisma + PostgreSQL |
+| Web      | React + Vite + TailwindCSS 4.1            |
+| Desktop  | Tauri + React + SQLite local (cache/cola) |
+| Worker   | NestJS worker process + Redis             |
+| Archivos | MinIO / S3 compatible                     |
+| Infra    | Docker Compose                            |
 
 ## Estructura
 
 ```text
 /
-â”œâ”€ apps/
-â”‚  â”œâ”€ api/
-â”‚  â”œâ”€ web/
-â”‚  â”œâ”€ desktop/
-â”‚  â””â”€ worker/
-â”œâ”€ packages/
-â”œâ”€ prisma/
-â”œâ”€ infra/
-â”œâ”€ docs/
-â””â”€ tools/
+├── apps/
+│   ├── api/
+│   ├── web/
+│   ├── desktop/
+│   └── worker/
+├── packages/
+├── prisma/
+├── infra/
+├── docs/
+└── tools/
 ```
 
 ## Prerrequisitos
@@ -36,7 +37,8 @@ Plataforma modular de negocio con arquitectura monorepo y soporte offline-first 
 - Docker Desktop
 - Para `apps/desktop`: Rust + Cargo + toolchain Tauri
 
-Si usas PowerShell y tienes restriccion de scripts, ejecuta comandos como `pnpm.cmd ...`.
+Si usas PowerShell y tienes restricción de scripts, ejecuta comandos como
+`pnpm.cmd ...`.
 
 ## Setup inicial (una sola vez)
 
@@ -67,7 +69,8 @@ pnpm dev
 pnpm dev:all
 ```
 
-`pnpm dev:all` tambien arranca `@atlaserp/desktop`, y requiere Rust/Cargo instalados.
+`pnpm dev:all` también arranca `@atlaserp/desktop`, y requiere Rust/Cargo
+instalados.
 
 ## Infra local
 
@@ -79,7 +82,7 @@ pnpm infra:down
 
 ## Reset local (volver al Setup Page)
 
-### Reset completo (borra volumenes Docker + datos)
+### Reset completo (borra volúmenes Docker + datos)
 
 ```bash
 pnpm infra:reset
@@ -88,7 +91,7 @@ pnpm db:migrate
 pnpm db:seed:setup
 ```
 
-Despues inicia web/api:
+Después inicia web/api:
 
 ```bash
 pnpm dev
@@ -96,7 +99,7 @@ pnpm dev
 
 Luego abre la app web y completa `"/setup"`.
 
-### Reset de BD sin borrar volumenes
+### Reset de BD sin borrar volúmenes
 
 ```bash
 pnpm db:reset
@@ -105,12 +108,13 @@ pnpm db:seed:setup
 
 Esto regresa al flujo de setup sin crear organización/usuarios demo.
 
-## Produccion local / smoke
+## Producción local / smoke
 
-> `infra/docker/docker-compose.prod.yml` usa imagenes ya construidas/publicadas.
+> `infra/docker/docker-compose.prod.yml` usa imágenes ya construidas/publicadas.
 
-1. Configura variables de entorno productivas (`DATABASE_URL`, `JWT_SECRET`, credenciales Redis y S3).
-2. Construye/publica imagenes `atlaserp/api`, `atlaserp/worker`, `atlaserp/web`.
+1. Configura variables de entorno productivas (`DATABASE_URL`, `JWT_SECRET`,
+   credenciales Redis y S3).
+2. Construye/publica imágenes `atlaserp/api`, `atlaserp/worker`, `atlaserp/web`.
 3. Levanta compose productivo:
 
 ```bash
@@ -126,16 +130,16 @@ pnpm infra:down:prod
 
 ## Task Catalog unificado
 
-AtlasERP incluye catalogo global de tareas con:
+AtlasERP incluye catálogo global de tareas con:
 
-- CRUD y asignacion (`/v1/tasks/*`)
-- Dependencias con validacion de ciclos
+- CRUD y asignación (`/v1/tasks/*`)
+- Dependencias con validación de ciclos
 - Historial de estados
-- Ingesta automatica de docs/codigo cada 15 min
+- Ingesta automática de docs/código cada 15 min
 - SSE realtime (`/v1/tasks/stream`)
 - Eventos Redis en `atlaserp.tasks.events`
 
-Documentacion operativa:
+Documentación operativa:
 
 - `docs/07-dev-workflow/task-catalog-operations.md`
 
@@ -143,12 +147,11 @@ Documentacion operativa:
 
 1. El servidor es la fuente de verdad.
 2. SQLite local nunca reemplaza PostgreSQL.
-3. No crear modulos/entidades sin ownership definido.
-4. Toda accion critica debe auditarse.
+3. No crear módulos/entidades sin ownership definido.
+4. Toda acción crítica debe auditarse.
 5. No usar Bootstrap; usar TailwindCSS 4.1.
 
-## Idioma y codificacion
+## Idioma y codificación
 
-- Idioma principal: espanol (MX)
+- Idioma principal: español (MX)
 - Archivos de texto: UTF-8
-
