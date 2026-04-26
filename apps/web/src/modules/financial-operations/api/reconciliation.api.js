@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/client";
+import { apiClient } from '@/api/client';
 
 /**
  * API layer — Reconciliation.
@@ -6,9 +6,14 @@ import { apiClient } from "@/api/client";
  */
 
 export async function fetchReconciliationSessions(params = {}) {
-  const res = await apiClient.get("/v1/reconciliation/sessions", { params });
+  const res = await apiClient.get('/v1/reconciliation/sessions', { params });
   const payload = res.data?.data ?? res.data;
   return Array.isArray(payload) ? payload : (payload?.items ?? []);
+}
+
+export async function createReconciliationSession(data) {
+  const res = await apiClient.post('/v1/reconciliation/sessions', data);
+  return res.data?.data ?? res.data;
 }
 
 export async function fetchReconciliationSession(id) {

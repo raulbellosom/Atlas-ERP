@@ -396,6 +396,8 @@ model FinancialMovement {
   status         FinancialMovementStatus @default(POSTED)
   amount         Decimal
   currencyCode   String                  @default("MXN")
+  exchangeRate   Decimal?
+  originalAmount Decimal?
   occurredAt     DateTime
   description    String?
   reference      String?

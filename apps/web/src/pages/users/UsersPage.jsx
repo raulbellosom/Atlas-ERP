@@ -236,6 +236,105 @@ function InvitationStatusBadge({ invitation }) {
     </Badge>
   );
 }
+
+function useUpdateRoles() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, roleIds }) =>
+      apiClient.patch(`/v1/users/${id}/roles`, { roleIds }).then((r) => r.data?.data ?? r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+function ManageRolesModal({ open, onClose, user, organizationId }) {
+  const { handleError } = useApiError();
+  const { toast } = useToast();
+  const updateRolesMutation = useUpdateRoles();
+  const { data: roles = [] } = useRoles(organizationId);
+  const [selectedRoleIds, setSelectedRoleIds] = useState([]);
+
+  useEffect(() => {
+    if (open && user) {
+      setSelectedRoleIds(user.userRoles?.map((ur) => ur.role.id) || []);
+    }
+  }, [open, user]);
+
+  const toggleRole = (roleId) => {
+    setSelectedRoleIds((prev) =>
+      prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId],
+    );
+  };
+
+  async function handleSubmit() {
+    if (!user) return;
+    try {
+      await updateRolesMutation.mutateAsync({
+        id: user.id,
+        roleIds: selectedRoleIds,
+      });
+      toast.success('Roles actualizados correctamente');
+      onClose();
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Gestionar roles"
+      description={`Roles asignados a ${user?.email}`}
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={updateRolesMutation.isPending}
+          >
+            {updateRolesMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-3 max-h-64 overflow-y-auto p-1">
+        {roles.length === 0 ? (
+          <p className="text-sm text-text-disabled">No hay roles disponibles en la organización.</p>
+        ) : (
+          roles.map((role) => (
+            <label
+              key={role.id}
+              className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-surface-subtle transition-colors"
+            >
+              <div className="pt-0.5">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-border text-amber-500 focus:ring-amber-500 bg-surface-card"
+                  checked={selectedRoleIds.includes(role.id)}
+                  onChange={() => toggleRole(role.id)}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">{role.name}</p>
+                {role.description && (
+                  <p className="text-xs text-text-secondary mt-0.5">{role.description}</p>
+                )}
+              </div>
+            </label>
+          ))
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 export default function UsersPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
@@ -259,6 +358,7 @@ export default function UsersPage() {
 
   const [actionTarget, setActionTarget] = useState(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [manageRolesUser, setManageRolesUser] = useState(null);
 
   const lockMutation = useUserAction('lock');
   const unlockMutation = useUserAction('unlock');
@@ -357,6 +457,24 @@ export default function UsersPage() {
       },
     },
     {
+      key: 'roles',
+      header: 'Roles',
+      render: (u) => {
+        if (!u.userRoles || u.userRoles.length === 0) {
+          return <span className="text-text-disabled text-xs">—</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {u.userRoles.map((ur) => (
+              <Badge key={ur.role.id} variant="blue" size="xs">
+                {ur.role.name}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
       key: 'createdAt',
       header: 'Registrado',
       sortable: true,
@@ -397,6 +515,9 @@ export default function UsersPage() {
                     </button>
                   }
                 >
+                  <DropdownMenuItem onClick={() => setManageRolesUser(u)}>
+                    Gestionar roles
+                  </DropdownMenuItem>
                   {u.isActive && !u.isLocked && (
                     <DropdownMenuItem
                       onClick={() => setActionTarget({ action: 'lock', targetUser: u })}
@@ -571,6 +692,13 @@ export default function UsersPage() {
             ? 'destructive'
             : 'default'
         }
+      />
+
+      <ManageRolesModal
+        open={Boolean(manageRolesUser)}
+        onClose={() => setManageRolesUser(null)}
+        user={manageRolesUser}
+        organizationId={organizationId}
       />
     </div>
   );

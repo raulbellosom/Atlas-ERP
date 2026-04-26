@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, SourceType, TransferStatus } from '@prisma/client';
+import {
+  FinancialMovementStatus,
+  FinancialMovementType,
+  Prisma,
+  SourceType,
+  TransferStatus,
+} from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -44,24 +50,87 @@ export class TransfersService {
   ) {}
 
   async create(input: CreateTransferDto): Promise<TransferSummary> {
-    const created = await this.prisma.transfer.create({
-      data: {
-        organizationId: input.organizationId,
-        fromBankAccountId: input.fromBankAccountId,
-        toBankAccountId: input.toBankAccountId,
-        branchId: input.branchId,
-        outgoingMovementId: input.outgoingMovementId,
-        incomingMovementId: input.incomingMovementId,
-        initiatedById: input.initiatedById,
-        approvedById: input.approvedById,
-        status: input.status ?? TransferStatus.POSTED,
-        amount: input.amount,
-        currencyCode: input.currencyCode ?? 'MXN',
-        occurredAt: new Date(input.occurredAt),
-        description: input.description,
-        reference: input.reference,
-      },
-      select: TRANSFER_SELECT,
+    const effectiveStatus = input.status ?? TransferStatus.POSTED;
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      // 1. Crear los 2 movimientos espejo
+      const outgoingMovement = await tx.financialMovement.create({
+        data: {
+          organizationId: input.organizationId,
+          bankAccountId: input.fromBankAccountId,
+          branchId: input.branchId,
+          createdById: input.initiatedById,
+          movementType: FinancialMovementType.TRANSFER_OUT,
+          status:
+            effectiveStatus === TransferStatus.POSTED
+              ? FinancialMovementStatus.POSTED
+              : FinancialMovementStatus.DRAFT,
+          amount: input.amount,
+          currencyCode: input.currencyCode ?? 'MXN',
+          occurredAt: new Date(input.occurredAt),
+          description: input.description ?? 'Transferencia saliente',
+          reference: input.reference,
+          categoryCode: 'INTERNAL_TRANSFER',
+        },
+        select: { id: true },
+      });
+
+      const incomingMovement = await tx.financialMovement.create({
+        data: {
+          organizationId: input.organizationId,
+          bankAccountId: input.toBankAccountId,
+          branchId: input.branchId,
+          createdById: input.initiatedById,
+          movementType: FinancialMovementType.TRANSFER_IN,
+          status:
+            effectiveStatus === TransferStatus.POSTED
+              ? FinancialMovementStatus.POSTED
+              : FinancialMovementStatus.DRAFT,
+          amount: input.amount,
+          currencyCode: input.currencyCode ?? 'MXN',
+          occurredAt: new Date(input.occurredAt),
+          description: input.description ?? 'Transferencia entrante',
+          reference: input.reference,
+          categoryCode: 'INTERNAL_TRANSFER',
+        },
+        select: { id: true },
+      });
+
+      // 2. Crear el registro de transferencia vinculando ambos movimientos
+      const transfer = await tx.transfer.create({
+        data: {
+          organizationId: input.organizationId,
+          fromBankAccountId: input.fromBankAccountId,
+          toBankAccountId: input.toBankAccountId,
+          branchId: input.branchId,
+          outgoingMovementId: outgoingMovement.id,
+          incomingMovementId: incomingMovement.id,
+          initiatedById: input.initiatedById,
+          approvedById: input.approvedById,
+          status: effectiveStatus,
+          amount: input.amount,
+          currencyCode: input.currencyCode ?? 'MXN',
+          occurredAt: new Date(input.occurredAt),
+          description: input.description,
+          reference: input.reference,
+        },
+        select: TRANSFER_SELECT,
+      });
+
+      // 3. Actualizar saldos de ambas cuentas si está contabilizado
+      if (effectiveStatus === TransferStatus.POSTED) {
+        const amount = new Prisma.Decimal(input.amount);
+        await tx.bankAccount.update({
+          where: { id: input.fromBankAccountId },
+          data: { currentBalance: { decrement: amount } },
+        });
+        await tx.bankAccount.update({
+          where: { id: input.toBankAccountId },
+          data: { currentBalance: { increment: amount } },
+        });
+      }
+
+      return transfer;
     });
 
     await this.auditService.auditAction({
@@ -75,6 +144,8 @@ export class TransfersService {
       after: {
         fromBankAccountId: created.fromBankAccountId,
         toBankAccountId: created.toBankAccountId,
+        outgoingMovementId: created.outgoingMovementId,
+        incomingMovementId: created.incomingMovementId,
         status: created.status,
         amount: created.amount.toString(),
         currencyCode: created.currencyCode,
@@ -195,19 +266,62 @@ export class TransfersService {
   async softDelete(id: string): Promise<boolean> {
     const existing = await this.prisma.transfer.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true, organizationId: true },
+      select: {
+        id: true,
+        organizationId: true,
+        fromBankAccountId: true,
+        toBankAccountId: true,
+        outgoingMovementId: true,
+        incomingMovementId: true,
+        amount: true,
+        status: true,
+      },
     });
 
     if (!existing) {
       return false;
     }
 
-    const result = await this.prisma.transfer.updateMany({
-      where: { id, deletedAt: null },
-      data: { deletedAt: new Date() },
+    const deleted = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.transfer.updateMany({
+        where: { id, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+
+      if (result.count > 0) {
+        // Soft-delete los movimientos espejo
+        const now = new Date();
+        if (existing.outgoingMovementId) {
+          await tx.financialMovement.updateMany({
+            where: { id: existing.outgoingMovementId, deletedAt: null },
+            data: { deletedAt: now },
+          });
+        }
+        if (existing.incomingMovementId) {
+          await tx.financialMovement.updateMany({
+            where: { id: existing.incomingMovementId, deletedAt: null },
+            data: { deletedAt: now },
+          });
+        }
+
+        // Revertir saldos si estaba contabilizado
+        if (existing.status === TransferStatus.POSTED) {
+          const amount = new Prisma.Decimal(existing.amount);
+          await tx.bankAccount.update({
+            where: { id: existing.fromBankAccountId },
+            data: { currentBalance: { increment: amount } },
+          });
+          await tx.bankAccount.update({
+            where: { id: existing.toBankAccountId },
+            data: { currentBalance: { decrement: amount } },
+          });
+        }
+      }
+
+      return result;
     });
 
-    if (result.count > 0) {
+    if (deleted.count > 0) {
       await this.auditService.auditAction({
         organizationId: existing.organizationId,
         action: 'FINANCIAL_TRANSFER_DELETED',
@@ -218,6 +332,6 @@ export class TransfersService {
       });
     }
 
-    return result.count > 0;
+    return deleted.count > 0;
   }
 }

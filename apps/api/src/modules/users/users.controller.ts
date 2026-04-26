@@ -4,6 +4,7 @@ import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 import { UserInvitationsService } from './user-invitations.service';
 import { UsersService } from './users.service';
 
@@ -91,5 +92,17 @@ export class UsersController {
     const organizationId = req.user?.organizationId ?? '';
     const actorId = req.user?.sub;
     return this.usersService.deactivateUser(id, organizationId, actorId);
+  }
+
+  @RequireAllPermissions('auth:user:write')
+  @Patch(':id/roles')
+  updateUserRoles(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserRolesDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const organizationId = req.user?.organizationId ?? '';
+    const actorId = req.user?.sub;
+    return this.usersService.updateUserRoles(id, organizationId, dto.roleIds, actorId);
   }
 }

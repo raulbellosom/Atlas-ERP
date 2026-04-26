@@ -41,6 +41,7 @@ import { UsersModule } from '../users/users.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { HrModule } from '../hr/hr.module';
 import { ModuleStoreModule } from '../module-store/module-store.module';
+import { CounterpartiesLiteModule } from '../counterparties-lite/counterparties-lite.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -111,6 +112,7 @@ import { AppService } from './app.service';
     AccountingModule,
     HrModule,
     ModuleStoreModule,
+    CounterpartiesLiteModule,
   ],
   controllers: [AppController],
   providers: [

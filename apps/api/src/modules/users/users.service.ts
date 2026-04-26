@@ -23,6 +23,17 @@ const USER_SELECT = {
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
+  userRoles: {
+    select: {
+      role: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.UserSelect;
 
 const USER_AUTH_SELECT = {
@@ -305,5 +316,63 @@ export class UsersService {
     });
 
     return updated;
+  }
+
+  async updateUserRoles(
+    userId: string,
+    organizationId: string,
+    roleIds: string[],
+    actorId?: string,
+  ): Promise<UserSummary> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, organizationId, deletedAt: null },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        statusCode: 404,
+        code: ErrorCode.NOT_FOUND,
+        message: 'Usuario no encontrado en la organización.',
+        error: 'Not Found',
+      });
+    }
+
+    // Usar transacción para actualizar los roles atómicamente
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Eliminar roles actuales
+      await tx.userRole.deleteMany({
+        where: { userId },
+      });
+
+      // 2. Insertar nuevos roles
+      if (roleIds.length > 0) {
+        await tx.userRole.createMany({
+          data: roleIds.map((roleId) => ({
+            userId,
+            roleId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    });
+
+    // Revocar las sesiones del usuario para forzar re-login con los nuevos roles
+    await this.sessionsService.revokeAllUserSessions(userId, organizationId);
+
+    // Auditoría
+    await this.auditService.auditAction({
+      organizationId,
+      actorId,
+      action: 'USER_ROLES_UPDATED',
+      entityType: 'User',
+      entityId: userId,
+      origin: 'WEB',
+      result: 'SUCCESS',
+      metadata: { newRoleIds: roleIds },
+    });
+
+    // Retornar el usuario actualizado
+    return this.findOneById(userId) as Promise<UserSummary>;
   }
 }

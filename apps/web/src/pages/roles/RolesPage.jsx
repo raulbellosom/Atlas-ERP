@@ -66,6 +66,21 @@ function RoleFormModal({ open, onClose, organizationId, initial }) {
   );
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    if (open) {
+      setForm(
+        initial
+          ? {
+              name: initial.name ?? '',
+              description: initial.description ?? '',
+              level: initial.level ?? '',
+            }
+          : ROLE_EMPTY,
+      );
+      setErrors({});
+    }
+  }, [open, initial]);
+
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));

@@ -128,10 +128,17 @@ export class OutboundEmailWorkerService implements OnModuleInit, OnModuleDestroy
         take: 10,
       });
 
-      logger.info(
-        { event: WorkerEvents.JOB_STARTED, module: 'outbound-email', jobCount: jobs.length },
-        `processQueue: ${jobs.length} job(s) pendientes encontrados`,
-      );
+      if (jobs.length > 0) {
+        logger.info(
+          { event: WorkerEvents.JOB_STARTED, module: 'outbound-email', jobCount: jobs.length },
+          `processQueue: ${jobs.length} job(s) pendientes encontrados`,
+        );
+      } else {
+        logger.debug(
+          { event: WorkerEvents.JOB_STARTED, module: 'outbound-email', jobCount: 0 },
+          `processQueue: 0 job(s) pendientes encontrados`,
+        );
+      }
 
       for (const job of jobs) {
         await this.processSingleJob(job.id, config);

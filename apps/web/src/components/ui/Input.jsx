@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef } from 'react';
 
 /**
  * Input — Meridian v2 Design System
@@ -17,72 +17,65 @@ import { forwardRef } from "react";
  * } & React.InputHTMLAttributes} props
  */
 const Input = forwardRef(function Input(
-  {
-    label,
-    error,
-    helpText,
-    id,
-    leadingIcon,
-    trailingIcon,
-    size = "md",
-    className = "",
-    ...rest
-  },
+  { label, error, helpText, id, leadingIcon, trailingIcon, size = 'md', className = '', ...rest },
   ref,
 ) {
-  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-');
   const hasError = Boolean(error);
 
   /* Alturas: sm=36px, md=44px (touch target), lg=50px */
-  const heightClass = {
-    sm: "h-9",
-    md: "h-11",  /* 44px — Apple HIG mínimo */
-    lg: "h-12",
-  }[size] ?? "h-11";
+  const heightClass =
+    {
+      sm: 'h-9',
+      md: 'h-11' /* 44px — Apple HIG mínimo */,
+      lg: 'h-12',
+    }[size] ?? 'h-11';
 
-  const paddingY = {
-    sm: "py-2",
-    md: "py-[0.6875rem]",
-    lg: "py-3",
-  }[size] ?? "py-[0.6875rem]";
+  const paddingY =
+    {
+      sm: 'py-2',
+      md: 'py-[0.6875rem]',
+      lg: 'py-3',
+    }[size] ?? 'py-[0.6875rem]';
 
-  const textSize = {
-    sm: "text-sm",
-    md: "text-sm",
-    lg: "text-base",
-  }[size] ?? "text-sm";
+  const textSize =
+    {
+      sm: 'text-sm',
+      md: 'text-sm',
+      lg: 'text-base',
+    }[size] ?? 'text-sm';
 
   const wrapperClass = [
-    "relative flex items-center",
-    "rounded-lg border bg-surface",
-    "transition-all duration-150",
+    'relative flex items-center',
+    'rounded-lg border bg-surface',
+    'transition-all duration-150',
     hasError
-      ? "border-error-border hover:border-error focus-within:border-error focus-within:[box-shadow:var(--shadow-focus-error)]"
-      : "border-border hover:border-border-strong focus-within:border-ink-500 focus-within:[box-shadow:var(--shadow-focus)]",
-  ].join(" ");
+      ? 'border-error-border focus-within:border-error'
+      : 'border-border hover:border-border-strong focus-within:border-border-strong',
+  ].join(' ');
 
   const inputClass = [
-    "w-full bg-transparent",
+    'w-full bg-transparent',
     textSize,
-    "text-text-primary placeholder:text-text-disabled",
-    "focus:outline-none",
+    'text-text-primary placeholder:text-text-disabled',
+    'focus:outline-none',
     heightClass,
-    leadingIcon  ? "pl-10 pr-3" : "px-3.5",
-    trailingIcon ? "pr-10" : "",
+    leadingIcon ? 'pl-10 pr-3' : 'px-3.5',
+    trailingIcon ? 'pr-10' : '',
     paddingY,
     className,
-  ].join(" ");
+  ].join(' ');
 
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="text-sm font-semibold text-text-primary select-none"
-        >
+        <label htmlFor={inputId} className="text-sm font-semibold text-text-primary select-none">
           {label}
           {rest.required && (
-            <span className="ml-0.5 text-error" aria-hidden="true"> *</span>
+            <span className="ml-0.5 text-error" aria-hidden="true">
+              {' '}
+              *
+            </span>
           )}
         </label>
       )}
@@ -100,11 +93,7 @@ const Input = forwardRef(function Input(
           className={inputClass}
           aria-invalid={hasError || undefined}
           aria-describedby={
-            hasError
-              ? `${inputId}-error`
-              : helpText
-              ? `${inputId}-hint`
-              : undefined
+            hasError ? `${inputId}-error` : helpText ? `${inputId}-hint` : undefined
           }
           {...rest}
         />
@@ -123,7 +112,11 @@ const Input = forwardRef(function Input(
           className="flex items-center gap-1.5 text-xs font-medium text-error"
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zM7.25 4.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100 1.5.75.75 0 000-1.5z" clipRule="evenodd"/>
+            <path
+              fillRule="evenodd"
+              d="M8 1a7 7 0 100 14A7 7 0 008 1zM7.25 4.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 6a.75.75 0 100 1.5.75.75 0 000-1.5z"
+              clipRule="evenodd"
+            />
           </svg>
           {error}
         </p>

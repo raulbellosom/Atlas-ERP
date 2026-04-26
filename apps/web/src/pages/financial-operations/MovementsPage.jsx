@@ -1,21 +1,25 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import useAuthStore from "@/store/auth.store";
-import { useApiError } from "@/hooks/useApiError";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useMovements, useDeleteMovement } from "@/modules/financial-operations/hooks/useMovements";
-import { useBankAccounts } from "@/modules/financial-operations/hooks/useBankAccounts";
-import { FINOPS_PERMISSIONS } from "@/modules/financial-operations/routes";
-import { formatDate } from "@/lib/i18n";
-import Table from "@/components/ui/Table";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
-import Select from "@/components/ui/Select";
-import Input from "@/components/ui/Input";
-import PageHeader from "@/components/ui/PageHeader";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/DropdownMenu";
-import AlertDialog from "@/components/ui/AlertDialog";
-import { useToast } from "@/components/ui/Toast";
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import useAuthStore from '@/store/auth.store';
+import { useApiError } from '@/hooks/useApiError';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useMovements, useDeleteMovement } from '@/modules/financial-operations/hooks/useMovements';
+import { useBankAccounts } from '@/modules/financial-operations/hooks/useBankAccounts';
+import { FINOPS_PERMISSIONS } from '@/modules/financial-operations/routes';
+import { formatDate } from '@/lib/i18n';
+import Table from '@/components/ui/Table';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Select from '@/components/ui/Select';
+import Input from '@/components/ui/Input';
+import PageHeader from '@/components/ui/PageHeader';
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/DropdownMenu';
+import AlertDialog from '@/components/ui/AlertDialog';
+import { useToast } from '@/components/ui/Toast';
 
 /**
  * MovementsPage — Listado de movimientos financieros con filtros avanzados.
@@ -28,57 +32,57 @@ import { useToast } from "@/components/ui/Toast";
  */
 
 const MOVEMENT_TYPES = [
-  { value: "all", label: "Todos los tipos" },
-  { value: "INCOME", label: "Ingreso" },
-  { value: "EXPENSE", label: "Egreso" },
-  { value: "ADJUSTMENT", label: "Ajuste" },
-  { value: "TRANSFER_IN", label: "Entrada (Transferencia)" },
-  { value: "TRANSFER_OUT", label: "Salida (Transferencia)" },
+  { value: 'all', label: 'Todos los tipos' },
+  { value: 'INCOME', label: 'Ingreso' },
+  { value: 'EXPENSE', label: 'Egreso' },
+  { value: 'ADJUSTMENT', label: 'Ajuste' },
+  { value: 'TRANSFER_IN', label: 'Entrada (Transferencia)' },
+  { value: 'TRANSFER_OUT', label: 'Salida (Transferencia)' },
 ];
 
 const MOVEMENT_STATUSES = [
-  { value: "all", label: "Todos los estados" },
-  { value: "DRAFT", label: "Borrador" },
-  { value: "POSTED", label: "Contabilizado" },
-  { value: "CANCELED", label: "Cancelado" },
-  { value: "REVERSED", label: "Revertido" },
+  { value: 'all', label: 'Todos los estados' },
+  { value: 'DRAFT', label: 'Borrador' },
+  { value: 'POSTED', label: 'Contabilizado' },
+  { value: 'CANCELED', label: 'Cancelado' },
+  { value: 'REVERSED', label: 'Revertido' },
 ];
 
 // Variantes de Badge correctas — Meridian Design System
 const typeVariants = {
-  INCOME:       "success",
-  EXPENSE:      "error",
-  ADJUSTMENT:   "info",
-  TRANSFER_IN:  "success",
-  TRANSFER_OUT: "error",
+  INCOME: 'success',
+  EXPENSE: 'error',
+  ADJUSTMENT: 'info',
+  TRANSFER_IN: 'success',
+  TRANSFER_OUT: 'error',
 };
 
 const typeLabels = {
-  INCOME:       "Ingreso",
-  EXPENSE:      "Egreso",
-  ADJUSTMENT:   "Ajuste",
-  TRANSFER_IN:  "Transferencia (Entrada)",
-  TRANSFER_OUT: "Transferencia (Salida)",
+  INCOME: 'Ingreso',
+  EXPENSE: 'Egreso',
+  ADJUSTMENT: 'Ajuste',
+  TRANSFER_IN: 'Transferencia (Entrada)',
+  TRANSFER_OUT: 'Transferencia (Salida)',
 };
 
 const statusVariants = {
-  DRAFT:     "warning",
-  POSTED:    "primary",
-  CANCELED:  "neutral",
-  REVERSED:  "neutral",
+  DRAFT: 'warning',
+  POSTED: 'primary',
+  CANCELED: 'neutral',
+  REVERSED: 'neutral',
 };
 
 const statusLabels = {
-  DRAFT:     "Borrador",
-  POSTED:    "Contabilizado",
-  CANCELED:  "Cancelado",
-  REVERSED:  "Revertido",
+  DRAFT: 'Borrador',
+  POSTED: 'Contabilizado',
+  CANCELED: 'Cancelado',
+  REVERSED: 'Revertido',
 };
 
-function formatMoney(amount, currency = "MXN") {
-  const val = parseFloat(amount ?? "0");
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
+function formatMoney(amount, currency = 'MXN') {
+  const val = parseFloat(amount ?? '0');
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
     currency,
     minimumFractionDigits: 2,
   }).format(val);
@@ -97,11 +101,11 @@ export default function MovementsPage() {
 
   // ── Filters ──────────────────────────────────────────────────────────────────
   const [filters, setFilters] = useState({
-    bankAccountId: searchParams.get("bankAccountId") ?? "all",
-    movementType:  "all",
-    status:        "all",
-    from:          "",
-    to:            "",
+    bankAccountId: searchParams.get('bankAccountId') ?? 'all',
+    movementType: 'all',
+    status: 'all',
+    from: '',
+    to: '',
   });
 
   const updateFilter = (key) => (e) => {
@@ -110,7 +114,7 @@ export default function MovementsPage() {
   };
 
   const apiFilters = Object.fromEntries(
-    Object.entries(filters).filter(([, v]) => v !== "" && v !== "all"),
+    Object.entries(filters).filter(([, v]) => v !== '' && v !== 'all'),
   );
 
   const { data: movements = [], isLoading, error } = useMovements(organizationId, apiFilters);
@@ -127,7 +131,7 @@ export default function MovementsPage() {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
-      toast.success("Movimiento eliminado");
+      toast.success('Movimiento eliminado');
     } catch (err) {
       handleError(err);
     } finally {
@@ -136,77 +140,75 @@ export default function MovementsPage() {
   };
 
   const accountOptions = [
-    { value: "all", label: "Todas las cuentas" },
+    { value: 'all', label: 'Todas las cuentas' },
     ...bankAccounts.map((a) => ({ value: a.id, label: `${a.name} (${a.bankName})` })),
   ];
 
   const COLUMNS = [
     {
-      key: "occurredAt",
-      header: "Fecha",
+      key: 'occurredAt',
+      header: 'Fecha',
       sortable: true,
-      width: "110px",
+      width: '110px',
       render: (row) => (
         <span className="text-xs text-text-secondary whitespace-nowrap font-mono">
-          {row.occurredAt ? formatDate(row.occurredAt) : "—"}
+          {row.occurredAt ? formatDate(row.occurredAt) : '—'}
         </span>
       ),
     },
     {
-      key: "movementType",
-      header: "Tipo",
-      width: "180px",
+      key: 'movementType',
+      header: 'Tipo',
+      width: '180px',
       render: (row) => (
-        <Badge variant={typeVariants[row.movementType] ?? "neutral"} size="xs" dot>
+        <Badge variant={typeVariants[row.movementType] ?? 'neutral'} size="xs" dot>
           {typeLabels[row.movementType] ?? row.movementType}
         </Badge>
       ),
     },
     {
-      key: "amount",
-      header: "Monto",
+      key: 'amount',
+      header: 'Monto',
       sortable: true,
-      align: "right",
-      width: "140px",
+      align: 'right',
+      width: '140px',
       render: (row) => {
-        const isIncome =
-          row.movementType === "INCOME" || row.movementType === "TRANSFER_IN";
+        const isIncome = row.movementType === 'INCOME' || row.movementType === 'TRANSFER_IN';
         return (
           <span
             className={[
-              "font-mono text-sm tabular-nums font-medium",
-              isIncome ? "text-success" : "text-error",
-            ].join(" ")}
+              'font-mono text-sm tabular-nums font-medium',
+              isIncome ? 'text-success' : 'text-error',
+            ].join(' ')}
           >
-            {isIncome ? "+" : "−"}{formatMoney(row.amount, row.currencyCode)}
+            {isIncome ? '+' : '−'}
+            {formatMoney(row.amount, row.currencyCode)}
           </span>
         );
       },
     },
     {
-      key: "description",
-      header: "Descripción",
+      key: 'description',
+      header: 'Descripción',
       render: (row) => (
         <span className="text-sm text-text-primary truncate max-w-[200px] block">
-          {row.description || "—"}
+          {row.description || '—'}
         </span>
       ),
     },
     {
-      key: "reference",
-      header: "Referencia",
+      key: 'reference',
+      header: 'Referencia',
       render: (row) => (
-        <span className="font-mono text-xs text-ink-400">
-          {row.reference || "—"}
-        </span>
+        <span className="font-mono text-xs text-ink-400">{row.reference || '—'}</span>
       ),
     },
     {
-      key: "status",
-      header: "Estado",
-      width: "130px",
+      key: 'status',
+      header: 'Estado',
+      width: '130px',
       render: (row) => (
-        <Badge variant={statusVariants[row.status] ?? "neutral"} size="xs">
+        <Badge variant={statusVariants[row.status] ?? 'neutral'} size="xs">
           {statusLabels[row.status] ?? row.status}
         </Badge>
       ),
@@ -214,9 +216,9 @@ export default function MovementsPage() {
     ...(canWrite
       ? [
           {
-            key: "_actions",
-            header: "",
-            width: "48px",
+            key: '_actions',
+            header: '',
+            width: '48px',
             render: (row) => (
               <DropdownMenu
                 trigger={
@@ -242,23 +244,28 @@ export default function MovementsPage() {
                 }
               >
                 <DropdownMenuItem
-                  onClick={() =>
-                    navigate(`/financial-operations/movements/${row.id}`)
-                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/financial-operations/movements/${row.id}`);
+                  }}
                 >
                   Ver detalle
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    navigate(`/financial-operations/movements/${row.id}/edit`)
-                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/financial-operations/movements/${row.id}/edit`);
+                  }}
                 >
                   Editar
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
-                  onClick={() => setDeleteTarget(row)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(row);
+                  }}
                 >
                   Eliminar
                 </DropdownMenuItem>
@@ -327,32 +334,22 @@ export default function MovementsPage() {
             label="Cuenta"
             options={accountOptions}
             value={filters.bankAccountId}
-            onValueChange={updateFilter("bankAccountId")}
+            onValueChange={updateFilter('bankAccountId')}
           />
           <Select
             label="Tipo"
             options={MOVEMENT_TYPES}
             value={filters.movementType}
-            onValueChange={updateFilter("movementType")}
+            onValueChange={updateFilter('movementType')}
           />
           <Select
             label="Estado"
             options={MOVEMENT_STATUSES}
             value={filters.status}
-            onValueChange={updateFilter("status")}
+            onValueChange={updateFilter('status')}
           />
-          <Input
-            label="Desde"
-            type="date"
-            value={filters.from}
-            onChange={updateFilter("from")}
-          />
-          <Input
-            label="Hasta"
-            type="date"
-            value={filters.to}
-            onChange={updateFilter("to")}
-          />
+          <Input label="Desde" type="date" value={filters.from} onChange={updateFilter('from')} />
+          <Input label="Hasta" type="date" value={filters.to} onChange={updateFilter('to')} />
         </div>
       </div>
 
@@ -363,9 +360,7 @@ export default function MovementsPage() {
         isLoading={isLoading}
         emptyTitle="Sin movimientos registrados"
         emptyDescription="Registra tu primer movimiento financiero para comenzar a cartografiar el territorio."
-        onRowClick={(row) =>
-          navigate(`/financial-operations/movements/${row.id}`)
-        }
+        onRowClick={(row) => navigate(`/financial-operations/movements/${row.id}`)}
       />
 
       {/* ── Confirmación de eliminación ───────────────────────────────────────── */}

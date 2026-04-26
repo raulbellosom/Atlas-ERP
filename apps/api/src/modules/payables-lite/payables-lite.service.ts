@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PayableStatus, Prisma, SourceType } from '@prisma/client';
+import {
+  PayableStatus,
+  Prisma,
+  SourceType,
+  FinancialMovementType,
+  FinancialMovementStatus,
+} from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { CreatePayableLiteDto } from './dto/create-payable-lite.dto';
 import { ListPayablesLiteQueryDto } from './dto/list-payables-lite.query.dto';
 import { UpdatePayableLiteDto } from './dto/update-payable-lite.dto';
+import { RegisterPaymentDto } from './dto/register-payment.dto';
+import { FinancialMovementsService } from '../financial-movements/financial-movements.service';
 
 const PAYABLE_SELECT = {
   id: true,
@@ -36,6 +44,7 @@ export class PayablesLiteService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly financialMovementsService: FinancialMovementsService,
   ) {}
 
   async create(input: CreatePayableLiteDto): Promise<PayableSummary> {
@@ -91,7 +100,9 @@ export class PayablesLiteService {
       ...(query.overdueOnly
         ? {
             dueAt: { lt: now },
-            status: { in: [PayableStatus.OPEN, PayableStatus.PARTIALLY_PAID, PayableStatus.OVERDUE] },
+            status: {
+              in: [PayableStatus.OPEN, PayableStatus.PARTIALLY_PAID, PayableStatus.OVERDUE],
+            },
           }
         : {}),
       ...(query.dueFrom || query.dueTo
@@ -128,10 +139,7 @@ export class PayablesLiteService {
     });
   }
 
-  async update(
-    id: string,
-    input: UpdatePayableLiteDto,
-  ): Promise<PayableSummary | null> {
+  async update(id: string, input: UpdatePayableLiteDto): Promise<PayableSummary | null> {
     const existing = await this.prisma.payableLite.findFirst({
       where: { id, deletedAt: null },
       select: { id: true },
@@ -143,9 +151,7 @@ export class PayablesLiteService {
 
     const data: Prisma.PayableLiteUncheckedUpdateInput = {
       ...(input.branchId !== undefined ? { branchId: input.branchId } : {}),
-      ...(input.counterpartyId !== undefined
-        ? { counterpartyId: input.counterpartyId }
-        : {}),
+      ...(input.counterpartyId !== undefined ? { counterpartyId: input.counterpartyId } : {}),
       ...(input.bankAccountId !== undefined ? { bankAccountId: input.bankAccountId } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.reference !== undefined ? { reference: input.reference } : {}),
@@ -224,5 +230,88 @@ export class PayablesLiteService {
         },
       },
     });
+  }
+
+  async registerPayment(
+    id: string,
+    input: RegisterPaymentDto,
+    userId?: string,
+  ): Promise<PayableSummary | null> {
+    const existing = await this.prisma.payableLite.findFirst({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        organizationId: true,
+        branchId: true,
+        amount: true,
+        amountPaid: true,
+        currencyCode: true,
+        reference: true,
+        status: true,
+      },
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    if (existing.status === PayableStatus.PAID || existing.status === PayableStatus.CANCELED) {
+      throw new Error('No se puede registrar pago en una cuenta ya pagada o cancelada');
+    }
+
+    const paymentAmount = new Prisma.Decimal(input.amount);
+    const newAmountPaid = existing.amountPaid.add(paymentAmount);
+
+    let newStatus: any = existing.status;
+    if (newAmountPaid.gte(existing.amount)) {
+      newStatus = 'PAID' as PayableStatus;
+    } else if (newAmountPaid.gt(0)) {
+      newStatus = PayableStatus.PARTIALLY_PAID;
+    }
+
+    // Actualizar el PayableLite
+    const updated = await this.prisma.payableLite.update({
+      where: { id },
+      data: {
+        amountPaid: newAmountPaid,
+        status: newStatus as any,
+        paidAt: newStatus === ('PAID' as any) ? new Date(input.occurredAt) : undefined,
+      },
+      select: PAYABLE_SELECT,
+    });
+
+    // Crear el FinancialMovement asociado (EXPENSE)
+    // Se usa el servicio para que también afecte el saldo de la cuenta
+    await this.financialMovementsService.create({
+      organizationId: existing.organizationId,
+      bankAccountId: input.bankAccountId,
+      branchId: existing.branchId ?? undefined,
+      createdById: userId,
+      movementType: FinancialMovementType.EXPENSE,
+      status: FinancialMovementStatus.POSTED,
+      amount: input.amount,
+      currencyCode: existing.currencyCode,
+      occurredAt: input.occurredAt,
+      description: `Pago a CxP ${existing.reference ?? existing.id}`,
+      reference: existing.reference ?? undefined,
+      categoryCode: 'PAYABLE_PAYMENT',
+    });
+
+    await this.auditService.auditAction({
+      organizationId: existing.organizationId,
+      actorId: userId,
+      action: 'PAYABLE_PAYMENT_REGISTERED',
+      entityType: 'payable_lite',
+      entityId: existing.id,
+      origin: SourceType.API,
+      result: 'SUCCESS',
+      after: {
+        status: newStatus,
+        amountPaid: newAmountPaid.toString(),
+        paymentAmount: paymentAmount.toString(),
+      },
+    });
+
+    return updated;
   }
 }

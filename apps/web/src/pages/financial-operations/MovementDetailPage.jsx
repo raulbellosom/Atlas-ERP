@@ -61,6 +61,7 @@ export default function MovementDetailPage() {
   const { toast } = useToast();
 
   const canUpload = isAdmin || hasAny(FINOPS_PERMISSIONS.ATTACHMENT_WRITE);
+  const canWrite = isAdmin || hasAny(FINOPS_PERMISSIONS.MOVEMENT_WRITE);
 
   const { data: movement, isLoading, error } = useMovement(id);
   const { data: attachments = [], isLoading: loadingAttachments } = useMovementAttachments(id);
@@ -192,18 +193,30 @@ export default function MovementDetailPage() {
             {formatDate(movement.occurredAt)}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() =>
-            downloadMovementReceipt(
-              { movement, attachments },
-              `comprobante-${movement.reference ?? movement.id}`,
-            )
-          }
-        >
-          Imprimir comprobante
-        </Button>
+        <div className="flex items-center gap-2">
+          {canWrite && (
+            <Button
+              as={Link}
+              to={`/financial-operations/movements/${id}/edit`}
+              variant="secondary"
+              size="sm"
+            >
+              Editar
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              downloadMovementReceipt(
+                { movement, attachments },
+                `comprobante-${movement.reference ?? movement.id}`,
+              )
+            }
+          >
+            Imprimir comprobante
+          </Button>
+        </div>
       </div>
 
       {/* Amount card */}

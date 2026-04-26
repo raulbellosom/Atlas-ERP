@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, ReceivableStatus, SourceType } from '@prisma/client';
+import {
+  Prisma,
+  ReceivableStatus,
+  SourceType,
+  FinancialMovementType,
+  FinancialMovementStatus,
+} from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { FinancialMovementsService } from '../financial-movements/financial-movements.service';
 import { CreateReceivableLiteDto } from './dto/create-receivable-lite.dto';
 import { ListReceivablesLiteQueryDto } from './dto/list-receivables-lite.query.dto';
 import { UpdateReceivableLiteDto } from './dto/update-receivable-lite.dto';
+import { RegisterPaymentDto } from './dto/register-payment.dto';
 
 const RECEIVABLE_SELECT = {
   id: true,
@@ -36,6 +44,7 @@ export class ReceivablesLiteService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly financialMovementsService: FinancialMovementsService,
   ) {}
 
   async create(input: CreateReceivableLiteDto): Promise<ReceivableSummary> {
@@ -91,7 +100,13 @@ export class ReceivablesLiteService {
       ...(query.overdueOnly
         ? {
             dueAt: { lt: now },
-            status: { in: [ReceivableStatus.OPEN, ReceivableStatus.PARTIALLY_PAID, ReceivableStatus.OVERDUE] },
+            status: {
+              in: [
+                ReceivableStatus.OPEN,
+                ReceivableStatus.PARTIALLY_PAID,
+                ReceivableStatus.OVERDUE,
+              ],
+            },
           }
         : {}),
       ...(query.dueFrom || query.dueTo
@@ -128,10 +143,7 @@ export class ReceivablesLiteService {
     });
   }
 
-  async update(
-    id: string,
-    input: UpdateReceivableLiteDto,
-  ): Promise<ReceivableSummary | null> {
+  async update(id: string, input: UpdateReceivableLiteDto): Promise<ReceivableSummary | null> {
     const existing = await this.prisma.receivableLite.findFirst({
       where: { id, deletedAt: null },
       select: { id: true },
@@ -143,9 +155,7 @@ export class ReceivablesLiteService {
 
     const data: Prisma.ReceivableLiteUncheckedUpdateInput = {
       ...(input.branchId !== undefined ? { branchId: input.branchId } : {}),
-      ...(input.counterpartyId !== undefined
-        ? { counterpartyId: input.counterpartyId }
-        : {}),
+      ...(input.counterpartyId !== undefined ? { counterpartyId: input.counterpartyId } : {}),
       ...(input.bankAccountId !== undefined ? { bankAccountId: input.bankAccountId } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.reference !== undefined ? { reference: input.reference } : {}),
@@ -224,5 +234,91 @@ export class ReceivablesLiteService {
         },
       },
     });
+  }
+
+  async registerPayment(
+    id: string,
+    input: RegisterPaymentDto,
+    userId?: string,
+  ): Promise<ReceivableSummary | null> {
+    const existing = await this.prisma.receivableLite.findFirst({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        organizationId: true,
+        branchId: true,
+        amount: true,
+        amountPaid: true,
+        currencyCode: true,
+        reference: true,
+        status: true,
+      },
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    if (
+      existing.status === ReceivableStatus.PAID ||
+      existing.status === ReceivableStatus.CANCELED
+    ) {
+      throw new Error('No se puede registrar pago en una cuenta ya pagada o cancelada');
+    }
+
+    const paymentAmount = new Prisma.Decimal(input.amount);
+    const newAmountPaid = existing.amountPaid.add(paymentAmount);
+
+    let newStatus: any = existing.status;
+    if (newAmountPaid.gte(existing.amount)) {
+      newStatus = 'PAID' as ReceivableStatus;
+    } else if (newAmountPaid.gt(0)) {
+      newStatus = ReceivableStatus.PARTIALLY_PAID;
+    }
+
+    // Actualizar el ReceivableLite
+    const updated = await this.prisma.receivableLite.update({
+      where: { id },
+      data: {
+        amountPaid: newAmountPaid,
+        status: newStatus as any,
+        paidAt: newStatus === ('PAID' as any) ? new Date(input.occurredAt) : undefined,
+      },
+      select: RECEIVABLE_SELECT,
+    });
+
+    // Crear el FinancialMovement asociado (INCOME)
+    // Se usa el servicio para que también afecte el saldo de la cuenta
+    await this.financialMovementsService.create({
+      organizationId: existing.organizationId,
+      bankAccountId: input.bankAccountId,
+      branchId: existing.branchId ?? undefined,
+      createdById: userId,
+      movementType: FinancialMovementType.INCOME,
+      status: FinancialMovementStatus.POSTED,
+      amount: input.amount,
+      currencyCode: existing.currencyCode,
+      occurredAt: input.occurredAt,
+      description: `Pago a CxC ${existing.reference ?? existing.id}`,
+      reference: existing.reference ?? undefined,
+      categoryCode: 'RECEIVABLE_PAYMENT',
+    });
+
+    await this.auditService.auditAction({
+      organizationId: existing.organizationId,
+      actorId: userId,
+      action: 'RECEIVABLE_PAYMENT_REGISTERED',
+      entityType: 'receivable_lite',
+      entityId: existing.id,
+      origin: SourceType.API,
+      result: 'SUCCESS',
+      after: {
+        status: newStatus,
+        amountPaid: newAmountPaid.toString(),
+        paymentAmount: paymentAmount.toString(),
+      },
+    });
+
+    return updated;
   }
 }

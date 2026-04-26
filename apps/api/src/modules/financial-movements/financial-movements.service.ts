@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { FinancialMovementStatus, Prisma, SourceType } from '@prisma/client';
+import { FinancialMovementStatus, FinancialMovementType, Prisma, SourceType } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AttachmentsService } from '../attachments/attachments.service';
@@ -24,6 +24,8 @@ const FINANCIAL_MOVEMENT_SELECT = {
   status: true,
   amount: true,
   currencyCode: true,
+  exchangeRate: true,
+  originalAmount: true,
   occurredAt: true,
   description: true,
   reference: true,
@@ -47,24 +49,70 @@ export class FinancialMovementsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Calcula el delta (positivo o negativo) que un movimiento aplica al saldo
+   * de la cuenta bancaria.
+   *
+   *  - INCOME, TRANSFER_IN, OPENING_BALANCE → suman
+   *  - EXPENSE, TRANSFER_OUT → restan
+   *  - ADJUSTMENT → suma (se espera que el monto ya venga con signo correcto)
+   */
+  private computeBalanceDelta(
+    movementType: FinancialMovementType,
+    amount: Prisma.Decimal | number | string,
+  ): Prisma.Decimal {
+    const abs = new Prisma.Decimal(amount);
+    switch (movementType) {
+      case FinancialMovementType.INCOME:
+      case FinancialMovementType.TRANSFER_IN:
+      case FinancialMovementType.OPENING_BALANCE:
+        return abs;
+      case FinancialMovementType.EXPENSE:
+      case FinancialMovementType.TRANSFER_OUT:
+        return abs.negated();
+      case FinancialMovementType.ADJUSTMENT:
+        // Los ajustes pueden ser positivos o negativos; se respeta el signo original
+        return abs;
+      default:
+        return new Prisma.Decimal(0);
+    }
+  }
+
   async create(input: CreateFinancialMovementDto): Promise<FinancialMovementSummary> {
-    const created = await this.prisma.financialMovement.create({
-      data: {
-        organizationId: input.organizationId,
-        bankAccountId: input.bankAccountId,
-        branchId: input.branchId,
-        createdById: input.createdById,
-        movementType: input.movementType,
-        status: input.status ?? FinancialMovementStatus.POSTED,
-        amount: input.amount,
-        currencyCode: input.currencyCode ?? 'MXN',
-        occurredAt: new Date(input.occurredAt),
-        description: input.description,
-        reference: input.reference,
-        categoryCode: input.categoryCode,
-        isReconciled: input.isReconciled ?? false,
-      },
-      select: FINANCIAL_MOVEMENT_SELECT,
+    const effectiveStatus = input.status ?? FinancialMovementStatus.POSTED;
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const movement = await tx.financialMovement.create({
+        data: {
+          organizationId: input.organizationId,
+          bankAccountId: input.bankAccountId,
+          branchId: input.branchId,
+          createdById: input.createdById,
+          movementType: input.movementType,
+          status: effectiveStatus,
+          amount: input.amount,
+          currencyCode: input.currencyCode ?? 'MXN',
+          exchangeRate: input.exchangeRate,
+          originalAmount: input.originalAmount,
+          occurredAt: new Date(input.occurredAt),
+          description: input.description,
+          reference: input.reference,
+          categoryCode: input.categoryCode,
+          isReconciled: input.isReconciled ?? false,
+        },
+        select: FINANCIAL_MOVEMENT_SELECT,
+      });
+
+      // Solo actualizar saldo si el movimiento está contabilizado
+      if (effectiveStatus === FinancialMovementStatus.POSTED) {
+        const delta = this.computeBalanceDelta(input.movementType, input.amount);
+        await tx.bankAccount.update({
+          where: { id: input.bankAccountId },
+          data: { currentBalance: { increment: delta } },
+        });
+      }
+
+      return movement;
     });
 
     await this.auditService.auditAction({
@@ -151,7 +199,13 @@ export class FinancialMovementsService {
   ): Promise<FinancialMovementSummary | null> {
     const existing = await this.prisma.financialMovement.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true },
+      select: {
+        id: true,
+        bankAccountId: true,
+        movementType: true,
+        amount: true,
+        status: true,
+      },
     });
 
     if (!existing) {
@@ -165,16 +219,55 @@ export class FinancialMovementsService {
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.amount !== undefined ? { amount: input.amount } : {}),
       ...(input.currencyCode !== undefined ? { currencyCode: input.currencyCode } : {}),
+      ...(input.exchangeRate !== undefined ? { exchangeRate: input.exchangeRate } : {}),
+      ...(input.originalAmount !== undefined ? { originalAmount: input.originalAmount } : {}),
       ...(input.occurredAt !== undefined ? { occurredAt: new Date(input.occurredAt) } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.reference !== undefined ? { reference: input.reference } : {}),
       ...(input.isReconciled !== undefined ? { isReconciled: input.isReconciled } : {}),
     };
 
-    const updated = await this.prisma.financialMovement.update({
-      where: { id },
-      data,
-      select: FINANCIAL_MOVEMENT_SELECT,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.financialMovement.update({
+        where: { id },
+        data,
+        select: FINANCIAL_MOVEMENT_SELECT,
+      });
+
+      // Recalcular delta de saldo si cambió monto, tipo o estado
+      const oldWasPosted = existing.status === FinancialMovementStatus.POSTED;
+      const newIsPosted = result.status === FinancialMovementStatus.POSTED;
+      const amountChanged = input.amount !== undefined;
+      const typeChanged = input.movementType !== undefined;
+      const statusChanged = input.status !== undefined;
+
+      if (amountChanged || typeChanged || statusChanged) {
+        // Revertir el efecto anterior si estaba POSTED
+        if (oldWasPosted) {
+          const oldDelta = this.computeBalanceDelta(
+            existing.movementType as FinancialMovementType,
+            existing.amount,
+          );
+          await tx.bankAccount.update({
+            where: { id: existing.bankAccountId },
+            data: { currentBalance: { decrement: oldDelta } },
+          });
+        }
+
+        // Aplicar el nuevo efecto si está POSTED
+        if (newIsPosted) {
+          const newDelta = this.computeBalanceDelta(
+            result.movementType as FinancialMovementType,
+            result.amount,
+          );
+          await tx.bankAccount.update({
+            where: { id: result.bankAccountId },
+            data: { currentBalance: { increment: newDelta } },
+          });
+        }
+      }
+
+      return result;
     });
 
     await this.auditService.auditAction({
@@ -198,24 +291,47 @@ export class FinancialMovementsService {
   async softDelete(id: string): Promise<boolean> {
     const existing = await this.prisma.financialMovement.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true, organizationId: true },
+      select: {
+        id: true,
+        organizationId: true,
+        bankAccountId: true,
+        movementType: true,
+        amount: true,
+        status: true,
+      },
     });
 
     if (!existing) {
       return false;
     }
 
-    const result = await this.prisma.financialMovement.updateMany({
-      where: {
-        id,
-        deletedAt: null,
-      },
-      data: {
-        deletedAt: new Date(),
-      },
+    const deleted = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.financialMovement.updateMany({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      // Revertir el saldo si el movimiento estaba contabilizado
+      if (result.count > 0 && existing.status === FinancialMovementStatus.POSTED) {
+        const delta = this.computeBalanceDelta(
+          existing.movementType as FinancialMovementType,
+          existing.amount,
+        );
+        await tx.bankAccount.update({
+          where: { id: existing.bankAccountId },
+          data: { currentBalance: { decrement: delta } },
+        });
+      }
+
+      return result;
     });
 
-    if (result.count > 0) {
+    if (deleted.count > 0) {
       await this.auditService.auditAction({
         organizationId: existing.organizationId,
         action: 'FINANCIAL_MOVEMENT_DELETED',
@@ -226,7 +342,7 @@ export class FinancialMovementsService {
       });
     }
 
-    return result.count > 0;
+    return deleted.count > 0;
   }
 
   async uploadProof(

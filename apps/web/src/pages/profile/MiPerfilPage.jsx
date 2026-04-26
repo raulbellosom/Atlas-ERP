@@ -292,6 +292,26 @@ export default function MiPerfilPage() {
                 {statusLabel}
               </Badge>
             </div>
+            <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
+              <span className="text-xs font-medium text-text-secondary w-36 shrink-0 pt-0.5">
+                Roles
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {user?.userRoles?.length > 0 ? (
+                  user.userRoles.map((ur) => (
+                    <Badge key={ur.role.id} variant="blue" size="xs">
+                      {ur.role.name}
+                    </Badge>
+                  ))
+                ) : user?.role ? (
+                  <Badge variant="blue" size="xs">
+                    {user.role}
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-text-disabled">—</span>
+                )}
+              </div>
+            </div>
             <ReadField
               label="Último acceso"
               value={user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString('es-MX') : null}

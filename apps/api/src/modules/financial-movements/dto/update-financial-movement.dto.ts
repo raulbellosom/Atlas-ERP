@@ -36,6 +36,14 @@ export class UpdateFinancialMovementDto {
   currencyCode?: string;
 
   @IsOptional()
+  @IsString()
+  exchangeRate?: string;
+
+  @IsOptional()
+  @IsString()
+  originalAmount?: string;
+
+  @IsOptional()
   @IsDateString()
   occurredAt?: string;
 

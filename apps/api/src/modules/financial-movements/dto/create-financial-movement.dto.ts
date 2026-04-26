@@ -39,6 +39,14 @@ export class CreateFinancialMovementDto {
   @Matches(/^[A-Z]{3}$/)
   currencyCode?: string;
 
+  @IsOptional()
+  @IsString()
+  exchangeRate?: string;
+
+  @IsOptional()
+  @IsString()
+  originalAmount?: string;
+
   @IsDateString()
   occurredAt!: string;
 

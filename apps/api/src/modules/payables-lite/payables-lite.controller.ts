@@ -8,9 +8,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
+import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { CreatePayableLiteDto } from './dto/create-payable-lite.dto';
+import { RegisterPaymentDto } from './dto/register-payment.dto';
 import { ListPayablesLiteQueryDto } from './dto/list-payables-lite.query.dto';
 import { UpdatePayableLiteDto } from './dto/update-payable-lite.dto';
 import { PayablesLiteService } from './payables-lite.service';
@@ -63,5 +66,20 @@ export class PayablesLiteController {
       throw new NotFoundException('Cuenta por pagar no encontrada.');
     }
     return { deleted: true };
+  }
+
+  @RequireAllPermissions('finops:payable:write')
+  @Post(':id/payments')
+  async registerPayment(
+    @Param('id') id: string,
+    @Body() dto: RegisterPaymentDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.sub ?? '';
+    const updated = await this.payablesLiteService.registerPayment(id, dto, userId);
+    if (!updated) {
+      throw new NotFoundException('Cuenta por pagar no encontrada.');
+    }
+    return updated;
   }
 }

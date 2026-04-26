@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth.store';
 import { useApiError } from '@/hooks/useApiError';
 import { usePermissions } from '@/hooks/usePermissions';
-import { usePayables, useDeletePayable } from '@/modules/financial-operations/hooks/useCxcCxp';
+import {
+  useCounterparties,
+  useDeleteCounterparty,
+} from '@/modules/financial-operations/hooks/useCounterparties';
 import { FINOPS_PERMISSIONS } from '@/modules/financial-operations/routes';
-import { formatDate } from '@/lib/i18n';
-import FinancialTable, {
-  moneyRender,
-} from '@/modules/financial-operations/components/FinancialTable';
-import FinancialSummaryCard from '@/modules/financial-operations/components/FinancialSummaryCard';
+import FinancialTable from '@/modules/financial-operations/components/FinancialTable';
 import Badge from '@/components/ui/Badge';
 import SearchInput from '@/components/ui/SearchInput';
 import PageHeader from '@/components/ui/PageHeader';
@@ -18,53 +17,42 @@ import AlertDialog from '@/components/ui/AlertDialog';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { useToast } from '@/components/ui/Toast';
 
-/**
- * PayablesPage — Cuentas por pagar simples.
- */
-
-const statusVariants = {
-  OPEN: 'yellow',
-  PARTIAL: 'blue',
-  PAID: 'green',
-  OVERDUE: 'red',
-  VOIDED: 'gray',
-};
-const statusLabels = {
-  OPEN: 'Abierto',
-  PARTIAL: 'Parcial',
-  PAID: 'Pagado',
-  OVERDUE: 'Vencido',
-  VOIDED: 'Anulado',
+const statusVariants = { ACTIVE: 'green', INACTIVE: 'gray', SUSPENDED: 'red' };
+const typeLabels = {
+  CUSTOMER: 'Cliente',
+  VENDOR: 'Proveedor',
+  EMPLOYEE: 'Empleado',
+  OTHER: 'Otro',
 };
 
 const matcher = (item, q) =>
-  item.reference?.toLowerCase().includes(q) ||
-  item.description?.toLowerCase().includes(q) ||
-  item.externalReference?.toLowerCase().includes(q);
+  item.name?.toLowerCase().includes(q) ||
+  item.displayName?.toLowerCase().includes(q) ||
+  item.taxId?.toLowerCase().includes(q);
 
-export default function PayablesPage() {
+export default function CounterpartiesPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
   const { handleError } = useApiError();
   const { hasAny, isAdmin } = usePermissions();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const canWrite = isAdmin || hasAny(FINOPS_PERMISSIONS.PAYABLE_WRITE);
+  const canWrite = isAdmin || hasAny(FINOPS_PERMISSIONS.RECEIVABLE_WRITE); // Compartiendo permisos con CxC/CxP
 
-  const { data: payables = [], isLoading, error } = usePayables(organizationId);
-  const deleteMutation = useDeletePayable();
+  const { data: counterparties = [], isLoading, error } = useCounterparties(organizationId);
+  const deleteMutation = useDeleteCounterparty();
   useEffect(() => {
     if (error) handleError(error);
   }, [error, handleError]);
 
-  const { query, setQuery, results } = useGlobalSearch(payables, matcher);
+  const { query, setQuery, results } = useGlobalSearch(counterparties, matcher);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
-      toast.success('CxP eliminada');
+      toast.success('Contraparte eliminada');
     } catch (err) {
       handleError(err);
     } finally {
@@ -72,54 +60,36 @@ export default function PayablesPage() {
     }
   };
 
-  const totalAmount = payables.reduce((s, r) => s + parseFloat(r.amount ?? '0'), 0);
-  const totalPaid = payables.reduce((s, r) => s + parseFloat(r.amountPaid ?? '0'), 0);
-  const pending = payables.filter(
-    (r) => r.status === 'OPEN' || r.status === 'PARTIAL' || r.status === 'OVERDUE',
-  );
-
   const COLUMNS = [
     {
-      key: 'reference',
-      header: 'Referencia',
+      key: 'name',
+      header: 'Nombre',
       sortable: true,
       render: (r) => (
-        <span className="font-mono text-xs">{r.reference || r.externalReference || '—'}</span>
+        <span className="font-medium text-text-primary">{r.displayName || r.name}</span>
       ),
     },
     {
-      key: 'description',
-      header: 'Descripción',
+      key: 'type',
+      header: 'Tipo',
+      sortable: true,
       render: (r) => (
-        <span className="text-sm truncate max-w-[180px] block">{r.description || '—'}</span>
+        <span className="text-sm text-text-secondary">{typeLabels[r.type] ?? r.type}</span>
       ),
     },
     {
-      key: 'amount',
-      header: 'Monto',
+      key: 'taxId',
+      header: 'RFC / ID Fiscal',
       sortable: true,
-      render: moneyRender({ colorMode: 'expense' }),
-    },
-    {
-      key: 'amountPaid',
-      header: 'Pagado',
-      render: moneyRender({ amountKey: 'amountPaid', colorMode: 'expense' }),
+      render: (r) => <span className="font-mono text-xs">{r.taxId || '—'}</span>,
     },
     {
       key: 'status',
       header: 'Estado',
       render: (r) => (
         <Badge variant={statusVariants[r.status] ?? 'gray'} size="xs">
-          {statusLabels[r.status] ?? r.status}
+          {r.status}
         </Badge>
-      ),
-    },
-    {
-      key: 'dueAt',
-      header: 'Vence',
-      sortable: true,
-      render: (r) => (
-        <span className="text-xs text-text-secondary">{r.dueAt ? formatDate(r.dueAt) : '—'}</span>
       ),
     },
     ...(canWrite
@@ -150,29 +120,11 @@ export default function PayablesPage() {
                 }
               >
                 <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/financial-operations/payables/${row.id}`);
-                  }}
-                >
-                  Ver detalle
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/financial-operations/payables/${row.id}/edit`);
-                  }}
+                  onClick={() => navigate(`/financial-operations/counterparties/${row.id}/edit`)}
                 >
                   Editar
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteTarget(row);
-                  }}
-                >
+                <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>
                   Eliminar
                 </DropdownMenuItem>
               </DropdownMenu>
@@ -185,13 +137,13 @@ export default function PayablesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Cuentas por pagar"
-        description="Gestión y seguimiento de cuentas por pagar (CxP)"
+        title="Contrapartes"
+        description="Directorio de clientes, proveedores y empleados"
       >
         {canWrite && (
           <button
             type="button"
-            onClick={() => navigate('/financial-operations/payables/new')}
+            onClick={() => navigate('/financial-operations/counterparties/new')}
             className="inline-flex items-center gap-2 rounded-lg bg-meridian-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-meridian-700 transition-colors"
           >
             <svg
@@ -207,12 +159,11 @@ export default function PayablesPage() {
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Nueva CxP
+            Nueva Contraparte
           </button>
         )}
       </PageHeader>
 
-      {/* Panel de búsqueda */}
       <div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-surface-subtle">
           <svg
@@ -236,26 +187,10 @@ export default function PayablesPage() {
           <SearchInput
             value={query}
             onChange={setQuery}
-            placeholder="Buscar por referencia o descripción..."
+            placeholder="Buscar por nombre, RFC..."
             className="w-full sm:w-80"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <FinancialSummaryCard
-          title="Total CxP"
-          amount={String(totalAmount)}
-          variant="expense"
-          subtitle={`${payables.length} registros`}
-        />
-        <FinancialSummaryCard title="Total pagado" amount={String(totalPaid)} variant="expense" />
-        <FinancialSummaryCard
-          title="Por pagar"
-          amount={String(totalAmount - totalPaid)}
-          variant="expense"
-          subtitle={`${pending.length} items`}
-        />
       </div>
 
       <FinancialTable
@@ -263,16 +198,15 @@ export default function PayablesPage() {
         data={results}
         isLoading={isLoading}
         sortable
-        emptyTitle="Sin cuentas por pagar"
-        emptyDescription="Registra tu primera CxP"
-        onRowClick={(row) => navigate(`/financial-operations/payables/${row.id}`)}
+        emptyTitle="Sin contrapartes"
+        emptyDescription="Agrega tu primer cliente o proveedor"
       />
 
       <AlertDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Eliminar CxP"
-        description={`¿Eliminar "${deleteTarget?.reference ?? 'este registro'}"?`}
+        title="Eliminar Contraparte"
+        description={`¿Eliminar a "${deleteTarget?.name ?? 'este registro'}"?`}
         cancelLabel="Cancelar"
         confirmLabel="Eliminar"
         onConfirm={handleDelete}

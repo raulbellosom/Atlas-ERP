@@ -8,9 +8,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { RequireAllPermissions } from '../../common/decorators/permissions.decorator';
+import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { CreateReceivableLiteDto } from './dto/create-receivable-lite.dto';
+import { RegisterPaymentDto } from './dto/register-payment.dto';
 import { ListReceivablesLiteQueryDto } from './dto/list-receivables-lite.query.dto';
 import { UpdateReceivableLiteDto } from './dto/update-receivable-lite.dto';
 import { ReceivablesLiteService } from './receivables-lite.service';
@@ -63,5 +66,20 @@ export class ReceivablesLiteController {
       throw new NotFoundException('Cuenta por cobrar no encontrada.');
     }
     return { deleted: true };
+  }
+
+  @RequireAllPermissions('finops:receivable:write')
+  @Post(':id/payments')
+  async registerPayment(
+    @Param('id') id: string,
+    @Body() dto: RegisterPaymentDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.sub ?? '';
+    const updated = await this.receivablesLiteService.registerPayment(id, dto, userId);
+    if (!updated) {
+      throw new NotFoundException('Cuenta por cobrar no encontrada.');
+    }
+    return updated;
   }
 }
