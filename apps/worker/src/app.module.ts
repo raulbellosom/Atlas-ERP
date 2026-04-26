@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
+import { PrismaService } from './infrastructure/prisma.service';
+import { OutboundEmailWorkerService } from './tasks/outbound-email-worker.service';
 import { TaskEventsSubscriberService } from './tasks/task-events-subscriber.service';
 
 @Module({
@@ -10,6 +12,6 @@ import { TaskEventsSubscriberService } from './tasks/task-events-subscriber.serv
       validate: validateEnv,
     }),
   ],
-  providers: [TaskEventsSubscriberService],
+  providers: [PrismaService, TaskEventsSubscriberService, OutboundEmailWorkerService],
 })
 export class AppModule {}

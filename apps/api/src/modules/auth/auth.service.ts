@@ -10,6 +10,7 @@ import { JwtTokenService, type JwtPayload } from '../../common/security/jwt-toke
 import { PasswordService } from '../../common/security/password.service';
 import { AuditService } from '../audit/audit.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { UserInvitationsService } from '../users/user-invitations.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
@@ -56,6 +57,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly auditService: AuditService,
     private readonly authorizationService: AuthorizationService,
+    private readonly userInvitationsService: UserInvitationsService,
   ) {}
 
   getStatus(): AuthStatusResponse {
@@ -198,10 +200,7 @@ export class AuthService {
     }
 
     if (dto.allSessions === 'true') {
-      await this.sessionsService.revokeAllUserSessions(
-        requestUser.sub,
-        requestUser.organizationId,
-      );
+      await this.sessionsService.revokeAllUserSessions(requestUser.sub, requestUser.organizationId);
       await this.auditService.auditAction({
         organizationId: requestUser.organizationId,
         actorId: requestUser.sub,
@@ -312,6 +311,14 @@ export class AuthService {
         branchId: user.branchId,
       })),
     };
+  }
+
+  async validateInvitation(token: string) {
+    return this.userInvitationsService.validateInvitation(token);
+  }
+
+  async acceptInvitation(token: string, password: string) {
+    return this.userInvitationsService.acceptInvitation(token, password);
   }
 
   private async buildAuthUserProfile(base: {

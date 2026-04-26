@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class InviteUserDto {
   @IsString()
@@ -11,10 +11,6 @@ export class InviteUserDto {
   @IsString()
   @MaxLength(120)
   displayName?: string;
-
-  @IsString()
-  @MinLength(8)
-  password!: string;
 
   @IsOptional()
   @IsString()

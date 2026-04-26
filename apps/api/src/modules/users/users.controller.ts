@@ -4,11 +4,15 @@ import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UserInvitationsService } from './user-invitations.service';
 import { UsersService } from './users.service';
 
 @Controller('v1/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userInvitationsService: UserInvitationsService,
+  ) {}
 
   @Get()
   findAll(@Query() query: ListUsersQueryDto) {
@@ -30,6 +34,12 @@ export class UsersController {
     return this.usersService.countActiveByOrganization(organizationId);
   }
 
+  @RequireAllPermissions('auth:user:read')
+  @Get('invitations')
+  findInvitations(@Query('organizationId') organizationId: string) {
+    return this.userInvitationsService.listInvitations(organizationId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOneById(id);
@@ -37,8 +47,20 @@ export class UsersController {
 
   @RequireAllPermissions('auth:user:write')
   @Post('invite')
-  invite(@Body() dto: InviteUserDto) {
-    return this.usersService.inviteUser(dto);
+  invite(@Body() dto: InviteUserDto, @Req() req: AuthenticatedRequest) {
+    return this.userInvitationsService.createInvitation(dto, req.user?.sub);
+  }
+
+  @RequireAllPermissions('auth:user:write')
+  @Post('invite/:id/resend')
+  resendInvitation(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.userInvitationsService.resendInvitation(id, req.user?.sub);
+  }
+
+  @RequireAllPermissions('auth:user:write')
+  @Post('invite/:id/revoke')
+  revokeInvitation(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.userInvitationsService.revokeInvitation(id, req.user?.sub);
   }
 
   @RequireAllPermissions('auth:user:write')

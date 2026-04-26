@@ -26,3 +26,18 @@ export async function revokeSession(id) {
   const res = await apiClient.delete(`/v1/sessions/${id}`);
   return res.data?.data ?? res.data;
 }
+
+export async function fetchEmailOutboundConfig() {
+  const res = await apiClient.get('/v1/settings/email-outbound');
+  return res.data?.data ?? res.data;
+}
+
+export async function updateEmailOutboundConfig(payload) {
+  const res = await apiClient.put('/v1/settings/email-outbound', payload);
+  return res.data?.data ?? res.data;
+}
+
+export async function testEmailOutbound(payload) {
+  const res = await apiClient.post('/v1/settings/email-outbound/test', payload ?? {});
+  return res.data?.data ?? res.data;
+}

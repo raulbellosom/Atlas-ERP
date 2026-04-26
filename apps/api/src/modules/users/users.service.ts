@@ -1,11 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ErrorCode } from '../../common/errors';
-import { PasswordService } from '../../common/security/password.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { SessionsService } from '../sessions/sessions.service';
-import { InviteUserDto } from './dto/invite-user.dto';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -49,7 +47,6 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly sessionsService: SessionsService,
     private readonly auditService: AuditService,
-    private readonly passwordService: PasswordService,
   ) {}
 
   async findAll(query: ListUsersQueryDto): Promise<UserSummary[]> {
@@ -308,23 +305,5 @@ export class UsersService {
     });
 
     return updated;
-  }
-
-  async inviteUser(dto: InviteUserDto): Promise<UserSummary> {
-    const passwordHash = await this.passwordService.hash(dto.password);
-    const user = await this.prisma.user.create({
-      data: {
-        organizationId: dto.organizationId,
-        email: dto.email,
-        displayName: dto.displayName ?? dto.email,
-        passwordHash,
-        isActive: true,
-      },
-      select: USER_SELECT,
-    });
-    if (dto.roleId) {
-      await this.prisma.userRole.create({ data: { userId: user.id, roleId: dto.roleId } });
-    }
-    return user;
   }
 }

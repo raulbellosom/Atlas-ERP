@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchFeatureFlags,
   fetchHealth,
+  fetchEmailOutboundConfig,
   fetchSessions,
   revokeSession,
+  testEmailOutbound,
   toggleFeatureFlag,
+  updateEmailOutboundConfig,
 } from '../api/instancia.api';
 
 export function useHealth() {
@@ -43,5 +46,26 @@ export function useRevokeSession() {
   return useMutation({
     mutationFn: (id) => revokeSession(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
+  });
+}
+
+export function useEmailOutboundConfig() {
+  return useQuery({
+    queryKey: ['email-outbound-config'],
+    queryFn: fetchEmailOutboundConfig,
+  });
+}
+
+export function useUpdateEmailOutboundConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => updateEmailOutboundConfig(payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['email-outbound-config'] }),
+  });
+}
+
+export function useTestEmailOutbound() {
+  return useMutation({
+    mutationFn: (payload) => testEmailOutbound(payload),
   });
 }

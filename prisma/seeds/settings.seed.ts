@@ -38,6 +38,29 @@ const GLOBAL_SETTINGS: SettingSeed[] = [
     description: 'Número máximo de reintentos de sincronización.',
     isActive: true,
   },
+  {
+    key: 'platform.email.outbound',
+    value: JSON.stringify({
+      provider: 'smtp',
+      host: '',
+      port: 587,
+      secure: false,
+      user: '',
+      password: '',
+      fromName: 'AtlasERP',
+      fromEmail: '',
+      timeoutMs: 10000,
+      isActive: false,
+    }),
+    description: 'Configuracion global de correo saliente (SMTP).',
+    isActive: true,
+  },
+  {
+    key: 'platform.email.outbound.health',
+    value: JSON.stringify({}),
+    description: 'Ultimo estado de salud del envio de correo saliente.',
+    isActive: true,
+  },
 ];
 
 // Only true app configuration — identity/branding/address/fiscal data lives in Organization

@@ -4,6 +4,7 @@ export const ALLOWED_ATTACHMENT_MIME_TYPES = [
   'application/pdf',
   'image/jpeg',
   'image/png',
+  'image/webp',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'text/csv',
 ] as const;
@@ -13,6 +14,7 @@ export const ALLOWED_ATTACHMENT_EXTENSIONS = [
   '.jpg',
   '.jpeg',
   '.png',
+  '.webp',
   '.xlsx',
   '.csv',
 ] as const;

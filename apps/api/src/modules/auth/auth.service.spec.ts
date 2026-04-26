@@ -6,6 +6,7 @@ import { JwtTokenService } from '../../common/security/jwt-token.service';
 import { PasswordService } from '../../common/security/password.service';
 import { AuditService } from '../audit/audit.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { UserInvitationsService } from '../users/user-invitations.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 
@@ -48,6 +49,11 @@ describe('AuthService', () => {
     resolveAccessContext: jest.fn(),
   };
 
+  const userInvitationsServiceMock = {
+    validateInvitation: jest.fn(),
+    acceptInvitation: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -60,6 +66,7 @@ describe('AuthService', () => {
         { provide: PasswordService, useValue: passwordServiceMock },
         { provide: AuditService, useValue: auditServiceMock },
         { provide: AuthorizationService, useValue: authorizationServiceMock },
+        { provide: UserInvitationsService, useValue: userInvitationsServiceMock },
       ],
     }).compile();
 
@@ -103,9 +110,7 @@ describe('AuthService', () => {
       roleIds: ['role-owner'],
       permissions: ['tasks:catalog:read', 'finops:bank_account:write'],
     });
-    expect(authorizationServiceMock.resolveAccessContext).toHaveBeenCalledWith(
-      'user-1',
-    );
+    expect(authorizationServiceMock.resolveAccessContext).toHaveBeenCalledWith('user-1');
   });
 
   it('getProfile includes role metadata and permissions', async () => {
@@ -133,10 +138,7 @@ describe('AuthService', () => {
 
     expect(result.role).toBe('admin');
     expect(result.roleIds).toEqual(['role-admin']);
-    expect(result.permissions).toEqual([
-      'tasks:catalog:read',
-      'tasks:catalog:write',
-    ]);
+    expect(result.permissions).toEqual(['tasks:catalog:read', 'tasks:catalog:write']);
   });
 
   it('login throws unauthorized when password is invalid', async () => {

@@ -1,12 +1,14 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { type AuthenticatedRequest } from '../../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
+import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ValidateInvitationQueryDto } from './dto/validate-invitation.query.dto';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -21,10 +23,7 @@ export class AuthController {
   @Public()
   @RateLimit({ limit: 10, windowMs: 60_000 })
   @Post('login')
-  login(
-    @Body() dto: LoginDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  login(@Body() dto: LoginDto, @Req() req: AuthenticatedRequest) {
     const ipAddress = req.ip ?? req.socket?.remoteAddress;
     const userAgent = req.headers['user-agent'];
     return this.authService.login(dto, ipAddress, userAgent);
@@ -45,10 +44,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(
-    @Body() dto: LogoutDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  logout(@Body() dto: LogoutDto, @Req() req: AuthenticatedRequest) {
     return this.authService.logout(dto, req.user);
   }
 
@@ -57,5 +53,19 @@ export class AuthController {
   @Post('refresh')
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto);
+  }
+
+  @Public()
+  @RateLimit({ limit: 30, windowMs: 60_000 })
+  @Get('invitations/validate')
+  validateInvitation(@Query() query: ValidateInvitationQueryDto) {
+    return this.authService.validateInvitation(query.token);
+  }
+
+  @Public()
+  @RateLimit({ limit: 15, windowMs: 60_000 })
+  @Post('invitations/accept')
+  acceptInvitation(@Body() dto: AcceptInvitationDto) {
+    return this.authService.acceptInvitation(dto.token, dto.password);
   }
 }

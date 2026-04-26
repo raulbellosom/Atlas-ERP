@@ -41,11 +41,35 @@ function useInviteUser() {
   return useMutation({
     mutationFn: (data) =>
       apiClient.post('/v1/users/invite', data).then((r) => r.data?.data ?? r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+      qc.invalidateQueries({ queryKey: ['user-invitations'] });
+    },
   });
 }
 
-const INVITE_EMPTY = { email: '', displayName: '', password: '', roleId: '' };
+function useInvitations(organizationId) {
+  return useQuery({
+    queryKey: ['user-invitations', organizationId],
+    queryFn: async () => {
+      const res = await apiClient.get('/v1/users/invitations', { params: { organizationId } });
+      const payload = res.data?.data ?? res.data;
+      return Array.isArray(payload) ? payload : (payload?.items ?? []);
+    },
+    enabled: Boolean(organizationId),
+  });
+}
+
+function useInvitationAction(action) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }) =>
+      apiClient.post(`/v1/users/invite/${id}/${action}`).then((r) => r.data?.data ?? r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['user-invitations'] }),
+  });
+}
+
+const INVITE_EMPTY = { email: '', displayName: '', roleId: '' };
 
 function InviteUserModal({ open, onClose, organizationId }) {
   const { handleError } = useApiError();
@@ -63,7 +87,6 @@ function InviteUserModal({ open, onClose, organizationId }) {
   function validate() {
     const errs = {};
     if (!form.email.trim()) errs.email = 'Requerido';
-    if (!form.password || form.password.length < 8) errs.password = 'Mínimo 8 caracteres';
     return errs;
   }
 
@@ -79,10 +102,9 @@ function InviteUserModal({ open, onClose, organizationId }) {
         organizationId,
         email: form.email.trim(),
         displayName: form.displayName.trim() || undefined,
-        password: form.password,
         roleId: form.roleId || undefined,
       });
-      toast.success(`Usuario "${form.email}" invitado correctamente`);
+      toast.success(`Invitacion enviada a "${form.email}"`);
       setForm(INVITE_EMPTY);
       onClose();
     } catch (err) {
@@ -97,7 +119,7 @@ function InviteUserModal({ open, onClose, organizationId }) {
       open={open}
       onClose={onClose}
       title="Invitar usuario"
-      description="El usuario podrá acceder a la plataforma con estas credenciales"
+      description="Se enviara un enlace por correo para activar su cuenta"
       size="sm"
       footer={
         <div className="flex justify-end gap-2">
@@ -129,14 +151,7 @@ function InviteUserModal({ open, onClose, organizationId }) {
           value={form.displayName}
           onChange={(e) => set('displayName', e.target.value)}
         />
-        <Input
-          label="Contraseña"
-          type="password"
-          required
-          value={form.password}
-          onChange={(e) => set('password', e.target.value)}
-          error={errors.password}
-        />
+
         {roleOptions.length > 0 && (
           <Select
             label="Rol"
@@ -193,6 +208,34 @@ const ACTION_CONFIRM_MSGS = {
   deactivate: (u) => `¿Desactivar al usuario "${u.email}"? Perderá acceso a la plataforma.`,
 };
 
+function InvitationStatusBadge({ invitation }) {
+  if (invitation.status === 'ACCEPTED') {
+    return (
+      <Badge variant="green" size="xs">
+        Aceptada
+      </Badge>
+    );
+  }
+  if (invitation.status === 'REVOKED') {
+    return (
+      <Badge variant="red" size="xs">
+        Revocada
+      </Badge>
+    );
+  }
+  if (invitation.status === 'EXPIRED') {
+    return (
+      <Badge variant="amber" size="xs">
+        Expirada
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="blue" size="xs">
+      Enviada
+    </Badge>
+  );
+}
 export default function UsersPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
@@ -201,6 +244,7 @@ export default function UsersPage() {
   const { toast } = useToast();
 
   const { data: users = [], isLoading, error } = useUsers(organizationId);
+  const { data: invitations = [] } = useInvitations(organizationId);
   const { data: employees = [] } = useEmployees(organizationId);
   const { query, setQuery, results } = useGlobalSearch(users, userMatcher);
   const { page, setPage, pageSize, paginate, resetPage } = usePagination(25);
@@ -220,6 +264,8 @@ export default function UsersPage() {
   const unlockMutation = useUserAction('unlock');
   const activateMutation = useUserAction('activate');
   const deactivateMutation = useUserAction('deactivate');
+  const resendInvitationMutation = useInvitationAction('resend');
+  const revokeInvitationMutation = useInvitationAction('revoke');
 
   const mutationMap = {
     lock: lockMutation,
@@ -240,6 +286,24 @@ export default function UsersPage() {
       handleError(err);
     } finally {
       setActionTarget(null);
+    }
+  }
+
+  async function handleResendInvitation(invitation) {
+    try {
+      await resendInvitationMutation.mutateAsync({ id: invitation.id });
+      toast.success(`Invitacion reenviada a "${invitation.email}"`);
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
+  async function handleRevokeInvitation(invitation) {
+    try {
+      await revokeInvitationMutation.mutateAsync({ id: invitation.id });
+      toast.success(`Invitacion revocada para "${invitation.email}"`);
+    } catch (err) {
+      handleError(err);
     }
   }
 
@@ -373,6 +437,8 @@ export default function UsersPage() {
       : []),
   ];
 
+  const latestInvitations = invitations.slice(0, 8);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -414,6 +480,59 @@ export default function UsersPage() {
             className="w-full sm:w-80"
           />
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border bg-surface-subtle">
+          <span className="label-caps text-[10px]">Invitaciones</span>
+          <span className="text-xs text-text-secondary">{invitations.length} totales</span>
+        </div>
+        {latestInvitations.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-text-disabled">No hay invitaciones registradas.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {latestInvitations.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-text-primary truncate">{invitation.email}</p>
+                  <p className="text-xs text-text-secondary">
+                    {invitation.lastSentAt
+                      ? `Ultimo envio: ${formatDate(invitation.lastSentAt)}`
+                      : 'Sin envio registrado'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <InvitationStatusBadge invitation={invitation} />
+                  {isAdmin &&
+                    invitation.status !== 'ACCEPTED' &&
+                    invitation.status !== 'REVOKED' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleResendInvitation(invitation)}
+                        disabled={resendInvitationMutation.isPending}
+                      >
+                        Reenviar
+                      </Button>
+                    )}
+                  {isAdmin && invitation.status === 'PENDING' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRevokeInvitation(invitation)}
+                      disabled={revokeInvitationMutation.isPending}
+                    >
+                      Revocar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Table

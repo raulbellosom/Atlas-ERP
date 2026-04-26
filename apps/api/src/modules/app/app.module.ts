@@ -12,6 +12,7 @@ import { ScopeGuard } from '../../common/guards/scope.guard';
 import { SecurityModule } from '../../common/security/security.module';
 import { ApiConfigModule } from '../../config/config.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
+import { RedisModule } from '../../infrastructure/redis/redis.module';
 import { StorageModule } from '../../infrastructure/storage/storage.module';
 import { AttachmentsModule } from '../attachments/attachments.module';
 import { AuditModule } from '../audit/audit.module';
@@ -80,6 +81,7 @@ import { AppService } from './app.service';
       ignoreErrors: false,
     }),
     PrismaModule,
+    RedisModule,
     SecurityModule,
     StorageModule,
     HealthModule,

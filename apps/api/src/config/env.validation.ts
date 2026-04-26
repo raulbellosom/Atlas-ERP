@@ -6,15 +6,7 @@
  * Se usa con @nestjs/config: ConfigModule.forRoot({ validate })
  */
 import { plainToInstance } from 'class-transformer';
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Min,
-  validateSync,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUrl, Min, validateSync } from 'class-validator';
 
 type NodeEnvType = 'development' | 'production' | 'test';
 
@@ -65,6 +57,10 @@ class EnvironmentVariables {
   @IsString()
   JWT_EXPIRES_IN?: string;
 
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  WEB_APP_URL?: string;
+
   // ── Servidor ──────────────────────────────────────────────────────────────
   @IsOptional()
   @IsInt()
@@ -85,9 +81,7 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
   });
 
   if (errors.length > 0) {
-    throw new Error(
-      `[AtlasERP API] Configuracion de entorno invalida:\n${errors.toString()}`,
-    );
+    throw new Error(`[AtlasERP API] Configuracion de entorno invalida:\n${errors.toString()}`);
   }
 
   return validatedConfig;

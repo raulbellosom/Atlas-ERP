@@ -12,12 +12,14 @@ import { TooltipProvider } from '@/components/ui/Tooltip';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const AcceptInvitePage = lazy(() => import('@/pages/auth/AcceptInvitePage'));
 const SetupPage = lazy(() => import('@/pages/setup/SetupPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const MiPerfilPage = lazy(() => import('@/pages/profile/MiPerfilPage'));
 const ModuleStorePage = lazy(() => import('@/modules/module-store/pages/ModuleStorePage'));
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const RolesPage = lazy(() => import('@/pages/roles/RolesPage'));
+const RolePermissionsPage = lazy(() => import('@/pages/roles/RolePermissionsPage'));
 const AuditPage = lazy(() => import('@/pages/audit/AuditPage'));
 const AttachmentsPage = lazy(() => import('@/pages/attachments/AttachmentsPage'));
 const SyncCenterPage = lazy(() => import('@/pages/sync/SyncCenterPage'));
@@ -59,6 +61,9 @@ const InstanciaSessionsPage = lazy(() => import('@/modules/instancia/pages/Insta
 const InstanciaFeatureFlagsPage = lazy(
   () => import('@/modules/instancia/pages/InstanciaFeatureFlagsPage'),
 );
+const InstanciaEmailOutboundPage = lazy(
+  () => import('@/modules/instancia/pages/InstanciaEmailOutboundPage'),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +86,7 @@ function App() {
                   <Route element={<AlreadyAuth />}>
                     <Route element={<PublicLayout />}>
                       <Route path="/login" element={<LoginPage />} />
+                      <Route path="/auth/accept-invite" element={<AcceptInvitePage />} />
                       <Route path="/setup" element={<SetupPage />} />
                     </Route>
                   </Route>
@@ -91,6 +97,7 @@ function App() {
                       <Route path="/branches" element={<BranchesPage />} />
                       <Route path="/users" element={<UsersPage />} />
                       <Route path="/roles" element={<RolesPage />} />
+                      <Route path="/roles/:roleId/permissions" element={<RolePermissionsPage />} />
                       <Route path="/audit" element={<AuditPage />} />
                       <Route path="/attachments" element={<AttachmentsPage />} />
                       <Route path="/sync" element={<SyncCenterPage />} />
@@ -161,6 +168,7 @@ function App() {
                     <Route index element={<InstanciaHomePage />} />
                     <Route path="sesiones" element={<InstanciaSessionsPage />} />
                     <Route path="funciones" element={<InstanciaFeatureFlagsPage />} />
+                    <Route path="correo" element={<InstanciaEmailOutboundPage />} />
                   </Route>
 
                   <Route path="/" element={<Navigate to="/login" replace />} />

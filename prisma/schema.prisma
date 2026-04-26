@@ -52,6 +52,8 @@ model Organization {
   sessions                Session[]
   refreshTokens           RefreshToken[]
   passwordResetTokens     PasswordResetToken[]
+  userInvitations         UserInvitation[]
+  outboundEmailJobs       OutboundEmailJob[]
   bankAccountTypes        BankAccountType[]
   bankAccounts            BankAccount[]
   financialMovements      FinancialMovement[]
@@ -155,6 +157,7 @@ model User {
   createdCounterpartiesLite    CounterpartyLite[]            @relation("UserCreatedCounterpartiesLite")
   createdReceivablesLite       ReceivableLite[]              @relation("UserCreatedReceivablesLite")
   createdPayablesLite          PayableLite[]                 @relation("UserCreatedPayablesLite")
+  invitedUserInvitations       UserInvitation[]              @relation("UserInvitedUserInvitations")
   @@unique([organizationId, email])
   @@index([organizationId, isActive])
   @@index([branchId])
@@ -178,6 +181,7 @@ model Role {
   childRoles               Role[]            @relation("RoleHierarchy")
   userRoles                UserRole[]
   rolePermissions          RolePermission[]
+  userInvitations          UserInvitation[]
   @@unique([organizationId, name])
   @@index([organizationId, isActive])
   @@index([parentRoleId])
@@ -935,6 +939,59 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model UserInvitation {
+  id             String               @id @default(cuid())
+  organizationId String
+  email          String
+  displayName    String?
+  roleId         String?
+  invitedById    String?
+  tokenHash      String               @unique
+  status         UserInvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  lastSentAt     DateTime?
+  sendCount      Int                  @default(1)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  role         Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invitedBy    User?        @relation("UserInvitedUserInvitations", fields: [invitedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, email])
+  @@index([expiresAt])
+  @@map("user_invitations")
+}
+
+model OutboundEmailJob {
+  id             String                 @id @default(cuid())
+  organizationId String?
+  type           String
+  toEmail        String
+  subject        String
+  htmlBody       String
+  textBody       String
+  status         OutboundEmailJobStatus @default(PENDING)
+  attemptCount   Int                    @default(0)
+  maxAttempts    Int                    @default(3)
+  nextAttemptAt  DateTime               @default(now())
+  lockedAt       DateTime?
+  sentAt         DateTime?
+  lastError      String?
+  provider       String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([organizationId, status])
+  @@map("outbound_email_jobs")
+}
+
 // ─── Accounting Core ─────────────────────────────────────────────────────────
 
 model ChartOfAccount {
@@ -1225,6 +1282,21 @@ enum RefreshTokenStatus {
   ROTATED
   REVOKED
   EXPIRED
+}
+
+enum UserInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum OutboundEmailJobStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  DEAD
 }
 
 enum AccountType {
