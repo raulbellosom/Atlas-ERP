@@ -138,33 +138,40 @@ function Ico({ n, size = 18, cls = '' }) {
   );
 }
 
-/* ── FloatingInput ──────────────────────────────────────────────────────────── */
+/* ── Field — label outside, consistent with Select ──────────────────────────── */
 
-function FloatingInput({
+function Field({
   id,
   label,
   type = 'text',
   value,
   onChange,
-  onFocus: onFocusProp,
+  onFocus,
   error,
   success,
   required,
   autoComplete,
   helper,
   disabled,
+  placeholder,
 }) {
-  const [focused, setFocused] = useState(false);
-  const raised = focused || Boolean(value);
-
   const borderCls = error
-    ? 'border-error focus:ring-error/40'
+    ? 'border-error focus:border-error focus:shadow-focus-error'
     : success
-      ? 'border-success focus:ring-success/30'
-      : 'border-border focus:border-brand-500 focus:ring-brand-500/25';
+      ? 'border-success focus:border-success'
+      : 'border-border hover:border-border-strong focus:border-border-focus focus:shadow-focus';
 
   return (
-    <div>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium text-text-primary select-none">
+        {label}
+        {required && (
+          <span className="ml-0.5 text-error" aria-hidden="true">
+            *
+          </span>
+        )}
+      </label>
+
       <div className="relative">
         <input
           id={id}
@@ -172,41 +179,21 @@ function FloatingInput({
           type={type}
           value={value}
           onChange={onChange}
-          onFocus={() => {
-            setFocused(true);
-            onFocusProp?.();
-          }}
-          onBlur={() => setFocused(false)}
+          onFocus={onFocus}
           required={required}
           autoComplete={autoComplete}
           disabled={disabled}
-          placeholder=" "
-          className={`peer w-full h-13 px-4 pt-5 pb-1 text-[15px] text-text-primary bg-surface border rounded-lg outline-none ring-0 focus:ring-2 transition-all duration-150 touch-manipulation ${borderCls} disabled:opacity-50 disabled:cursor-not-allowed`}
+          placeholder={placeholder}
+          className={`w-full rounded-lg border bg-surface px-3 py-[0.5625rem] text-sm text-text-primary outline-none ring-0 transition-shadow touch-manipulation focus:outline-none ${borderCls} disabled:opacity-50 disabled:cursor-not-allowed`}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-err` : helper ? `${id}-help` : undefined}
         />
-        <label
-          htmlFor={id}
-          className={`absolute left-4 pointer-events-none select-none transition-all duration-150 ${
-            raised
-              ? `top-2.25 text-[11px] font-semibold ${error ? 'text-error' : 'text-brand-500'}`
-              : 'top-1/2 -translate-y-1/2 text-[14px] font-medium text-text-tertiary'
-          }`}
-        >
-          {label}
-          {required && (
-            <span className="ml-0.5 text-error" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-
         {success && !error && (
           <span
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-success pointer-events-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-success pointer-events-none"
             aria-hidden="true"
           >
-            <Ico n="check" size={15} />
+            <Ico n="check" size={14} />
           </span>
         )}
       </div>
@@ -215,7 +202,7 @@ function FloatingInput({
         <p
           id={`${id}-err`}
           role="alert"
-          className="mt-1.5 flex items-center gap-1 text-[12px] font-medium text-error"
+          className="flex items-center gap-1 text-xs font-medium text-error"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
@@ -224,7 +211,7 @@ function FloatingInput({
         </p>
       )}
       {helper && !error && (
-        <p id={`${id}-help`} className="mt-1.5 text-[12px] text-text-tertiary">
+        <p id={`${id}-help`} className="text-xs text-text-secondary">
           {helper}
         </p>
       )}
@@ -232,9 +219,9 @@ function FloatingInput({
   );
 }
 
-/* ── PasswordInput ──────────────────────────────────────────────────────────── */
+/* ── PasswordField ──────────────────────────────────────────────────────────── */
 
-function PasswordInput({
+function PasswordField({
   id,
   label,
   value,
@@ -246,17 +233,24 @@ function PasswordInput({
   helper,
 }) {
   const [show, setShow] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const raised = focused || Boolean(value);
 
   const borderCls = error
-    ? 'border-error focus:ring-error/40'
+    ? 'border-error focus:border-error focus:shadow-focus-error'
     : success
-      ? 'border-success focus:ring-success/30'
-      : 'border-border focus:border-brand-500 focus:ring-brand-500/25';
+      ? 'border-success focus:border-success'
+      : 'border-border hover:border-border-strong focus:border-border-focus focus:shadow-focus';
 
   return (
-    <div>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium text-text-primary select-none">
+        {label}
+        {required && (
+          <span className="ml-0.5 text-error" aria-hidden="true">
+            *
+          </span>
+        )}
+      </label>
+
       <div className="relative">
         <input
           id={id}
@@ -264,38 +258,19 @@ function PasswordInput({
           type={show ? 'text' : 'password'}
           value={value}
           onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           required={required}
           autoComplete={autoComplete}
-          placeholder=" "
-          className={`peer w-full h-13 pl-4 pr-12 pt-5 pb-1 text-[15px] text-text-primary bg-surface border rounded-lg outline-none ring-0 focus:ring-2 transition-all duration-150 touch-manipulation font-mono ${borderCls}`}
+          className={`w-full rounded-lg border bg-surface pl-3 pr-11 py-[0.5625rem] text-sm text-text-primary font-mono outline-none ring-0 transition-shadow touch-manipulation focus:outline-none ${borderCls}`}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-err` : helper ? `${id}-help` : undefined}
         />
-        <label
-          htmlFor={id}
-          className={`absolute left-4 pointer-events-none select-none transition-all duration-150 font-sans ${
-            raised
-              ? `top-2.25 text-[11px] font-semibold ${error ? 'text-error' : 'text-brand-500'}`
-              : 'top-1/2 -translate-y-1/2 text-[14px] font-medium text-text-tertiary'
-          }`}
-        >
-          {label}
-          {required && (
-            <span className="ml-0.5 text-error" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-md text-text-tertiary hover:text-text-primary hover:bg-surface-sunken transition-colors cursor-pointer"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-md text-text-disabled hover:text-text-primary hover:bg-surface-sunken transition-colors cursor-pointer"
           aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         >
-          <Ico n={show ? 'eyeOff' : 'eye'} size={16} />
+          <Ico n={show ? 'eyeOff' : 'eye'} size={15} />
         </button>
       </div>
 
@@ -303,7 +278,7 @@ function PasswordInput({
         <p
           id={`${id}-err`}
           role="alert"
-          className="mt-1.5 flex items-center gap-1 text-[12px] font-medium text-error"
+          className="flex items-center gap-1 text-xs font-medium text-error"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
@@ -312,10 +287,23 @@ function PasswordInput({
         </p>
       )}
       {helper && !error && (
-        <p id={`${id}-help`} className="mt-1.5 text-[12px] text-text-tertiary">
+        <p id={`${id}-help`} className="text-xs text-text-secondary">
           {helper}
         </p>
       )}
+    </div>
+  );
+}
+
+/* ── SectionHeader — visual divider with label for form grouping ─────────────── */
+
+function SectionHeader({ label }) {
+  return (
+    <div className="flex items-center gap-3 pt-3">
+      <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest whitespace-nowrap">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
@@ -397,9 +385,9 @@ function StepAccount({ form, onChange, errors }) {
   const lastNameOk = form.ownerLastName.trim().length >= 2;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FloatingInput
+        <Field
           id="ownerFirstName"
           label="Nombre"
           value={form.ownerFirstName}
@@ -408,8 +396,9 @@ function StepAccount({ form, onChange, errors }) {
           success={firstNameOk && !errors.ownerFirstName}
           required
           autoComplete="given-name"
+          placeholder="Juan"
         />
-        <FloatingInput
+        <Field
           id="ownerLastName"
           label="Apellidos"
           value={form.ownerLastName}
@@ -418,9 +407,11 @@ function StepAccount({ form, onChange, errors }) {
           success={lastNameOk && !errors.ownerLastName}
           required
           autoComplete="family-name"
+          placeholder="García López"
         />
       </div>
-      <FloatingInput
+
+      <Field
         id="ownerEmail"
         label="Correo electrónico"
         type="email"
@@ -430,6 +421,7 @@ function StepAccount({ form, onChange, errors }) {
         success={emailOk && !errors.ownerEmail}
         required
         autoComplete="email"
+        placeholder="juan@miempresa.com"
         helper="Será tu usuario para iniciar sesión en AtlasERP"
       />
     </div>
@@ -455,13 +447,12 @@ const INDUSTRIES = [
 ];
 
 const SIZES = [
-  { v: '1-10', l: '1–10 empleados' },
-  { v: '11-50', l: '11–50 empleados' },
-  { v: '51-200', l: '51–200 empleados' },
-  { v: '201+', l: 'Más de 200 empleados' },
+  { v: '1-10', l: '1–10' },
+  { v: '11-50', l: '11–50' },
+  { v: '51-200', l: '51–200' },
+  { v: '201+', l: '200+' },
 ];
 
-/* ── Helpers for color extraction ── */
 function hexDist(a, b) {
   const p = (h) => [
     parseInt(h.slice(1, 3), 16),
@@ -531,8 +522,6 @@ function StepCompany({ form, onChange, errors, onClearError }) {
   const legalOk = form.businessLegalName.trim().length >= 2;
   const comrcOk = form.businessName.trim().length >= 2;
 
-  // logo preview is managed locally via upload token; no base64 fallback needed
-
   const handleLogoFile = async (file) => {
     if (!file) return;
 
@@ -571,9 +560,7 @@ function StepCompany({ form, onChange, errors, onClearError }) {
       const payload = res.data?.data ?? res.data;
       const token = payload?.logoUploadToken;
 
-      if (!token) {
-        throw new Error('No token de upload');
-      }
+      if (!token) throw new Error('No token de upload');
 
       onChange({ target: { name: 'logoUploadToken', value: token } });
       onChange({ target: { name: 'logoFileName', value: file.name } });
@@ -606,9 +593,187 @@ function StepCompany({ form, onChange, errors, onClearError }) {
 
   return (
     <div className="space-y-5">
+      {/* ── Identidad ── */}
+      <SectionHeader label="Identidad" />
+
+      <Field
+        id="businessName"
+        label="Nombre comercial"
+        value={form.businessName}
+        onChange={onChange}
+        onFocus={() => onClearError?.('businessName')}
+        error={errors.businessName}
+        success={comrcOk && !errors.businessName}
+        required
+        autoComplete="off"
+        placeholder="Mi Empresa"
+        helper="Nombre que aparecerá en la interfaz y reportes"
+      />
+
+      <Field
+        id="businessLegalName"
+        label="Razón social"
+        value={form.businessLegalName}
+        onChange={onChange}
+        onFocus={() => onClearError?.('businessLegalName')}
+        error={errors.businessLegalName}
+        success={legalOk && !errors.businessLegalName}
+        required
+        autoComplete="organization"
+        placeholder="Mi Empresa S.A. de C.V."
+        helper="Nombre registrado ante el SAT"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Select
+          id="legalEntityType"
+          label="Tipo de persona"
+          placeholder="Selecciona tipo"
+          options={LEGAL_ENTITY_TYPES.map((t) => ({ value: t, label: t }))}
+          value={form.legalEntityType}
+          onValueChange={(value) => onChange({ target: { name: 'legalEntityType', value } })}
+        />
+
+        <Field
+          id="rfc"
+          label="RFC"
+          value={form.rfc}
+          onChange={onChange}
+          autoComplete="off"
+          placeholder="XAXX010101000"
+          helper="12 o 13 caracteres"
+        />
+      </div>
+
+      {/* ── Datos fiscales ── */}
+      <SectionHeader label="Datos fiscales" />
+
+      <Select
+        id="fiscalRegime"
+        label="Régimen fiscal"
+        placeholder="Selecciona régimen"
+        options={FISCAL_REGIMES}
+        value={form.fiscalRegime}
+        onValueChange={(value) => onChange({ target: { name: 'fiscalRegime', value } })}
+      />
+
+      {/* ── Industria y tamaño ── */}
+      <SectionHeader label="Perfil de empresa" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Select
+          id="industry"
+          label="Sector / Industria"
+          placeholder="Selecciona tu sector"
+          options={INDUSTRIES.map((ind) => ({ value: ind, label: ind }))}
+          value={form.industry}
+          onValueChange={(value) => onChange({ target: { name: 'industry', value } })}
+        />
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-text-primary select-none">
+            Tamaño de empresa
+          </span>
+          <div className="flex gap-2 flex-wrap pt-0.5">
+            {SIZES.map(({ v, l }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => onChange({ target: { name: 'companySize', value: v } })}
+                className={[
+                  'px-3.5 py-[0.5625rem] text-sm font-medium rounded-lg border transition-all duration-150 cursor-pointer leading-none',
+                  form.companySize === v
+                    ? 'bg-brand-500 border-brand-500 text-white'
+                    : 'bg-surface border-border text-text-primary hover:border-border-strong',
+                ].join(' ')}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Contacto ── */}
+      <SectionHeader label="Contacto" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field
+          id="phone"
+          label="Teléfono"
+          value={form.phone}
+          onChange={onChange}
+          autoComplete="tel"
+          placeholder="+52 55 0000 0000"
+        />
+        <Field
+          id="email"
+          label="Correo de contacto"
+          type="email"
+          value={form.email}
+          onChange={onChange}
+          autoComplete="email"
+          placeholder="contacto@miempresa.com"
+        />
+      </div>
+
+      <Field
+        id="website"
+        label="Sitio web"
+        value={form.website}
+        onChange={onChange}
+        autoComplete="url"
+        placeholder="https://miempresa.com"
+      />
+
+      {/* ── Dirección ── */}
+      <SectionHeader label="Dirección" />
+
+      <Field
+        id="street"
+        label="Calle y número"
+        value={form.street}
+        onChange={onChange}
+        autoComplete="street-address"
+        placeholder="Av. Insurgentes Sur 1234"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field
+          id="city"
+          label="Ciudad / Municipio"
+          value={form.city}
+          onChange={onChange}
+          autoComplete="address-level2"
+          placeholder="Ciudad de México"
+        />
+        <Field
+          id="state"
+          label="Estado"
+          value={form.state}
+          onChange={onChange}
+          autoComplete="address-level1"
+          placeholder="CDMX"
+        />
+      </div>
+
+      <Field
+        id="postalCode"
+        label="Código postal"
+        value={form.postalCode}
+        onChange={onChange}
+        autoComplete="postal-code"
+        placeholder="06600"
+      />
+
+      {/* ── Marca ── */}
+      <SectionHeader label="Marca" />
+
+      {/* Logo upload */}
       <div>
-        <p className="text-[11px] font-semibold text-text-secondary mb-2">
-          Logo de empresa <span className="font-normal text-text-tertiary ml-1">opcional</span>
+        <p className="text-sm font-medium text-text-primary mb-2">
+          Logo de empresa{' '}
+          <span className="text-xs font-normal text-text-secondary ml-1">opcional</span>
         </p>
         <div
           role="button"
@@ -632,7 +797,7 @@ function StepCompany({ form, onChange, errors, onClearError }) {
           ].join(' ')}
         >
           {logoPreview ? (
-            <div className="w-18 h-18 rounded-xl overflow-hidden bg-white border border-border shrink-0 flex items-center justify-center shadow-sm">
+            <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-border shrink-0 flex items-center justify-center shadow-sm">
               <img
                 src={logoPreview}
                 alt="Vista previa del logo"
@@ -640,10 +805,10 @@ function StepCompany({ form, onChange, errors, onClearError }) {
               />
             </div>
           ) : (
-            <div className="w-18 h-18 rounded-xl bg-surface-subtle border border-border shrink-0 flex items-center justify-center text-text-tertiary group-hover:text-brand-500 transition-colors">
+            <div className="w-16 h-16 rounded-xl bg-surface-subtle border border-border shrink-0 flex items-center justify-center text-text-tertiary group-hover:text-brand-500 transition-colors">
               <svg
-                width="26"
-                height="26"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -663,9 +828,9 @@ function StepCompany({ form, onChange, errors, onClearError }) {
             {logoPreview ? (
               <>
                 <p className="text-sm font-semibold text-text-primary">Logo cargado</p>
-                <p className="text-xs text-text-tertiary mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {uploadingLogo
-                    ? 'Subiendo logo al almacenamiento...'
+                    ? 'Subiendo al almacenamiento...'
                     : hasPalette
                       ? 'Selecciona un color de la paleta detectada'
                       : 'Haz clic para cambiar'}
@@ -683,8 +848,8 @@ function StepCompany({ form, onChange, errors, onClearError }) {
                 <p className="text-sm font-semibold text-text-primary group-hover:text-brand-600 transition-colors">
                   {uploadingLogo ? 'Subiendo...' : 'Subir imagen'}
                 </p>
-                <p className="text-xs text-text-tertiary mt-0.5">
-                  PNG, JPG, WEBP - Arrastra o haz clic
+                <p className="text-xs text-text-secondary mt-0.5">
+                  PNG, JPG, WEBP · Arrastra o haz clic
                 </p>
               </>
             )}
@@ -692,8 +857,8 @@ function StepCompany({ form, onChange, errors, onClearError }) {
 
           {!logoPreview && (
             <svg
-              width="18"
-              height="18"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -722,161 +887,17 @@ function StepCompany({ form, onChange, errors, onClearError }) {
             }}
           />
         </div>
-        {uploadError && <p className="mt-1.5 text-[12px] text-error">{uploadError}</p>}
+        {uploadError && <p className="mt-1.5 text-xs text-error">{uploadError}</p>}
       </div>
 
-      <FloatingInput
-        id="businessName"
-        label="Nombre comercial"
-        value={form.businessName}
-        onChange={onChange}
-        onFocus={() => onClearError?.('businessName')}
-        error={errors.businessName}
-        success={comrcOk && !errors.businessName}
-        required
-        autoComplete="off"
-        helper="Nombre que aparecerá en la interfaz y reportes"
-      />
-
-      <FloatingInput
-        id="businessLegalName"
-        label="Razon social"
-        value={form.businessLegalName}
-        onChange={onChange}
-        onFocus={() => onClearError?.('businessLegalName')}
-        error={errors.businessLegalName}
-        success={legalOk && !errors.businessLegalName}
-        required
-        autoComplete="organization"
-        helper="Nombre legal registrado"
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Select
-          id="legalEntityType"
-          label="Tipo de persona"
-          placeholder="Selecciona tipo"
-          options={LEGAL_ENTITY_TYPES.map((t) => ({ value: t, label: t }))}
-          value={form.legalEntityType}
-          onValueChange={(value) => onChange({ target: { name: 'legalEntityType', value } })}
-        />
-
-        <FloatingInput
-          id="rfc"
-          label="RFC"
-          value={form.rfc}
-          onChange={onChange}
-          autoComplete="off"
-        />
-      </div>
-
-      <Select
-        id="fiscalRegime"
-        label="Régimen fiscal"
-        placeholder="Selecciona régimen"
-        options={FISCAL_REGIMES}
-        value={form.fiscalRegime}
-        onValueChange={(value) => onChange({ target: { name: 'fiscalRegime', value } })}
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Select
-          id="industry"
-          label="Sector / Industria"
-          placeholder="Selecciona tu sector"
-          options={INDUSTRIES.map((ind) => ({ value: ind, label: ind }))}
-          value={form.industry}
-          onValueChange={(value) => onChange({ target: { name: 'industry', value } })}
-        />
-
-        <div>
-          <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">
-            Tamano de empresa
-          </label>
-          <div className="flex gap-1.5 flex-wrap">
-            {SIZES.map(({ v, l }) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => onChange({ target: { name: 'companySize', value: v } })}
-                className={[
-                  'px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 cursor-pointer',
-                  form.companySize === v
-                    ? 'bg-brand-500 border-brand-500 text-white'
-                    : 'bg-surface border-border text-text-secondary hover:border-brand-400 hover:text-brand-600',
-                ].join(' ')}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FloatingInput
-          id="phone"
-          label="Teléfono"
-          value={form.phone}
-          onChange={onChange}
-          autoComplete="tel"
-        />
-        <FloatingInput
-          id="email"
-          label="Correo de contacto"
-          type="email"
-          value={form.email}
-          onChange={onChange}
-          autoComplete="email"
-        />
-      </div>
-
-      <FloatingInput
-        id="website"
-        label="Sitio web"
-        value={form.website}
-        onChange={onChange}
-        autoComplete="url"
-      />
-
-      <FloatingInput
-        id="street"
-        label="Calle y número"
-        value={form.street}
-        onChange={onChange}
-        autoComplete="street-address"
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FloatingInput
-          id="city"
-          label="Ciudad / Municipio"
-          value={form.city}
-          onChange={onChange}
-          autoComplete="address-level2"
-        />
-        <FloatingInput
-          id="state"
-          label="Estado"
-          value={form.state}
-          onChange={onChange}
-          autoComplete="address-level1"
-        />
-      </div>
-
-      <FloatingInput
-        id="postalCode"
-        label="Código postal"
-        value={form.postalCode}
-        onChange={onChange}
-        autoComplete="postal-code"
-      />
-
+      {/* Color principal */}
       <div>
-        <p className="text-[11px] font-semibold text-text-secondary mb-2 flex items-center gap-1.5">
+        <p className="text-sm font-medium text-text-primary mb-2">
           Color principal
           {hasPalette && (
-            <span className="font-normal text-text-tertiary">paleta detectada del logo</span>
+            <span className="ml-1.5 text-xs font-normal text-text-secondary">
+              paleta detectada del logo
+            </span>
           )}
         </p>
 
@@ -892,7 +913,7 @@ function StepCompany({ form, onChange, errors, onClearError }) {
                   title={hex}
                   aria-label={'Seleccionar color ' + hex}
                   className={[
-                    'relative w-9 h-9 rounded-xl border-2 transition-all duration-150 cursor-pointer',
+                    'relative w-8 h-8 rounded-lg border-2 transition-all duration-150 cursor-pointer',
                     'focus-visible:outline-none focus-visible:[box-shadow:var(--shadow-focus)]',
                     'hover:scale-110 active:scale-95',
                     active
@@ -904,8 +925,8 @@ function StepCompany({ form, onChange, errors, onClearError }) {
                   {active && (
                     <span className="absolute inset-0 flex items-center justify-center">
                       <svg
-                        width="14"
-                        height="14"
+                        width="12"
+                        height="12"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="white"
@@ -929,7 +950,7 @@ function StepCompany({ form, onChange, errors, onClearError }) {
                 aria-label="Seleccionar color personalizado"
                 onClick={() => customColorRef.current?.click()}
                 className={[
-                  'w-9 h-9 rounded-xl border-2 transition-all duration-150 cursor-pointer overflow-hidden',
+                  'w-8 h-8 rounded-lg border-2 transition-all duration-150 cursor-pointer overflow-hidden',
                   'focus-visible:outline-none focus-visible:[box-shadow:var(--shadow-focus)]',
                   'hover:scale-110 active:scale-95 flex items-center justify-center',
                   selectedSwatch === 'custom'
@@ -958,8 +979,8 @@ function StepCompany({ form, onChange, errors, onClearError }) {
                   </svg>
                 ) : (
                   <svg
-                    width="14"
-                    height="14"
+                    width="12"
+                    height="12"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -991,11 +1012,8 @@ function StepCompany({ form, onChange, errors, onClearError }) {
 
         <div
           className={[
-            'flex items-center gap-3 h-12 px-3 border rounded-xl bg-surface-subtle',
-            'hover:border-border-strong transition-colors',
-            hasPalette && selectedSwatch !== 'custom'
-              ? 'border-border cursor-default'
-              : 'cursor-pointer',
+            'flex items-center gap-3 h-10 px-3 border rounded-lg bg-surface-subtle',
+            'hover:border-border-strong transition-colors cursor-pointer',
           ].join(' ')}
         >
           <input
@@ -1008,22 +1026,22 @@ function StepCompany({ form, onChange, errors, onClearError }) {
               else setSelectedSwatch('custom');
               onChange({ target: { name: 'primaryColor', value: e.target.value } });
             }}
-            className="h-8 w-10 rounded-lg border border-border/50 cursor-pointer bg-transparent p-0.5"
+            className="h-7 w-9 rounded-md border border-border/50 cursor-pointer bg-transparent p-0.5"
             title="Editar color manualmente"
           />
           <span className="text-sm font-mono text-text-secondary flex-1 select-all">
             {form.primaryColor}
           </span>
           <div
-            className="w-5 h-5 rounded-full border border-border/40 shadow-sm shrink-0 transition-colors duration-200"
+            className="w-4 h-4 rounded-full border border-border/40 shadow-sm shrink-0"
             style={{ background: form.primaryColor }}
             aria-hidden="true"
           />
         </div>
-        <p className="mt-1.5 text-[12px] text-text-tertiary">
+        <p className="mt-1.5 text-xs text-text-secondary">
           {hasPalette
             ? 'Selecciona una muestra de la paleta o usa el selector manual'
-            : 'Sube un logo para detectar colores o elige un color aqui'}
+            : 'Sube un logo para detectar colores automáticamente'}
         </p>
       </div>
     </div>
@@ -1048,9 +1066,9 @@ function StepSecurity({ form, onChange, onGenerate, errors }) {
   const confirmOk = form.ownerPasswordConfirm && form.ownerPasswordConfirm === form.ownerPassword;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Generator card */}
-      <div className="flex items-center gap-3 p-3.5 bg-surface-subtle border border-border-subtle rounded-lg">
+      <div className="flex items-center gap-3 p-3.5 bg-surface-subtle border border-border rounded-lg">
         <div
           className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
           style={{ background: 'var(--gradient-accent)' }}
@@ -1058,10 +1076,8 @@ function StepSecurity({ form, onChange, onGenerate, errors }) {
           <Ico n="sparkle" size={15} cls="text-ink-950" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-text-primary">
-            Generador de contraseña segura
-          </p>
-          <p className="text-[11px] text-text-tertiary mt-0.5">
+          <p className="text-sm font-semibold text-text-primary">Generador de contraseña segura</p>
+          <p className="text-xs text-text-secondary mt-0.5">
             Crea automáticamente una contraseña robusta y única
           </p>
         </div>
@@ -1086,7 +1102,7 @@ function StepSecurity({ form, onChange, onGenerate, errors }) {
         </div>
       </div>
 
-      <PasswordInput
+      <PasswordField
         id="ownerPassword"
         label="Contraseña"
         value={form.ownerPassword}
@@ -1098,7 +1114,7 @@ function StepSecurity({ form, onChange, onGenerate, errors }) {
 
       {form.ownerPassword && <StrengthMeter password={form.ownerPassword} />}
 
-      <PasswordInput
+      <PasswordField
         id="ownerPasswordConfirm"
         label="Confirmar contraseña"
         value={form.ownerPasswordConfirm}
@@ -1164,7 +1180,7 @@ function StepReview({ form, onEdit }) {
     <div className="space-y-3">
       <div className="flex items-start gap-2 px-3.5 py-2.5 bg-success/5 border border-success/20 rounded-lg">
         <Ico n="check" size={14} cls="text-success mt-0.5 shrink-0" />
-        <p className="text-[12px] text-success font-medium">
+        <p className="text-xs text-success font-medium">
           Todo se ve bien. Revisa los datos y confirma para completar la configuración de AtlasERP.
         </p>
       </div>
@@ -1179,7 +1195,7 @@ function StepReview({ form, onEdit }) {
             <button
               type="button"
               onClick={() => onEdit(sec.step)}
-              className="flex items-center gap-1 text-[12px] text-brand-500 hover:text-brand-700 font-semibold cursor-pointer transition-colors"
+              className="flex items-center gap-1 text-xs text-brand-500 hover:text-brand-700 font-semibold cursor-pointer transition-colors"
             >
               <Ico n="edit" size={12} />
               Editar
@@ -1188,7 +1204,7 @@ function StepReview({ form, onEdit }) {
           <div className="px-4 py-3 space-y-2">
             {sec.fields.map((f) => (
               <div key={f.label} className="flex items-baseline justify-between gap-4">
-                <span className="text-[12px] text-text-tertiary shrink-0">{f.label}</span>
+                <span className="text-xs text-text-tertiary shrink-0">{f.label}</span>
                 <span
                   className={`text-[13px] text-text-primary font-medium text-right truncate max-w-[60%] ${f.mono ? 'font-mono' : ''}`}
                 >
@@ -1225,7 +1241,6 @@ function StepIndicator({ current, completed }) {
           return (
             <li key={stepNum} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-1.5">
-                {/* Circle */}
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold transition-all duration-200 ${
                     isCompleted
@@ -1238,7 +1253,6 @@ function StepIndicator({ current, completed }) {
                 >
                   {isCompleted ? <Ico n="check" size={13} /> : stepNum}
                 </div>
-                {/* Label */}
                 <span
                   className={`text-[10px] font-semibold whitespace-nowrap ${
                     isCurrent
@@ -1252,7 +1266,6 @@ function StepIndicator({ current, completed }) {
                 </span>
               </div>
 
-              {/* Connector */}
               {!isLast && (
                 <div
                   className={`h-0.5 flex-1 mx-1 mb-4 rounded-full transition-all duration-300 ${isCompleted ? 'bg-brand-500' : 'bg-border'}`}
@@ -1290,8 +1303,6 @@ const FEATURES = [
     desc: 'Añade nuevos módulos conforme crece tu negocio, sin migrar de plataforma.',
   },
 ];
-
-/* ── AtlasLogo — compass isotipo (Meridian v2) ─────────────────────────────── */
 
 function AtlasLogo({ size = 36 }) {
   return (
@@ -1346,9 +1357,7 @@ function LeftPanel() {
       className="h-full relative flex flex-col justify-between overflow-hidden p-10 xl:p-12"
       style={{ background: 'var(--gradient-sidebar)' }}
     >
-      {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Dot grid */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.045]" aria-hidden="true">
           <defs>
             <pattern id="dp" width="28" height="28" patternUnits="userSpaceOnUse">
@@ -1357,7 +1366,6 @@ function LeftPanel() {
           </defs>
           <rect width="100%" height="100%" fill="url(#dp)" />
         </svg>
-        {/* Glow orb 1 – ink */}
         <div
           style={{
             position: 'absolute',
@@ -1370,7 +1378,6 @@ function LeftPanel() {
             animation: 'floatA 9s ease-in-out infinite',
           }}
         />
-        {/* Glow orb 2 – amber */}
         <div
           style={{
             position: 'absolute',
@@ -1383,16 +1390,13 @@ function LeftPanel() {
             animation: 'floatB 11s ease-in-out 1.5s infinite',
           }}
         />
-        {/* Top amber accent line */}
         <div
           className="absolute top-0 left-0 right-0 h-0.5"
           style={{ background: 'var(--gradient-accent)' }}
         />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col h-full gap-10">
-        {/* Logo */}
         <div className="flex items-center gap-3">
           <AtlasLogo size={38} />
           <div>
@@ -1408,7 +1412,6 @@ function LeftPanel() {
           </div>
         </div>
 
-        {/* Hero copy */}
         <div className="space-y-4">
           <h1
             className="text-white font-bold text-[28px] xl:text-[32px] leading-tight"
@@ -1422,7 +1425,6 @@ function LeftPanel() {
           </p>
         </div>
 
-        {/* Features */}
         <div className="space-y-3 flex-1">
           {FEATURES.map((f) => (
             <div key={f.ico} className="flex items-start gap-3.5 group">
@@ -1437,7 +1439,6 @@ function LeftPanel() {
           ))}
         </div>
 
-        {/* Bottom trust badge */}
         <div className="border-t border-white/10 pt-6">
           <div className="flex items-center gap-3">
             <div className="flex -space-x-1.5">
@@ -1514,16 +1515,15 @@ const STEP_INFO = [
 export default function SetupPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(buildForm);
-  const [pageStatus, setPageStatus] = useState('loading'); // loading | ready | error
+  const [pageStatus, setPageStatus] = useState('loading');
   const [loadError, setLoadError] = useState(null);
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [stepKey, setStepKey] = useState(0); // forces re-mount on step change for animation
+  const [stepKey, setStepKey] = useState(0);
 
-  /* Load setup status */
   useEffect(() => {
     let mounted = true;
 
@@ -1637,7 +1637,6 @@ export default function SetupPage() {
       >
         <style>{ANIM_CSS}</style>
         <div className="flex flex-col items-center gap-4">
-          {/* Skeleton shimmer logo */}
           <div className="w-12 h-12 rounded-xl bg-ink-100 animate-pulse" />
           <div className="space-y-2 text-center">
             <div className="h-4 w-36 rounded bg-ink-100 animate-pulse mx-auto" />
@@ -1694,12 +1693,12 @@ export default function SetupPage() {
     <div className="fixed inset-0 z-50 flex" style={{ fontFamily: 'var(--font-sans)' }}>
       <style>{ANIM_CSS}</style>
 
-      {/* ── Left branding panel (hidden on mobile) ── */}
+      {/* Left branding panel */}
       <div className="hidden lg:flex lg:flex-col lg:w-[46%] xl:w-[42%] shrink-0">
         <LeftPanel />
       </div>
 
-      {/* ── Right form panel ── */}
+      {/* Right form panel */}
       <div className="flex-1 flex flex-col bg-surface overflow-y-auto">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-border bg-surface sticky top-0 z-10">
@@ -1717,7 +1716,7 @@ export default function SetupPage() {
               </div>
             </div>
           </div>
-          <span className="text-[12px] font-semibold text-text-tertiary">
+          <span className="text-xs font-semibold text-text-tertiary">
             Paso {step} de {TOTAL_STEPS}
           </span>
         </div>
@@ -1738,12 +1737,10 @@ export default function SetupPage() {
               >
                 {currentStepInfo.title}
               </h2>
-              <p className="text-[14px] text-text-secondary leading-relaxed">
-                {currentStepInfo.desc}
-              </p>
+              <p className="text-sm text-text-secondary leading-relaxed">{currentStepInfo.desc}</p>
             </div>
 
-            {/* Step content — key forces animation on step change */}
+            {/* Step content */}
             <form
               onSubmit={
                 isLastStep
@@ -1779,7 +1776,7 @@ export default function SetupPage() {
                 {step === 4 && <StepReview form={form} onEdit={handleEdit} />}
               </div>
 
-              {/* Global submit error */}
+              {/* Submit error */}
               {submitError && (
                 <div
                   role="alert"
@@ -1793,7 +1790,7 @@ export default function SetupPage() {
                   >
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                   </svg>
-                  <p className="text-[13px] text-error font-medium">{submitError}</p>
+                  <p className="text-sm text-error font-medium">{submitError}</p>
                 </div>
               )}
 
@@ -1804,7 +1801,7 @@ export default function SetupPage() {
                     type="button"
                     onClick={handleBack}
                     disabled={submitting}
-                    className="flex items-center gap-2 h-11 px-5 text-sm font-semibold text-text-secondary bg-surface border border-border rounded-lg hover:bg-surface-subtle hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
+                    className="flex items-center gap-2 h-10 px-5 text-sm font-semibold text-text-secondary bg-surface border border-border rounded-lg hover:bg-surface-subtle hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
                   >
                     <Ico n="lArrow" size={15} />
                     Atrás
@@ -1814,7 +1811,7 @@ export default function SetupPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 h-11 px-6 text-sm font-semibold text-white rounded-lg disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm hover:shadow-md"
+                  className="flex items-center gap-2 h-10 px-6 text-sm font-semibold text-white rounded-lg disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm hover:shadow-md"
                   style={{ background: 'var(--gradient-primary)' }}
                 >
                   {submitting ? (
@@ -1856,7 +1853,6 @@ export default function SetupPage() {
               </div>
             </form>
 
-            {/* Footer */}
             <p className="mt-8 text-center text-[11px] text-text-tertiary">
               AtlasERP · Configuración inicial · Sesión local segura
             </p>
