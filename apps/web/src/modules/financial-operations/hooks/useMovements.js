@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchMovements,
   fetchMovement,
@@ -8,8 +8,10 @@ import {
   deleteMovement,
   fetchMovementAttachments,
   uploadMovementAttachment,
-} from "../api/movements.api";
-import { buildFiltersKey, normalizeFilters } from "./queryFilters";
+  updateMovementAttachment,
+  deleteMovementAttachment,
+} from '../api/movements.api';
+import { buildFiltersKey, normalizeFilters } from './queryFilters';
 
 /**
  * React Query hooks — Financial Movements.
@@ -23,7 +25,7 @@ import { buildFiltersKey, normalizeFilters } from "./queryFilters";
 export function useMovements(organizationId, filters = {}) {
   const normalizedFilters = normalizeFilters(filters);
   return useQuery({
-    queryKey: ["movements", organizationId, buildFiltersKey(normalizedFilters)],
+    queryKey: ['movements', organizationId, buildFiltersKey(normalizedFilters)],
     queryFn: () => fetchMovements({ organizationId, ...normalizedFilters }),
     enabled: Boolean(organizationId),
   });
@@ -33,7 +35,7 @@ export function useMovements(organizationId, filters = {}) {
 export function useMovementsByFilters(organizationId, filters = {}, enabled = false) {
   const normalizedFilters = normalizeFilters(filters);
   return useQuery({
-    queryKey: ["movements-report", organizationId, buildFiltersKey(normalizedFilters)],
+    queryKey: ['movements-report', organizationId, buildFiltersKey(normalizedFilters)],
     queryFn: () => fetchMovementsByFilters({ organizationId, ...normalizedFilters }),
     enabled: Boolean(organizationId) && enabled,
   });
@@ -41,7 +43,7 @@ export function useMovementsByFilters(organizationId, filters = {}, enabled = fa
 
 export function useMovement(id) {
   return useQuery({
-    queryKey: ["movement", id],
+    queryKey: ['movement', id],
     queryFn: () => fetchMovement(id),
     enabled: Boolean(id),
   });
@@ -49,7 +51,7 @@ export function useMovement(id) {
 
 export function useMovementAttachments(movementId) {
   return useQuery({
-    queryKey: ["movement-attachments", movementId],
+    queryKey: ['movement-attachments', movementId],
     queryFn: () => fetchMovementAttachments(movementId),
     enabled: Boolean(movementId),
   });
@@ -60,10 +62,10 @@ export function useCreateMovement() {
   return useMutation({
     mutationFn: (data) => createMovement(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["movements"] });
-      qc.invalidateQueries({ queryKey: ["bank-accounts"] });
-      qc.invalidateQueries({ queryKey: ["bank-account-balance"] });
-      qc.invalidateQueries({ queryKey: ["bank-accounts-summary"] });
+      qc.invalidateQueries({ queryKey: ['movements'] });
+      qc.invalidateQueries({ queryKey: ['bank-accounts'] });
+      qc.invalidateQueries({ queryKey: ['bank-account-balance'] });
+      qc.invalidateQueries({ queryKey: ['bank-accounts-summary'] });
     },
   });
 }
@@ -73,9 +75,9 @@ export function useUpdateMovement() {
   return useMutation({
     mutationFn: ({ id, data }) => updateMovement(id, data),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: ["movements"] });
-      qc.invalidateQueries({ queryKey: ["movement", id] });
-      qc.invalidateQueries({ queryKey: ["bank-accounts"] });
+      qc.invalidateQueries({ queryKey: ['movements'] });
+      qc.invalidateQueries({ queryKey: ['movement', id] });
+      qc.invalidateQueries({ queryKey: ['bank-accounts'] });
     },
   });
 }
@@ -85,9 +87,9 @@ export function useDeleteMovement() {
   return useMutation({
     mutationFn: (id) => deleteMovement(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["movements"] });
-      qc.invalidateQueries({ queryKey: ["bank-accounts"] });
-      qc.invalidateQueries({ queryKey: ["bank-accounts-summary"] });
+      qc.invalidateQueries({ queryKey: ['movements'] });
+      qc.invalidateQueries({ queryKey: ['bank-accounts'] });
+      qc.invalidateQueries({ queryKey: ['bank-accounts-summary'] });
     },
   });
 }
@@ -95,10 +97,31 @@ export function useDeleteMovement() {
 export function useUploadMovementAttachment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ movementId, file, meta }) =>
-      uploadMovementAttachment(movementId, file, meta),
+    mutationFn: ({ movementId, file, meta }) => uploadMovementAttachment(movementId, file, meta),
     onSuccess: (_data, { movementId }) => {
-      qc.invalidateQueries({ queryKey: ["movement-attachments", movementId] });
+      qc.invalidateQueries({ queryKey: ['movement-attachments', movementId] });
+    },
+  });
+}
+
+export function useUpdateMovementAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ movementId, attachmentId, meta }) =>
+      updateMovementAttachment(movementId, attachmentId, meta),
+    onSuccess: (_data, { movementId }) => {
+      qc.invalidateQueries({ queryKey: ['movement-attachments', movementId] });
+    },
+  });
+}
+
+export function useDeleteMovementAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ movementId, attachmentId }) =>
+      deleteMovementAttachment(movementId, attachmentId),
+    onSuccess: (_data, { movementId }) => {
+      qc.invalidateQueries({ queryKey: ['movement-attachments', movementId] });
     },
   });
 }

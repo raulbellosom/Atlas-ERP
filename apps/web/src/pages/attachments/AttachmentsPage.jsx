@@ -6,11 +6,10 @@ import { useApiError } from '@/hooks/useApiError';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useToast } from '@/components/ui/Toast';
-import { formatDate } from '@/lib/i18n';
-import Table from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
 import SearchInput from '@/components/ui/SearchInput';
 import PageHeader from '@/components/ui/PageHeader';
+import AttachmentList from '@/components/ui/AttachmentList';
 
 function useAttachments(organizationId) {
   return useQuery({
@@ -39,62 +38,32 @@ function useUploadAttachment() {
   });
 }
 
-function formatBytes(bytes) {
-  if (!bytes) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+function useUpdateAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const res = await apiClient.patch(`/v1/attachments/${id}`, data);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments'] }),
+  });
+}
+
+function useDeleteAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const res = await apiClient.delete(`/v1/attachments/${id}`);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attachments'] }),
+  });
 }
 
 const matcher = (a, q) =>
   a.filename?.toLowerCase().includes(q) ||
   a.mimeType?.toLowerCase().includes(q) ||
   a.entityType?.toLowerCase().includes(q);
-
-const COLUMNS = [
-  {
-    key: 'filename',
-    header: 'Archivo',
-    sortable: true,
-    render: (r) => <span className="text-sm font-medium text-text-primary">{r.filename}</span>,
-  },
-  {
-    key: 'mimeType',
-    header: 'Tipo',
-    render: (r) => (
-      <span className="text-xs font-mono text-text-secondary">{r.mimeType ?? '—'}</span>
-    ),
-  },
-  {
-    key: 'sizeBytes',
-    header: 'Tamaño',
-    render: (r) => <span className="text-xs text-text-secondary">{formatBytes(r.sizeBytes)}</span>,
-  },
-  {
-    key: 'entityType',
-    header: 'Entidad',
-    render: (r) => (
-      <div className="flex flex-col">
-        <span className="text-xs text-text-secondary">{r.entityType ?? '—'}</span>
-        {r.entityId && (
-          <span className="text-xs font-mono text-text-disabled truncate max-w-30">
-            {r.entityId}
-          </span>
-        )}
-      </div>
-    ),
-  },
-  {
-    key: 'createdAt',
-    header: 'Fecha',
-    sortable: true,
-    render: (r) => (
-      <span className="text-xs text-text-secondary">
-        {r.createdAt ? formatDate(r.createdAt) : '—'}
-      </span>
-    ),
-  },
-];
 
 export default function AttachmentsPage() {
   const user = useAuthStore((s) => s.user);
@@ -106,6 +75,8 @@ export default function AttachmentsPage() {
 
   const { data: attachments = [], isLoading, error } = useAttachments(organizationId);
   const uploadMutation = useUploadAttachment();
+  const updateMutation = useUpdateAttachment();
+  const deleteMutation = useDeleteAttachment();
   const { query, setQuery, results } = useGlobalSearch(attachments, matcher);
 
   if (error) handleError(error);
@@ -122,6 +93,24 @@ export default function AttachmentsPage() {
       e.target.value = '';
     }
   }
+
+  const handleRename = async (attachmentId, newName) => {
+    try {
+      await updateMutation.mutateAsync({ id: attachmentId, data: { filename: newName } });
+      toast.success('Archivo renombrado');
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const handleDelete = async (attachmentId) => {
+    try {
+      await deleteMutation.mutateAsync(attachmentId);
+      toast.success('Archivo eliminado');
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -174,16 +163,18 @@ export default function AttachmentsPage() {
         </div>
       </div>
 
-      <Table
-        columns={COLUMNS}
-        data={results}
-        isLoading={isLoading}
-        sortable
-        emptyTitle="Sin adjuntos"
-        emptyDescription={
-          query ? `Sin resultados para "${query}"` : 'Sube el primer archivo de la organización'
-        }
-      />
+      <div className="bg-surface rounded-xl border border-border p-4 shadow-xs">
+        {isLoading ? (
+          <div className="flex justify-center p-8 text-text-secondary text-sm">Cargando...</div>
+        ) : (
+          <AttachmentList
+            attachments={results}
+            onRename={isAdmin ? handleRename : undefined}
+            onDelete={isAdmin ? handleDelete : undefined}
+            readOnly={false}
+          />
+        )}
+      </div>
     </div>
   );
 }

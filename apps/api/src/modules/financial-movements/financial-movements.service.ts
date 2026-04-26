@@ -11,6 +11,7 @@ import {
 import { CreateFinancialMovementDto } from './dto/create-financial-movement.dto';
 import { ListFinancialMovementsQueryDto } from './dto/list-financial-movements.query.dto';
 import { UploadMovementAttachmentDto } from './dto/upload-movement-attachment.dto';
+import { UpdateMovementAttachmentDto } from './dto/update-movement-attachment.dto';
 import { UpdateFinancialMovementDto } from './dto/update-financial-movement.dto';
 
 const FINANCIAL_MOVEMENT_SELECT = {
@@ -312,7 +313,10 @@ export class FinancialMovementsService {
     }
 
     return this.prisma.financialMovementAttachment.findMany({
-      where: { financialMovementId: movementId },
+      where: {
+        financialMovementId: movementId,
+        attachment: { deletedAt: null },
+      },
       select: {
         id: true,
         note: true,
@@ -336,5 +340,104 @@ export class FinancialMovementsService {
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
     });
+  }
+
+  async updateProof(
+    movementId: string,
+    attachmentId: string,
+    dto: UpdateMovementAttachmentDto,
+    requesterOrganizationId?: string,
+  ) {
+    const movement = await this.prisma.financialMovement.findFirst({
+      where: { id: movementId, deletedAt: null },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!movement) {
+      throw new NotFoundException('Movimiento financiero no encontrado.');
+    }
+
+    if (requesterOrganizationId && movement.organizationId !== requesterOrganizationId) {
+      throw new NotFoundException('Movimiento no encontrado.');
+    }
+
+    const existingRelation = await this.prisma.financialMovementAttachment.findFirst({
+      where: {
+        financialMovementId: movementId,
+        attachmentId,
+      },
+    });
+
+    if (!existingRelation) {
+      throw new NotFoundException('Comprobante no encontrado.');
+    }
+
+    const updated = await this.prisma.financialMovementAttachment.update({
+      where: { id: existingRelation.id },
+      data: {
+        ...(dto.note !== undefined ? { note: dto.note } : {}),
+      },
+    });
+
+    await this.auditService.auditAction({
+      organizationId: movement.organizationId,
+      action: 'FINANCIAL_MOVEMENT_ATTACHMENT_UPDATED',
+      entityType: 'financial_movement',
+      entityId: movementId,
+      origin: SourceType.API,
+      result: 'SUCCESS',
+      metadata: {
+        attachmentId,
+        movementAttachmentId: existingRelation.id,
+        note: updated.note,
+      },
+    });
+
+    return updated;
+  }
+
+  async deleteProof(movementId: string, attachmentId: string, requesterOrganizationId?: string) {
+    const movement = await this.prisma.financialMovement.findFirst({
+      where: { id: movementId, deletedAt: null },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!movement) {
+      throw new NotFoundException('Movimiento financiero no encontrado.');
+    }
+
+    if (requesterOrganizationId && movement.organizationId !== requesterOrganizationId) {
+      throw new NotFoundException('Movimiento no encontrado.');
+    }
+
+    const existingRelation = await this.prisma.financialMovementAttachment.findFirst({
+      where: {
+        financialMovementId: movementId,
+        attachmentId,
+      },
+    });
+
+    if (!existingRelation) {
+      throw new NotFoundException('Comprobante no encontrado.');
+    }
+
+    await this.prisma.financialMovementAttachment.delete({
+      where: { id: existingRelation.id },
+    });
+
+    await this.auditService.auditAction({
+      organizationId: movement.organizationId,
+      action: 'FINANCIAL_MOVEMENT_ATTACHMENT_UNLINKED',
+      entityType: 'financial_movement',
+      entityId: movementId,
+      origin: SourceType.API,
+      result: 'SUCCESS',
+      metadata: {
+        attachmentId,
+        movementAttachmentId: existingRelation.id,
+      },
+    });
+
+    return { deleted: true };
   }
 }

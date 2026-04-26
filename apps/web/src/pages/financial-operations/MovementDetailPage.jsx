@@ -1,22 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { useApiError } from "@/hooks/useApiError";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useEffect, useRef, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useApiError } from '@/hooks/useApiError';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   useMovement,
   useMovementAttachments,
   useUploadMovementAttachment,
-} from "@/modules/financial-operations/hooks/useMovements";
-import { downloadMovementReceipt } from "@/modules/financial-operations/utils/pdf/MovementReceiptPdf";
-import { FINOPS_PERMISSIONS } from "@/modules/financial-operations/routes";
-import { formatDate } from "@/lib/i18n";
-import { Card } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
-import Breadcrumbs from "@/components/ui/Breadcrumbs";
-import { FinOpsLoadingState } from "@/modules/financial-operations/components/StateIndicators";
-import { Tabs, TabContent } from "@/components/ui/Tabs";
-import { useToast } from "@/components/ui/Toast";
+  useUpdateMovementAttachment,
+  useDeleteMovementAttachment,
+} from '@/modules/financial-operations/hooks/useMovements';
+import AttachmentList from '@/components/ui/AttachmentList';
+import { downloadMovementReceipt } from '@/modules/financial-operations/utils/pdf/MovementReceiptPdf';
+import { FINOPS_PERMISSIONS } from '@/modules/financial-operations/routes';
+import { formatDate } from '@/lib/i18n';
+import { Card } from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { FinOpsLoadingState } from '@/modules/financial-operations/components/StateIndicators';
+import { Tabs, TabContent } from '@/components/ui/Tabs';
+import { useToast } from '@/components/ui/Toast';
 
 /**
  * MovementDetailPage — Detalle de movimiento financiero.
@@ -26,25 +29,25 @@ import { useToast } from "@/components/ui/Toast";
  * 2. Adjuntos / Comprobantes (T-1410)
  */
 
-const typeLabels = { INCOME: "Ingreso", EXPENSE: "Egreso", ADJUSTMENT: "Ajuste" };
-const typeVariants = { INCOME: "green", EXPENSE: "red", ADJUSTMENT: "blue" };
+const typeLabels = { INCOME: 'Ingreso', EXPENSE: 'Egreso', ADJUSTMENT: 'Ajuste' };
+const typeVariants = { INCOME: 'green', EXPENSE: 'red', ADJUSTMENT: 'blue' };
 const statusLabels = {
-  DRAFT: "Borrador",
-  POSTED: "Contabilizado",
-  CANCELED: "Cancelado",
-  REVERSED: "Revertido",
+  DRAFT: 'Borrador',
+  POSTED: 'Contabilizado',
+  CANCELED: 'Cancelado',
+  REVERSED: 'Revertido',
 };
 const statusVariants = {
-  DRAFT: "warning",
-  POSTED: "primary",
-  CANCELED: "neutral",
-  REVERSED: "neutral",
+  DRAFT: 'warning',
+  POSTED: 'primary',
+  CANCELED: 'neutral',
+  REVERSED: 'neutral',
 };
 
-function formatMoney(amount, currency = "MXN") {
-  const val = parseFloat(amount ?? "0");
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
+function formatMoney(amount, currency = 'MXN') {
+  const val = parseFloat(amount ?? '0');
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
     currency,
     minimumFractionDigits: 2,
   }).format(val);
@@ -61,6 +64,8 @@ export default function MovementDetailPage() {
   const { data: movement, isLoading, error } = useMovement(id);
   const { data: attachments = [], isLoading: loadingAttachments } = useMovementAttachments(id);
   const uploadMutation = useUploadMovementAttachment();
+  const updateMutation = useUpdateMovementAttachment();
+  const deleteMutation = useDeleteMovementAttachment();
 
   useEffect(() => {
     if (error) handleError(error);
@@ -76,20 +81,52 @@ export default function MovementDetailPage() {
 
     setUploading(true);
     try {
-      await uploadMutation.mutateAsync({ movementId: id, file, meta: { label: file.name } });
-      toast.success("Comprobante adjuntado");
+      await uploadMutation.mutateAsync({
+        movementId: id,
+        file,
+        meta: {
+          note: file.name,
+          organizationId: movement.organizationId,
+        },
+      });
+      toast.success('Comprobante adjuntado');
     } catch (err) {
       handleError(err);
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRenameAttachment = async (attachmentId, newName) => {
+    try {
+      await updateMutation.mutateAsync({
+        movementId: id,
+        attachmentId,
+        meta: { note: newName },
+      });
+      toast.success('Comprobante renombrado');
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    try {
+      await deleteMutation.mutateAsync({
+        movementId: id,
+        attachmentId,
+      });
+      toast.success('Comprobante eliminado');
+    } catch (err) {
+      handleError(err);
     }
   };
 
   const breadcrumbs = [
-    { label: "Tesorería" },
-    { label: "Movimientos", to: "/financial-operations/movements" },
-    { label: movement?.reference || "Detalle" },
+    { label: 'Tesorería' },
+    { label: 'Movimientos', to: '/financial-operations/movements' },
+    { label: movement?.reference || 'Detalle' },
   ];
 
   if (isLoading) {
@@ -105,22 +142,29 @@ export default function MovementDetailPage() {
     return (
       <div className="space-y-6">
         <Breadcrumbs items={breadcrumbs} />
-        <Card><div className="p-6 text-center">
-          <p className="text-text-secondary">Movimiento no encontrado</p>
-          <Button as={Link} to="/financial-operations/movements" variant="secondary" className="mt-4">
-            Volver
-          </Button>
-        </div></Card>
+        <Card>
+          <div className="p-6 text-center">
+            <p className="text-text-secondary">Movimiento no encontrado</p>
+            <Button
+              as={Link}
+              to="/financial-operations/movements"
+              variant="secondary"
+              className="mt-4"
+            >
+              Volver
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
 
-  const isIncome = movement.movementType === "INCOME";
+  const isIncome = movement.movementType === 'INCOME';
   const formattedAmount = formatMoney(movement.amount, movement.currencyCode);
 
   const tabs = [
-    { value: "info", label: "Información" },
-    { value: "attachments", label: `Adjuntos (${attachments.length})` },
+    { value: 'info', label: 'Información' },
+    { value: 'attachments', label: `Adjuntos (${attachments.length})` },
   ];
 
   return (
@@ -132,7 +176,7 @@ export default function MovementDetailPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-text-primary">
-              {movement.description || "Movimiento"}
+              {movement.description || 'Movimiento'}
             </h1>
             <Badge variant={typeVariants[movement.movementType]} size="xs">
               {typeLabels[movement.movementType]}
@@ -143,7 +187,7 @@ export default function MovementDetailPage() {
           </div>
           <p className="text-sm text-text-secondary mt-1">
             {movement.reference ? <span className="font-mono">{movement.reference}</span> : null}
-            {movement.reference ? " · " : ""}
+            {movement.reference ? ' · ' : ''}
             {formatDate(movement.occurredAt)}
           </p>
         </div>
@@ -165,15 +209,22 @@ export default function MovementDetailPage() {
       <Card>
         <div className="p-4 md:p-6 flex items-center justify-between">
           <div>
-            <p className="text-xs text-text-secondary uppercase tracking-wider font-medium">Monto</p>
-            <p className={[
-              "text-3xl font-bold font-mono tabular-nums mt-1",
-              isIncome ? "text-success" : "text-error",
-            ].join(" ")}>
-              {isIncome ? "+" : "−"}{formattedAmount}
+            <p className="text-xs text-text-secondary uppercase tracking-wider font-medium">
+              Monto
+            </p>
+            <p
+              className={[
+                'text-3xl font-bold font-mono tabular-nums mt-1',
+                isIncome ? 'text-success' : 'text-error',
+              ].join(' ')}
+            >
+              {isIncome ? '+' : '−'}
+              {formattedAmount}
             </p>
           </div>
-          <Badge variant="blue" size="sm">{movement.currencyCode ?? "MXN"}</Badge>
+          <Badge variant="blue" size="sm">
+            {movement.currencyCode ?? 'MXN'}
+          </Badge>
         </div>
       </Card>
 
@@ -184,32 +235,70 @@ export default function MovementDetailPage() {
             <div className="p-4 md:p-6">
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Tipo</dt>
-                  <dd className="mt-1"><Badge variant={typeVariants[movement.movementType]} size="xs">{typeLabels[movement.movementType]}</Badge></dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Tipo
+                  </dt>
+                  <dd className="mt-1">
+                    <Badge variant={typeVariants[movement.movementType]} size="xs">
+                      {typeLabels[movement.movementType]}
+                    </Badge>
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Estado</dt>
-                  <dd className="mt-1"><Badge variant={statusVariants[movement.status]} size="xs">{statusLabels[movement.status]}</Badge></dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Estado
+                  </dt>
+                  <dd className="mt-1">
+                    <Badge variant={statusVariants[movement.status]} size="xs">
+                      {statusLabels[movement.status]}
+                    </Badge>
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Fecha</dt>
-                  <dd className="mt-1 text-sm text-text-primary">{formatDate(movement.occurredAt)}</dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Fecha
+                  </dt>
+                  <dd className="mt-1 text-sm text-text-primary">
+                    {formatDate(movement.occurredAt)}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Referencia</dt>
-                  <dd className="mt-1 text-sm text-text-primary font-mono">{movement.reference || "—"}</dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Referencia
+                  </dt>
+                  <dd className="mt-1 text-sm text-text-primary font-mono">
+                    {movement.reference || '—'}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Conciliado</dt>
-                  <dd className="mt-1">{movement.isReconciled ? <Badge variant="green" size="xs">Sí</Badge> : <Badge variant="gray" size="xs">No</Badge>}</dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Conciliado
+                  </dt>
+                  <dd className="mt-1">
+                    {movement.isReconciled ? (
+                      <Badge variant="green" size="xs">
+                        Sí
+                      </Badge>
+                    ) : (
+                      <Badge variant="gray" size="xs">
+                        No
+                      </Badge>
+                    )}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Registrado</dt>
-                  <dd className="mt-1 text-sm text-text-primary">{formatDate(movement.createdAt)}</dd>
+                  <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                    Registrado
+                  </dt>
+                  <dd className="mt-1 text-sm text-text-primary">
+                    {formatDate(movement.createdAt)}
+                  </dd>
                 </div>
                 {movement.description && (
                   <div className="sm:col-span-2">
-                    <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">Descripción</dt>
+                    <dt className="text-xs text-text-secondary font-medium uppercase tracking-wider">
+                      Descripción
+                    </dt>
                     <dd className="mt-1 text-sm text-text-primary">{movement.description}</dd>
                   </div>
                 )}
@@ -237,46 +326,23 @@ export default function MovementDetailPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    {uploading ? "Subiendo..." : "Adjuntar comprobante"}
+                    {uploading ? 'Subiendo...' : 'Adjuntar comprobante'}
                   </Button>
                 </div>
               )}
 
               {/* Attachment list */}
               {loadingAttachments ? (
-                <div className="flex justify-center py-8"><Spinner /></div>
-              ) : attachments.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-text-secondary text-sm">Sin adjuntos</p>
-                  <p className="text-text-disabled text-xs mt-1">
-                    Sube comprobantes, facturas o documentos relacionados
-                  </p>
+                <div className="flex justify-center py-8">
+                  <Spinner />
                 </div>
               ) : (
-                <ul className="divide-y divide-border">
-                  {attachments.map((att) => (
-                    <li key={att.id} className="flex items-center justify-between py-3 gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-text-primary font-medium truncate">
-                          {att.originalName ?? att.label ?? "Archivo"}
-                        </p>
-                        <p className="text-xs text-text-secondary">
-                          {att.mimeType} · {formatDate(att.createdAt)}
-                        </p>
-                      </div>
-                      {att.url && (
-                        <a
-                          href={att.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-ink-600 hover:text-ink-800 font-medium whitespace-nowrap"
-                        >
-                          Descargar
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                <AttachmentList
+                  attachments={attachments}
+                  onRename={canUpload ? handleRenameAttachment : undefined}
+                  onDelete={canUpload ? handleDeleteAttachment : undefined}
+                  readOnly={!canUpload}
+                />
               )}
             </div>
           </Card>

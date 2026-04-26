@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
   Param,
   ParseBoolPipe,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -18,6 +20,7 @@ import { MAX_ATTACHMENT_SIZE_BYTES } from './constants/file-policy.constants';
 import { DownloadAttachmentQueryDto } from './dto/download-attachment.query.dto';
 import { ListAttachmentsQueryDto } from './dto/list-attachments.query.dto';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
+import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 
 @Controller('v1/attachments')
 export class AttachmentsController {
@@ -37,11 +40,7 @@ export class AttachmentsController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentOrganizationId() requesterOrganizationId?: string,
   ) {
-    return this.attachmentsService.uploadAttachment(
-      body,
-      file,
-      requesterOrganizationId,
-    );
+    return this.attachmentsService.uploadAttachment(body, file, requesterOrganizationId);
   }
 
   @Get()
@@ -56,11 +55,7 @@ export class AttachmentsController {
     @Query('includeDeleted', new DefaultValuePipe(false), ParseBoolPipe)
     includeDeleted: boolean,
   ) {
-    return this.attachmentsService.findByEntity(
-      entityType,
-      entityId,
-      includeDeleted,
-    );
+    return this.attachmentsService.findByEntity(entityType, entityId, includeDeleted);
   }
 
   @Get(':id/download')
@@ -69,15 +64,25 @@ export class AttachmentsController {
     @Query() query: DownloadAttachmentQueryDto,
     @CurrentOrganizationId() requesterOrganizationId?: string,
   ) {
-    return this.attachmentsService.generateSecureDownload(
-      id,
-      query,
-      requesterOrganizationId,
-    );
+    return this.attachmentsService.generateSecureDownload(id, query, requesterOrganizationId);
   }
 
   @Get(':id')
   findOneById(@Param('id') id: string) {
     return this.attachmentsService.findOneById(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateAttachmentDto,
+    @CurrentOrganizationId() requesterOrganizationId?: string,
+  ) {
+    return this.attachmentsService.update(id, body, requesterOrganizationId);
+  }
+
+  @Delete(':id')
+  softDelete(@Param('id') id: string, @CurrentOrganizationId() requesterOrganizationId?: string) {
+    return this.attachmentsService.softDelete(id, requesterOrganizationId);
   }
 }

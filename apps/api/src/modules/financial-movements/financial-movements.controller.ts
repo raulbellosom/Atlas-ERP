@@ -19,6 +19,7 @@ import { MAX_ATTACHMENT_SIZE_BYTES } from '../attachments/constants/file-policy.
 import { CreateFinancialMovementDto } from './dto/create-financial-movement.dto';
 import { ListFinancialMovementsQueryDto } from './dto/list-financial-movements.query.dto';
 import { UploadMovementAttachmentDto } from './dto/upload-movement-attachment.dto';
+import { UpdateMovementAttachmentDto } from './dto/update-movement-attachment.dto';
 import { UpdateFinancialMovementDto } from './dto/update-financial-movement.dto';
 import { FinancialMovementsService } from './financial-movements.service';
 import { RequireModuleInstalled } from '../../common/decorators/module-install.decorator';
@@ -69,6 +70,32 @@ export class FinancialMovementsController {
     @CurrentOrganizationId() requesterOrganizationId?: string,
   ) {
     return this.financialMovementsService.uploadProof(id, dto, file, requesterOrganizationId);
+  }
+
+  @RequireAllPermissions('finops:financial_movement:write', 'finops:attachment:write')
+  @Patch(':id/attachments/:attachmentId')
+  updateProof(
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+    @Body() dto: UpdateMovementAttachmentDto,
+    @CurrentOrganizationId() requesterOrganizationId?: string,
+  ) {
+    return this.financialMovementsService.updateProof(
+      id,
+      attachmentId,
+      dto,
+      requesterOrganizationId,
+    );
+  }
+
+  @RequireAllPermissions('finops:financial_movement:write', 'finops:attachment:write')
+  @Delete(':id/attachments/:attachmentId')
+  deleteProof(
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+    @CurrentOrganizationId() requesterOrganizationId?: string,
+  ) {
+    return this.financialMovementsService.deleteProof(id, attachmentId, requesterOrganizationId);
   }
 
   @RequireAllPermissions('finops:financial_movement:read')
