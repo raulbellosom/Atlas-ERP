@@ -17,7 +17,8 @@ export default {
       ["feat", "fix", "docs", "style", "refactor", "test", "chore", "build", "ci", "perf", "revert"],
     ],
     "subject-case": [0],
-    "subject-max-length": [2, "always", 100],
-    "body-max-line-length": [2, "always", 120],
+    "subject-max-length": [2, "always", 200],
+    "header-max-length": [2, "always", 200],
+    "body-max-line-length": [2, "always", 200],
   },
 };
