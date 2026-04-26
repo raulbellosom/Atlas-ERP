@@ -22,6 +22,7 @@ const AuditPage = lazy(() => import('@/pages/audit/AuditPage'));
 const AttachmentsPage = lazy(() => import('@/pages/attachments/AttachmentsPage'));
 const SyncCenterPage = lazy(() => import('@/pages/sync/SyncCenterPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+const BranchesPage = lazy(() => import('@/pages/branches/BranchesPage'));
 
 import { financialOperationsRoutes } from '@/modules/financial-operations/routes';
 import FinOpsLayout from '@/modules/financial-operations/components/FinOpsLayout';
@@ -87,6 +88,7 @@ function App() {
                   <Route element={<RequireAuth />}>
                     <Route element={<PrivateLayout />}>
                       <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/branches" element={<BranchesPage />} />
                       <Route path="/users" element={<UsersPage />} />
                       <Route path="/roles" element={<RolesPage />} />
                       <Route path="/audit" element={<AuditPage />} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import useAuthStore from '@/store/auth.store';
@@ -21,6 +21,7 @@ import {
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import Pagination, { usePagination } from '@/components/ui/Pagination';
 import { useEmployees } from '@/modules/hr/hooks/useHr';
 
 function useRoles(organizationId) {
@@ -202,6 +203,11 @@ export default function UsersPage() {
   const { data: users = [], isLoading, error } = useUsers(organizationId);
   const { data: employees = [] } = useEmployees(organizationId);
   const { query, setQuery, results } = useGlobalSearch(users, userMatcher);
+  const { page, setPage, pageSize, paginate, resetPage } = usePagination(25);
+
+  useEffect(() => {
+    resetPage();
+  }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const employeeByUserId = Object.fromEntries(
     employees.filter((e) => e.userId).map((e) => [e.userId, e]),
@@ -412,7 +418,7 @@ export default function UsersPage() {
 
       <Table
         columns={COLUMNS}
-        data={results}
+        data={paginate(results)}
         isLoading={isLoading}
         sortable
         emptyTitle="Sin usuarios"
@@ -422,6 +428,8 @@ export default function UsersPage() {
             : 'No hay usuarios registrados en esta organización'
         }
       />
+
+      <Pagination page={page} pageSize={pageSize} total={results.length} onPageChange={setPage} />
 
       <InviteUserModal
         open={inviteOpen}
