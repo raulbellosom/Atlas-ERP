@@ -6,7 +6,7 @@
 #   docker build -f apps/web/Dockerfile \
 #     --build-arg VITE_API_URL=/api \
 #     --build-arg VITE_APP_NAME=AtlasERP \
-#     --build-arg VITE_ENVIRONMENT=production \
+#     --build-arg VITE_ENV=production \
 #     -t atlaserp/web:latest .
 
 # â”€â”€ Stage 1: build del bundle estatico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -31,11 +31,11 @@ COPY apps/web/ ./apps/web/
 # Variables de entorno de Vite (se incrustan en el bundle en build-time)
 ARG VITE_API_URL=/api
 ARG VITE_APP_NAME=AtlasERP
-ARG VITE_ENVIRONMENT=production
+ARG VITE_ENV=production
 
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
-ENV VITE_ENVIRONMENT=$VITE_ENVIRONMENT
+ENV VITE_ENV=$VITE_ENV
 
 # Build de produccion
 RUN pnpm --filter=@atlaserp/web build

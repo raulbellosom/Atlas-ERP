@@ -41,14 +41,14 @@ section "Instalando dependencias"
 pnpm install
 info "Dependencias instaladas"
 
-# ── Copiar .env.example → .env ────────────────────────────────────────────────
+# ── Copiar .env.example → .env raiz ───────────────────────────────────────────
 section "Configurando archivos .env"
-if [ -f "apps/api/.env.example" ] && [ ! -f "apps/api/.env" ]; then
-  cp apps/api/.env.example apps/api/.env
-  info "Creado: apps/api/.env"
-  warn "Edita apps/api/.env con tus valores locales antes de continuar"
+if [ -f ".env.example" ] && [ ! -f ".env" ]; then
+  cp .env.example .env
+  info "Creado: .env"
+  warn "Edita .env en la raiz con tus valores locales antes de continuar"
 else
-  info "apps/api/.env ya existe — no se sobreescribe"
+  info ".env ya existe o falta .env.example; no se sobreescribe"
 fi
 
 # ── Verificar Docker ──────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ echo -e "${GREEN}║   Bootstrap completado exitosamente  ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════╝${NC}"
 echo ""
 echo "Pasos siguientes:"
-echo "  1. Editar apps/api/.env con tus valores"
+echo "  1. Editar .env con tus valores"
 echo "  2. pnpm infra:up      — Levantar Docker (postgres, redis, minio)"
 echo "  3. pnpm db:migrate    — Ejecutar migraciones"
 echo "  4. pnpm dev           — Iniciar todas las apps"

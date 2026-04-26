@@ -11,14 +11,14 @@ const REQUIRED_ENV_VARS = {
 
 const runtimeEnv = (() => {
   if (
-    typeof import.meta !== "undefined" &&
+    typeof import.meta !== 'undefined' &&
     import.meta &&
-    typeof import.meta.env === "object" &&
+    typeof import.meta.env === 'object' &&
     import.meta.env !== null
   ) {
     return import.meta.env;
   }
-  if (typeof process !== "undefined" && process?.env) {
+  if (typeof process !== 'undefined' && process?.env) {
     return process.env;
   }
   return {};
@@ -37,7 +37,7 @@ export function validateEnv() {
   if (missing.length > 0) {
     throw new Error(
       `[AtlasERP Desktop] Variables de entorno faltantes:\n${missing.join('\n')}\n\n` +
-        'Copia apps/desktop/.env.example a apps/desktop/.env y completa los valores.',
+        'Copia .env.example a .env en la raiz del repositorio y completa los valores.',
     );
   }
 }
@@ -49,8 +49,5 @@ export const env = {
   apiUrl: runtimeEnv['VITE_API_URL'] ?? '',
   appName: runtimeEnv['VITE_APP_NAME'] ?? 'AtlasERP',
   environment: runtimeEnv['VITE_ENV'] ?? 'development',
-  dataDir:
-    runtimeEnv['VITE_DESKTOP_DATA_DIR'] ??
-    runtimeEnv['DESKTOP_DATA_DIR'] ??
-    '',
+  dataDir: runtimeEnv['VITE_DESKTOP_DATA_DIR'] ?? runtimeEnv['DESKTOP_DATA_DIR'] ?? '',
 };

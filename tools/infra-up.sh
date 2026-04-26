@@ -20,7 +20,18 @@ error()   { echo -e "${RED}[ERR]${NC} $1"; exit 1; }
 section() { echo -e "\n${BLUE}=== $1 ===${NC}"; }
 
 COMPOSE_FILE="infra/docker/docker-compose.dev.yml"
-MINIO_BUCKET="${MINIO_BUCKET:-atlaserp-files}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-atlaserp-dev}"
+if [ -f ".env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+fi
+
+S3_ENDPOINT="${S3_ENDPOINT:-http://localhost:9000}"
+S3_ACCESS_KEY="${S3_ACCESS_KEY:-atlaserp}"
+S3_SECRET_KEY="${S3_SECRET_KEY:-atlaserp_dev}"
+S3_BUCKET="${S3_BUCKET:-atlaserp-dev}"
 MAX_WAIT=60   # segundos maximos de espera por servicio
 
 # â”€â”€ Verificar Docker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -35,15 +46,15 @@ info "Docker corriendo"
 
 # â”€â”€ Levantar servicios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Levantando servicios Docker"
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" up -d
 info "Servicios iniciados"
 
 # â”€â”€ Esperar a PostgreSQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Esperando PostgreSQL"
 elapsed=0
-until docker compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U atlaserp -d atlaserp_dev &>/dev/null; do
+until docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" exec -T postgres pg_isready -U atlaserp -d atlaserp_dev &>/dev/null; do
   if [ $elapsed -ge $MAX_WAIT ]; then
-    error "PostgreSQL no respondio en ${MAX_WAIT}s. Revisar: docker compose -f $COMPOSE_FILE logs postgres"
+    error "PostgreSQL no respondio en ${MAX_WAIT}s. Revisar: docker compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE logs postgres"
   fi
   echo -n "."
   sleep 2
@@ -55,9 +66,9 @@ info "PostgreSQL listo (${elapsed}s)"
 # â”€â”€ Esperar a Redis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Esperando Redis"
 elapsed=0
-until docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do
+until docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do
   if [ $elapsed -ge $MAX_WAIT ]; then
-    error "Redis no respondio en ${MAX_WAIT}s. Revisar: docker compose -f $COMPOSE_FILE logs redis"
+    error "Redis no respondio en ${MAX_WAIT}s. Revisar: docker compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE logs redis"
   fi
   echo -n "."
   sleep 2
@@ -71,7 +82,7 @@ section "Esperando MinIO"
 elapsed=0
 until curl -sf http://localhost:9000/minio/health/live &>/dev/null; do
   if [ $elapsed -ge $MAX_WAIT ]; then
-    error "MinIO no respondio en ${MAX_WAIT}s. Revisar: docker compose -f $COMPOSE_FILE logs minio"
+    error "MinIO no respondio en ${MAX_WAIT}s. Revisar: docker compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE logs minio"
   fi
   echo -n "."
   sleep 2
@@ -83,17 +94,17 @@ info "MinIO listo (${elapsed}s)"
 # â”€â”€ Crear bucket de MinIO si no existe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 section "Configurando bucket de MinIO"
 if command -v mc &>/dev/null; then
-  mc alias set atlaserp-local http://localhost:9000 atlaserp atlaserp_dev --quiet 2>/dev/null || true
-  if mc ls atlaserp-local/"$MINIO_BUCKET" &>/dev/null; then
-    info "Bucket '$MINIO_BUCKET' ya existe"
+  mc alias set atlaserp-local "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY" --quiet 2>/dev/null || true
+  if mc ls atlaserp-local/"$S3_BUCKET" &>/dev/null; then
+    info "Bucket '$S3_BUCKET' ya existe"
   else
-    mc mb atlaserp-local/"$MINIO_BUCKET" --quiet
-    info "Bucket '$MINIO_BUCKET' creado"
+    mc mb atlaserp-local/"$S3_BUCKET" --quiet
+    info "Bucket '$S3_BUCKET' creado"
   fi
 else
   warn "mc (MinIO Client) no instalado â€” crear bucket manualmente en http://localhost:9001"
-  warn "Credenciales: user=atlaserp, password=atlaserp_dev"
-  warn "Bucket a crear: $MINIO_BUCKET"
+  warn "Credenciales: usar S3_ACCESS_KEY y S3_SECRET_KEY desde .env"
+  warn "Bucket a crear: $S3_BUCKET"
 fi
 
 # â”€â”€ Resumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -105,7 +116,7 @@ echo ""
 echo "Servicios disponibles:"
 echo "  PostgreSQL  â†’ localhost:5432  (user: atlaserp, db: atlaserp_dev)"
 echo "  Redis       â†’ localhost:6379"
-echo "  MinIO API   â†’ localhost:9000  (bucket: $MINIO_BUCKET)"
+echo "  MinIO API   â†’ localhost:9000  (bucket: $S3_BUCKET)"
 echo "  MinIO UI    â†’ http://localhost:9001"
 echo ""
 echo "Pasos siguientes:"

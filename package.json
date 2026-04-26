@@ -34,14 +34,14 @@
     "db:seed:setup": "pnpm --filter=@atlaserp/api seed:setup",
     "db:reset": "pnpm --filter=@atlaserp/api db:reset",
     "db:studio": "pnpm --filter=@atlaserp/api db:studio",
-    "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml up -d",
-    "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml down",
-    "infra:reset": "docker compose -f infra/docker/docker-compose.dev.yml down -v",
-    "infra:logs": "docker compose -f infra/docker/docker-compose.dev.yml logs -f",
-    "infra:status": "docker compose -f infra/docker/docker-compose.dev.yml ps",
-    "infra:up:prod": "docker compose -f infra/docker/docker-compose.prod.yml up -d",
-    "infra:down:prod": "docker compose -f infra/docker/docker-compose.prod.yml down",
-    "infra:logs:prod": "docker compose -f infra/docker/docker-compose.prod.yml logs -f"
+    "infra:up": "docker compose -p atlaserp-dev -f infra/docker/docker-compose.dev.yml up -d",
+    "infra:down": "docker compose -p atlaserp-dev -f infra/docker/docker-compose.dev.yml down",
+    "infra:reset": "docker compose -p atlaserp-dev -f infra/docker/docker-compose.dev.yml down -v",
+    "infra:logs": "docker compose -p atlaserp-dev -f infra/docker/docker-compose.dev.yml logs -f",
+    "infra:status": "docker compose -p atlaserp-dev -f infra/docker/docker-compose.dev.yml ps",
+    "infra:up:prod": "docker compose -p atlaserp-prod -f infra/docker/docker-compose.prod.yml up -d",
+    "infra:down:prod": "docker compose -p atlaserp-prod -f infra/docker/docker-compose.prod.yml down",
+    "infra:logs:prod": "docker compose -p atlaserp-prod -f infra/docker/docker-compose.prod.yml logs -f"
   },
   "devDependencies": {
     "@atlaserp/config": "workspace:*",

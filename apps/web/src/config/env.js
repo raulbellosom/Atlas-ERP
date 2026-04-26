@@ -16,7 +16,7 @@ export function validateEnv() {
   if (missing.length > 0) {
     throw new Error(
       `[AtlasERP Web] Variables de entorno faltantes:\n${missing.join('\n')}\n\n` +
-        'Copia apps/web/.env.example a apps/web/.env y completa los valores.',
+        'Copia .env.example a .env en la raiz del repositorio y completa los valores.',
     );
   }
 }

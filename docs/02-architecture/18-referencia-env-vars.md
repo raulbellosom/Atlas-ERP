@@ -1,6 +1,7 @@
-# Referencia de Variables de Entorno por App
+# Referencia de Variables de Entorno
 
 ## ID de documento
+
 - Task origen: `T-0328`
 - Estado: `aprobado`
 - Fecha: `2026-04-12`
@@ -8,84 +9,92 @@
 
 ## Proposito
 
-Catalogo completo de todas las variables de entorno del proyecto AtlasERP, organizadas por app. Toda variable nueva debe registrarse aqui al mismo tiempo que se agrega al `.env.example` correspondiente.
+Catalogo de las variables de entorno de AtlasERP. Todas viven en `/.env` para
+desarrollo local y se documentan en `/.env.example`.
 
-## Reglas (canon â€” no negociables)
+## Reglas canonicas
 
 1. Formato: `MAYUSCULAS_CON_GUION_BAJO`.
-2. Prefijo obligatorio segun app: `API_`, `VITE_`, `DESKTOP_`, `WORKER_`.
-3. Variables de conexion compartidas (DB, Redis, S3) sin prefijo de app.
-4. Ningun secreto en git â€” solo el `.env.example` con valores de ejemplo.
-5. Toda variable nueva requiere actualizar `.env.example` y este documento.
-6. La app debe fallar al arrancar si falta una variable obligatoria.
+2. Un solo archivo local soportado: `/.env`.
+3. Solo `/.env.example` se versiona como catalogo de ejemplo.
+4. Ningun secreto real en git.
+5. Toda variable nueva requiere actualizar `/.env.example` y este documento.
+6. Las apps deben fallar al arrancar si falta una variable obligatoria.
+7. `S3_*` significa almacenamiento S3-compatible; MinIO es el proveedor local.
 
 ---
 
-## `apps/api` â€” Backend NestJS
+## Infraestructura compartida
 
-| Variable              | Obligatoria | Descripcion                              | Ejemplo                                         |
-| --------------------- | ----------- | ---------------------------------------- | ----------------------------------------------- |
-| `DATABASE_URL`        | Si          | URL completa de PostgreSQL (Prisma)      | `postgresql://user:pass@localhost:5432/atlaserp` |
-| `REDIS_HOST`          | Si          | Host de Redis (BullMQ)                   | `localhost`                                     |
-| `REDIS_PORT`          | Si          | Puerto de Redis                          | `6379`                                          |
-| `S3_ENDPOINT`         | Si          | Endpoint S3/MinIO                        | `http://localhost:9000`                         |
-| `S3_PUBLIC_URL`       | No          | Endpoint pÃºblico para URLs firmadas      | `http://localhost:9000`                         |
-| `S3_ACCESS_KEY`       | Si          | Access key S3/MinIO                      | `atlaserp`                                      |
-| `S3_SECRET_KEY`       | Si          | Secret key S3/MinIO                      | `atlaserp_dev`                                  |
-| `S3_BUCKET`           | Si          | Bucket por defecto                       | `atlaserp-dev`                                  |
-| `S3_REGION`           | No          | Region S3 (MinIO ignora)                 | `us-east-1`                                     |
-| `S3_PRESIGNED_EXPIRY_SECONDS` | No  | ExpiraciÃ³n default de URLs firmadas (segundos) | `300`                                   |
-| `JWT_SECRET`          | Si          | Clave de firma JWT (min 32 chars)        | `change-me-in-production`                       |
-| `JWT_EXPIRES_IN`      | No          | Duracion de tokens JWT                   | `7d`                                            |
-| `PORT`                | No          | Puerto del servidor NestJS               | `3000`                                          |
-| `NODE_ENV`            | Si          | Entorno (`development`/`production`/`test`) | `development`                               |
-
----
-
-## `apps/web` â€” Frontend React (Vite)
-
-Solo variables con prefijo `VITE_` son accesibles en el navegador.
-
-| Variable              | Obligatoria | Descripcion                              | Ejemplo                  |
-| --------------------- | ----------- | ---------------------------------------- | ------------------------ |
-| `VITE_API_URL`        | Si          | URL base del backend API                 | `http://localhost:3000/api` |
-| `VITE_APP_NAME`       | No          | Nombre de la app (titulo del navegador)  | `AtlasERP`              |
-| `VITE_ENV`            | No          | Entorno para mostrar en UI               | `development`            |
+| Variable                      | Obligatoria    | Descripcion                             | Ejemplo                                                          |
+| ----------------------------- | -------------- | --------------------------------------- | ---------------------------------------------------------------- |
+| `POSTGRES_USER`               | Si para Docker | Usuario PostgreSQL local                | `atlaserp`                                                       |
+| `POSTGRES_PASSWORD`           | Si para Docker | Password PostgreSQL local               | `atlaserp_dev`                                                   |
+| `POSTGRES_DB`                 | Si para Docker | Base PostgreSQL local                   | `atlaserp_dev`                                                   |
+| `DATABASE_URL`                | Si             | URL completa de PostgreSQL (Prisma)     | `postgresql://atlaserp:atlaserp_dev@localhost:5432/atlaserp_dev` |
+| `REDIS_HOST`                  | Si             | Host de Redis                           | `localhost`                                                      |
+| `REDIS_PORT`                  | Si             | Puerto de Redis                         | `6379`                                                           |
+| `REDIS_PASSWORD`              | No             | Password Redis si el ambiente lo exige  | `change-me`                                                      |
+| `S3_ENDPOINT`                 | Si             | Endpoint privado S3-compatible          | `http://localhost:9000`                                          |
+| `S3_PUBLIC_URL`               | No             | Endpoint publico para URLs firmadas     | `http://localhost:9000`                                          |
+| `S3_ACCESS_KEY`               | Si             | Access key S3-compatible                | `atlaserp`                                                       |
+| `S3_SECRET_KEY`               | Si             | Secret key S3-compatible                | `atlaserp_dev`                                                   |
+| `S3_BUCKET`                   | Si             | Bucket de trabajo                       | `atlaserp-dev`                                                   |
+| `S3_REGION`                   | No             | Region S3; MinIO local la ignora        | `us-east-1`                                                      |
+| `S3_PRESIGNED_EXPIRY_SECONDS` | No             | Expiracion de URLs firmadas en segundos | `300`                                                            |
 
 ---
 
-## `apps/worker` â€” Worker NestJS (BullMQ)
+## API NestJS
 
-| Variable              | Obligatoria | Descripcion                              | Ejemplo                                         |
-| --------------------- | ----------- | ---------------------------------------- | ----------------------------------------------- |
-| `DATABASE_URL`        | Si          | Misma URL que API (comparte BD)          | `postgresql://user:pass@localhost:5432/atlaserp` |
-| `REDIS_HOST`          | Si          | Host de Redis (misma instancia que API)  | `localhost`                                     |
-| `REDIS_PORT`          | Si          | Puerto de Redis                          | `6379`                                          |
-| `S3_ENDPOINT`         | Si          | Endpoint S3/MinIO (para jobs de archivos) | `http://localhost:9000`                        |
-| `S3_ACCESS_KEY`       | Si          | Access key S3/MinIO                      | `atlaserp`                                      |
-| `S3_SECRET_KEY`       | Si          | Secret key S3/MinIO                      | `atlaserp_dev`                                  |
-| `S3_BUCKET`           | Si          | Bucket de trabajo                        | `atlaserp-dev`                                  |
-| `NODE_ENV`            | Si          | Entorno                                  | `development`                                   |
+| Variable         | Obligatoria | Descripcion                                  | Ejemplo                                    |
+| ---------------- | ----------- | -------------------------------------------- | ------------------------------------------ |
+| `NODE_ENV`       | Si          | Entorno (`development`/`production`/`test`)  | `development`                              |
+| `PORT`           | No          | Puerto HTTP                                  | `3000`                                     |
+| `API_PREFIX`     | No          | Prefijo de rutas API                         | `api`                                      |
+| `WEB_APP_URL`    | No          | URL del frontend para invitaciones y enlaces | `http://localhost:5173`                    |
+| `JWT_SECRET`     | Si          | Clave de firma JWT                           | `change-me-in-production-use-32-chars-min` |
+| `JWT_EXPIRES_IN` | No          | Duracion de tokens JWT                       | `7d`                                       |
+| `LOG_LEVEL`      | No          | Nivel de logging                             | `info`                                     |
 
 ---
 
-## `apps/desktop` â€” Desktop Tauri
+## Web y Desktop (Vite)
 
-El desktop no tiene variables de entorno del sistema en el mismo sentido; su configuracion se almacena localmente en SQLite y en archivos de preferencias gestionados por Tauri.
+Solo variables con prefijo `VITE_` son accesibles en el navegador o bundle
+embebido.
 
-| Variable              | Obligatoria | Descripcion                                   | Ejemplo                  |
-| --------------------- | ----------- | --------------------------------------------- | ------------------------ |
-| `VITE_API_URL`        | Si          | URL del backend al que conecta el desktop     | `http://localhost:3000/api` |
-| `VITE_APP_NAME`       | No          | Nombre en la ventana Tauri                    | `AtlasERP`               |
-| `DESKTOP_DATA_DIR`    | No          | Directorio nativo local (por defecto: auto)   | `/home/user/.atlaserp`   |
-| `VITE_DESKTOP_DATA_DIR` | No        | Variante visible en frontend React/Vite       | `/home/user/.atlaserp`   |
+| Variable                | Obligatoria | Descripcion                            | Ejemplo                     |
+| ----------------------- | ----------- | -------------------------------------- | --------------------------- |
+| `VITE_API_URL`          | Si          | URL base del backend API               | `http://localhost:3000/api` |
+| `VITE_APP_NAME`         | No          | Nombre visible de la app               | `AtlasERP`                  |
+| `VITE_ENV`              | No          | Entorno visible para UI                | `development`               |
+| `VITE_DESKTOP_DATA_DIR` | No          | Directorio local visible en UI desktop | `/home/user/.atlaserp`      |
+
+---
+
+## Desktop nativo
+
+| Variable           | Obligatoria | Descripcion                                                             | Ejemplo                |
+| ------------------ | ----------- | ----------------------------------------------------------------------- | ---------------------- |
+| `DESKTOP_DATA_DIR` | No          | Directorio local nativo; si esta vacio Tauri usa el default del sistema | `/home/user/.atlaserp` |
+
+---
+
+## Module Store remoto
+
+| Variable                              | Obligatoria | Descripcion                                  | Ejemplo                           |
+| ------------------------------------- | ----------- | -------------------------------------------- | --------------------------------- |
+| `MODULE_STORE_PROVIDER`               | No          | Proveedor de catalogo (`curated` o `remote`) | `curated`                         |
+| `MODULE_STORE_REMOTE_CATALOG_URL`     | No          | URL del catalogo remoto                      | `https://catalog.example/modules` |
+| `MODULE_STORE_REMOTE_TRUSTED_SIGNERS` | No          | Firmantes confiables separados por coma      | `signer-a,signer-b`               |
+| `MODULE_STORE_REMOTE_CANARY_ORGS`     | No          | Organizaciones habilitadas para canary       | `org-1,org-2`                     |
+| `MODULE_STORE_REMOTE_PARTIAL_PERCENT` | No          | Porcentaje de rollout parcial                | `25`                              |
+| `MODULE_STORE_REMOTE_ROLLOUT_STAGE`   | No          | Etapa de rollout remoto                      | `total`                           |
 
 ---
 
 ## Actualizacion de este documento
 
-Toda nueva variable de entorno debe:
-1. Agregarse a `.env.example` de la app correspondiente.
-2. Agregarse a esta tabla con su descripcion y si es obligatoria.
-3. Implementar validacion en el arranque de la app (Fase 3 / T-0331-T-0334).
-
+Toda nueva variable de entorno debe agregarse a `/.env.example`, registrarse en
+este documento y validarse al arranque cuando sea obligatoria.

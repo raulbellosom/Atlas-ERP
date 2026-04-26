@@ -8,7 +8,8 @@
 
 ## Instrucción
 
-Configura y mantén la infraestructura, Docker, CI/CD, ambientes y operación del proyecto AtlasERP.
+Configura y mantén la infraestructura, Docker, CI/CD, ambientes y operación del
+proyecto AtlasERP.
 
 ### Servicios en Docker
 
@@ -38,7 +39,7 @@ Configura y mantén la infraestructura, Docker, CI/CD, ambientes y operación de
 ### Variables de entorno
 
 - Seguir `docs/02-architecture/10-estrategia-environment-variables.md`.
-- `.env.example` en raíz y por app.
+- `.env.example` unico en la raiz; no usar `.env.example` por app.
 - Validación de env vars al arrancar cada app.
 - Secretos separados según `docs/02-architecture/11-estrategia-secretos.md`.
 

@@ -44,6 +44,7 @@ Si usas PowerShell y tienes restricción de scripts, ejecuta comandos como
 
 ```bash
 pnpm install
+cp .env.example .env
 pnpm infra:up
 pnpm db:migrate
 pnpm db:seed:setup
