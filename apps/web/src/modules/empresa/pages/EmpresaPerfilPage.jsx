@@ -3,10 +3,11 @@ import useAuthStore from '@/store/auth.store';
 import { useApiError } from '@/hooks/useApiError';
 import { useToast } from '@/components/ui/Toast';
 import PageHeader from '@/components/ui/PageHeader';
+import FormPageLayout from '@/components/ui/FormPageLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { useOrganization, useUpdateOrganization } from '../hooks/useEmpresa';
+import { useOrganization, useUpdateOrganization, useLogoUrl } from '../hooks/useEmpresa';
 
 function slugify(str) {
   return str
@@ -45,6 +46,96 @@ function Field({ label, children }) {
   );
 }
 
+function PreviewRow({ label, value, mono }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-2">
+      <span className="text-[10px] text-text-disabled w-20 shrink-0 pt-px">{label}</span>
+      <span className={`text-xs text-text-primary leading-relaxed ${mono ? 'font-mono' : ''}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function OrgPreview({ form, logoUrl }) {
+  const regimeLabel = FISCAL_REGIMES.find((r) => r.value === form.fiscalRegime)?.label;
+  const hasFiscal = form.rfc || form.fiscalRegime;
+  const hasContact = form.phone || form.email || form.website;
+  const hasAddress = form.street || form.city || form.state;
+
+  return (
+    <div className="rounded-xl border border-border bg-surface-card p-5 space-y-4">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">
+        Vista previa
+      </p>
+
+      {/* Identity header */}
+      <div className="flex items-start gap-3">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="w-12 h-12 rounded-xl object-contain border border-border bg-white shrink-0"
+          />
+        ) : (
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shrink-0 select-none"
+            style={{
+              background: 'var(--gradient-accent)',
+              fontFamily: 'var(--font-display)',
+              fontSize: 20,
+            }}
+          >
+            {(form.name || '?')[0].toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-text-primary text-sm leading-tight truncate">
+            {form.name || <span className="text-text-disabled italic">Nombre comercial</span>}
+          </p>
+          {form.legalName && (
+            <p className="text-xs text-text-secondary truncate mt-0.5">{form.legalName}</p>
+          )}
+          {form.legalEntityType && (
+            <span className="inline-block mt-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border text-text-secondary">
+              {form.legalEntityType}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Fiscal */}
+      {hasFiscal && (
+        <div className="space-y-1.5 pt-3 border-t border-border">
+          <PreviewRow label="RFC" value={form.rfc} mono />
+          <PreviewRow label="Régimen" value={regimeLabel} />
+        </div>
+      )}
+
+      {/* Contacto */}
+      {hasContact && (
+        <div className="space-y-1.5 pt-3 border-t border-border">
+          <PreviewRow label="Teléfono" value={form.phone} />
+          <PreviewRow label="Correo" value={form.email} />
+          <PreviewRow label="Web" value={form.website} />
+        </div>
+      )}
+
+      {/* Dirección */}
+      {hasAddress && (
+        <div className="pt-3 border-t border-border">
+          <p className="text-xs text-text-secondary leading-relaxed">
+            {[form.street, form.city, form.state, form.postalCode, form.country]
+              .filter(Boolean)
+              .join(', ')}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmpresaPerfilPage() {
   const user = useAuthStore((s) => s.user);
   const organizationId = user?.organizationId;
@@ -53,6 +144,7 @@ export default function EmpresaPerfilPage() {
 
   const { data: org, isLoading } = useOrganization(organizationId);
   const updateMutation = useUpdateOrganization();
+  const { data: logoUrl } = useLogoUrl(org?.logoAttachmentId);
 
   const [form, setForm] = useState({
     name: '',
@@ -134,106 +226,110 @@ export default function EmpresaPerfilPage() {
     <div className="space-y-6">
       <PageHeader title="Perfil" description="Datos legales y comerciales de la organización" />
 
-      <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
-        {/* Identidad */}
-        <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            Identidad
-          </h3>
-          <Field label="Nombre comercial">
-            <Input value={form.name} onChange={handleNameChange} required />
-          </Field>
-          <Field label="Slug">
-            <Input
-              value={form.slug}
-              onChange={handleSlugChange}
-              className="font-mono text-sm"
-              placeholder="mi-organizacion"
-            />
-            <p className="text-xs text-text-disabled mt-1">
-              Se actualiza automáticamente al cambiar el nombre. Cambiar el slug puede romper URLs
-              existentes.
-            </p>
-          </Field>
-          <Field label="Razón social">
-            <Input value={form.legalName} onChange={handleChange('legalName')} />
-          </Field>
-        </div>
-
-        {/* Datos fiscales */}
-        <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            Datos fiscales
-          </h3>
-          <Field label="Tipo de persona">
-            <Select
-              value={form.legalEntityType || undefined}
-              onValueChange={handleSelect('legalEntityType')}
-              options={LEGAL_ENTITY_TYPES.map((t) => ({ value: t, label: t }))}
-              placeholder="Selecciona tipo…"
-            />
-          </Field>
-          <Field label="RFC">
-            <Input value={form.rfc} onChange={handleChange('rfc')} className="font-mono" />
-          </Field>
-          <Field label="Régimen fiscal">
-            <Select
-              value={form.fiscalRegime || undefined}
-              onValueChange={handleSelect('fiscalRegime')}
-              options={FISCAL_REGIMES}
-              placeholder="Selecciona régimen…"
-            />
-          </Field>
-        </div>
-
-        {/* Contacto */}
-        <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            Contacto
-          </h3>
-          <Field label="Teléfono">
-            <Input value={form.phone} onChange={handleChange('phone')} type="tel" />
-          </Field>
-          <Field label="Correo de contacto">
-            <Input value={form.email} onChange={handleChange('email')} type="email" />
-          </Field>
-          <Field label="Sitio web">
-            <Input value={form.website} onChange={handleChange('website')} type="url" />
-          </Field>
-        </div>
-
-        {/* Dirección */}
-        <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            Dirección
-          </h3>
-          <Field label="Calle y número">
-            <Input value={form.street} onChange={handleChange('street')} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Ciudad / Municipio">
-              <Input value={form.city} onChange={handleChange('city')} />
+      <FormPageLayout aside={<OrgPreview form={form} logoUrl={logoUrl} />}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Identidad */}
+          <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              Identidad
+            </h3>
+            <Field label="Nombre comercial">
+              <Input value={form.name} onChange={handleNameChange} required />
             </Field>
-            <Field label="Estado">
-              <Input value={form.state} onChange={handleChange('state')} />
+            <Field label="Slug">
+              <Input
+                value={form.slug}
+                onChange={handleSlugChange}
+                className="font-mono text-sm"
+                placeholder="mi-organizacion"
+              />
+              <p className="text-xs text-text-disabled mt-1">
+                Se actualiza automáticamente al cambiar el nombre. Cambiar el slug puede romper URLs
+                existentes.
+              </p>
+            </Field>
+            <Field label="Razón social">
+              <Input value={form.legalName} onChange={handleChange('legalName')} />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Código postal">
-              <Input value={form.postalCode} onChange={handleChange('postalCode')} />
+
+          {/* Datos fiscales */}
+          <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              Datos fiscales
+            </h3>
+            <Field label="Tipo de persona">
+              <Select
+                value={form.legalEntityType || undefined}
+                onValueChange={handleSelect('legalEntityType')}
+                options={LEGAL_ENTITY_TYPES.map((t) => ({ value: t, label: t }))}
+                placeholder="Selecciona tipo…"
+              />
             </Field>
-            <Field label="País">
-              <Input value={form.country} onChange={handleChange('country')} />
+            <Field label="RFC">
+              <Input value={form.rfc} onChange={handleChange('rfc')} className="font-mono" />
+            </Field>
+            <Field label="Régimen fiscal">
+              <Select
+                value={form.fiscalRegime || undefined}
+                onValueChange={handleSelect('fiscalRegime')}
+                options={FISCAL_REGIMES}
+                placeholder="Selecciona régimen…"
+              />
             </Field>
           </div>
-        </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" variant="primary" size="sm" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-          </Button>
-        </div>
-      </form>
+          {/* Contacto */}
+          <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              Contacto
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Teléfono">
+                <Input value={form.phone} onChange={handleChange('phone')} type="tel" />
+              </Field>
+              <Field label="Correo de contacto">
+                <Input value={form.email} onChange={handleChange('email')} type="email" />
+              </Field>
+            </div>
+            <Field label="Sitio web">
+              <Input value={form.website} onChange={handleChange('website')} type="url" />
+            </Field>
+          </div>
+
+          {/* Dirección */}
+          <div className="rounded-xl border border-border bg-surface-card p-6 space-y-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              Dirección
+            </h3>
+            <Field label="Calle y número">
+              <Input value={form.street} onChange={handleChange('street')} />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Ciudad / Municipio">
+                <Input value={form.city} onChange={handleChange('city')} />
+              </Field>
+              <Field label="Estado">
+                <Input value={form.state} onChange={handleChange('state')} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Código postal">
+                <Input value={form.postalCode} onChange={handleChange('postalCode')} />
+              </Field>
+              <Field label="País">
+                <Input value={form.country} onChange={handleChange('country')} />
+              </Field>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button type="submit" variant="primary" size="sm" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </form>
+      </FormPageLayout>
     </div>
   );
 }
