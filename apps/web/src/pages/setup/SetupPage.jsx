@@ -1723,7 +1723,7 @@ export default function SetupPage() {
 
         {/* Form scroll area */}
         <div className="flex-1 flex items-start justify-center">
-          <div className="w-full max-w-110 px-5 sm:px-8 py-8 lg:py-12">
+          <div className="w-full max-w-2xl px-6 sm:px-10 lg:px-14 py-8 lg:py-12">
             {/* Step indicator */}
             <div className="mb-8">
               <StepIndicator current={step} completed={completed} />
